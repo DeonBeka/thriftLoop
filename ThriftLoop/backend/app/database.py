@@ -44,6 +44,9 @@ _ADDED_COLUMNS = {
     "products": {
         "photo_colors": "VARCHAR(60)",
     },
+    "product_images": {
+        "angle": "VARCHAR(10)",
+    },
 }
 
 

@@ -24,6 +24,19 @@ def _csv(value: str | None) -> list[str]:
     return [v.strip() for v in value.split(",") if v.strip()] if value else []
 
 
+ANGLES = {"front", "back", "side"}
+
+
+def _angles(value: str | None, count: int) -> list[str | None]:
+    """'front,,back' -> ['front', None, 'back'], one entry per photo in final order. Unknown -> None."""
+    raw = value.split(",") if value else []
+    out: list[str | None] = []
+    for i in range(count):
+        a = raw[i].strip().lower() if i < len(raw) else ""
+        out.append(a if a in ANGLES else None)
+    return out
+
+
 def _validate_fields(title: str, description: str, price: float, category: str, size: str, condition: str) -> None:
     errors: list[str] = []
     if not 3 <= len(title.strip()) <= 80:
@@ -135,6 +148,7 @@ def create_product(
     condition: Annotated[str, Form()],
     images: Annotated[list[UploadFile], File()],
     background: BackgroundTasks,
+    image_angles: Annotated[str | None, Form(description="Comma separated front/back/side per photo")] = None,
     db: Session = Depends(get_db),
     user: User = Depends(require_seller),
 ) -> ProductOut:
@@ -164,7 +178,8 @@ def create_product(
         condition=condition,
         status="active",
     )
-    product.images = [ProductImage(image_path=path, display_order=i) for i, path in enumerate(saved)]
+    angles = _angles(image_angles, len(saved))
+    product.images = [ProductImage(image_path=path, display_order=i, angle=angles[i]) for i, path in enumerate(saved)]
     db.add(product)
     db.commit()
     background.add_task(analyze_product, product.id)  # read the colour from the photo after responding
@@ -186,6 +201,9 @@ def update_product(
         str | None, Form(description="Comma separated ids of existing images to keep, in display order")
     ] = None,
     images: Annotated[list[UploadFile] | None, File()] = None,
+    image_angles: Annotated[
+        str | None, Form(description="Comma separated front/back/side for kept photos then new ones")
+    ] = None,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> ProductOut:
@@ -240,10 +258,14 @@ def update_product(
 
     for img in removed:
         product.images.remove(img)
+    angles = _angles(image_angles, len(kept) + len(saved)) if image_angles is not None else None
     for i, img in enumerate(kept):
         img.display_order = i
+        if angles is not None:
+            img.angle = angles[i]
     for j, path in enumerate(saved):
-        product.images.append(ProductImage(image_path=path, display_order=len(kept) + j))
+        angle = angles[len(kept) + j] if angles is not None else None
+        product.images.append(ProductImage(image_path=path, display_order=len(kept) + j, angle=angle))
     main_photo_after = kept[0].image_path if kept else saved[0]
     if main_photo_after != main_photo_before:
         product.photo_colors = None

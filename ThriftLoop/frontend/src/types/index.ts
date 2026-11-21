@@ -78,10 +78,13 @@ export interface AdminStats {
   open_orders: number;
 }
 
+export type PhotoAngle = 'front' | 'back' | 'side';
+
 export interface ProductImage {
   id: number;
   url: string;
   display_order: number;
+  angle?: PhotoAngle | null;
 }
 
 export interface Product {
@@ -98,6 +101,8 @@ export interface Product {
   seller: UserSummary;
   favorites_count: number;
   is_favorited: boolean;
+  /** Colours seen in the main photo, e.g. ['black']. */
+  photo_colors?: string[];
 }
 
 export interface ProductList {

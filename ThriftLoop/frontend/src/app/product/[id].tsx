@@ -199,6 +199,21 @@ export default function ProductDetails() {
             <Pill label={product.condition} />
             <Pill label={product.category} />
           </View>
+          <Pressable
+            onPress={() => router.push(`/live-view/${product.id}`)}
+            style={({ pressed }) => [styles.liveView, pressed && { opacity: 0.8 }]}
+            accessibilityRole="button"
+            accessibilityLabel="Live view: see how it fits your body"
+          >
+            <View style={styles.liveIcon}>
+              <Ionicons name="body-outline" size={20} color={colors.white} />
+            </View>
+            <View style={styles.flex}>
+              <Text style={type.bodyStrong}>Live view</Text>
+              <Text style={type.footnote}>See how size {product.size} fits your body</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+          </Pressable>
           <Text style={type.footnote}>
             Listed {timeAgo(product.created_at)} · {product.favorites_count} {product.favorites_count === 1 ? 'save' : 'saves'}
           </Text>
@@ -303,6 +318,23 @@ const styles = themed(() =>
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.separator, marginVertical: spacing.lg },
   description: { marginTop: spacing.xs },
   seller: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm },
+  liveView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.secondary,
+    marginVertical: spacing.sm,
+  },
+  liveIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   bottomBar: {
     position: 'absolute',
     left: 0,

@@ -87,12 +87,14 @@ def products_out(db: Session, products: list[Product], viewer: User | None) -> l
             status=p.status,
             created_at=p.created_at,
             images=[
-                ProductImageOut(id=img.id, url=public_url(img.image_path) or "", display_order=img.display_order)
+                ProductImageOut(id=img.id, url=public_url(img.image_path) or "", display_order=img.display_order,
+                                angle=img.angle)
                 for img in p.images
             ],
             seller=user_summary(p.seller),
             favorites_count=fav_counts.get(p.id, 0),
             is_favorited=p.id in favorited,
+            photo_colors=[c for c in (p.photo_colors or "").split(",") if c],
         )
         for p in products
     ]

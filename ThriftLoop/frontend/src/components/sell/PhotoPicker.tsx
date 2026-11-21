@@ -6,6 +6,7 @@ import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanim
 import { ProductImage } from '@/components/product/ProductImage';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { colors, fs, GUTTER, radius, spacing, themed, type } from '@/constants/theme';
+import type { PhotoAngle } from '@/types';
 import { haptic } from '@/utils/haptics';
 
 export const MAX_PHOTOS = 8;
@@ -13,9 +14,12 @@ const COLUMNS = 3;
 const GAP = spacing.sm;
 
 /** A photo is either already on the server (id) or freshly picked on the device. */
-export type ListingPhoto =
+export type ListingPhoto = (
   | { kind: 'remote'; id: number; url: string }
-  | { kind: 'local'; uri: string; mimeType?: string | null; fileName?: string | null };
+  | { kind: 'local'; uri: string; mimeType?: string | null; fileName?: string | null }
+) & { angle?: PhotoAngle | null };
+
+const ANGLE_LABEL: Record<PhotoAngle, string> = { front: 'Front', back: 'Back', side: 'Side' };
 
 interface PhotoPickerProps {
   photos: ListingPhoto[];
@@ -102,6 +106,31 @@ export function PhotoPicker({ photos, onChange, error }: PhotoPickerProps) {
     onChange([photos[index], ...photos.filter((_, i) => i !== index)]);
   };
 
+  /** Optional: tag a photo as Front / Back / Side so shoppers can compare angles in Live view. */
+  const setAngle = (index: number, angle: PhotoAngle | null) => {
+    void haptic.selection();
+    onChange(photos.map((p, i) => (i === index ? { ...p, angle } : angle && p.angle === angle ? { ...p, angle: null } : p)));
+  };
+  const chooseAngle = (index: number) => {
+    const values: (PhotoAngle | null)[] = ['front', 'back', 'side', null];
+    const options = ['Front', 'Back', 'Side', 'No label', 'Cancel'];
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { title: 'Which side of the item is this?', options, cancelButtonIndex: 4 },
+        (i) => i < 4 && setAngle(index, values[i]),
+      );
+    } else if (Platform.OS === 'web') {
+      // Web preview: cycle through the labels on each tap.
+      const order = values.indexOf(photos[index].angle ?? null);
+      setAngle(index, values[(order + 1) % values.length]);
+    } else {
+      Alert.alert('Which side of the item is this?', undefined, [
+        ...values.map((v, i) => ({ text: options[i], onPress: () => setAngle(index, v) })),
+        { text: 'Cancel', style: 'cancel' as const },
+      ]);
+    }
+  };
+
   const size = { width: tile, height: Math.round(tile * 1.25) };
 
   return (
@@ -114,13 +143,25 @@ export function PhotoPicker({ photos, onChange, error }: PhotoPickerProps) {
             exiting={FadeOut.duration(150)}
             layout={LinearTransition.duration(220)}
           >
-            <Pressable onLongPress={() => makeCover(i)} delayLongPress={300} accessibilityHint="Long-press to make this the cover photo">
+            <Pressable
+              onPress={() => chooseAngle(i)}
+              onLongPress={() => makeCover(i)}
+              delayLongPress={300}
+              accessibilityHint="Tap to label front, back or side. Long-press to make this the cover photo"
+            >
               <ProductImage uri={photoUri(photo)} style={[styles.thumb, size]} />
-              {i === 0 && (
-                <View style={styles.cover}>
-                  <Text style={styles.coverText}>Cover</Text>
-                </View>
-              )}
+              <View style={styles.badges}>
+                {i === 0 && (
+                  <View style={styles.cover}>
+                    <Text style={styles.coverText}>Cover</Text>
+                  </View>
+                )}
+                {photo.angle ? (
+                  <View style={[styles.cover, styles.angle]}>
+                    <Text style={styles.coverText}>{ANGLE_LABEL[photo.angle]}</Text>
+                  </View>
+                ) : null}
+              </View>
               <Pressable onPress={() => remove(i)} hitSlop={8} style={styles.remove} accessibilityLabel="Remove photo">
                 <Ionicons name="close" size={13} color={colors.white} />
               </Pressable>
@@ -137,7 +178,7 @@ export function PhotoPicker({ photos, onChange, error }: PhotoPickerProps) {
         )}
       </View>
       <Text style={[type.footnote, error && styles.error]}>
-        {error ?? `${photos.length}/${MAX_PHOTOS} · Natural light and a plain background sell faster. Long-press a photo to make it the cover.`}
+        {error ?? `${photos.length}/${MAX_PHOTOS} · Natural light and a plain background sell faster. Tap a photo to label it Front, Back or Side for Live view; long-press to make it the cover.`}
       </Text>
     </View>
   );
@@ -160,10 +201,9 @@ const styles = themed(() =>
   },
   addError: { borderColor: colors.danger },
   addLabel: { fontSize: fs(13), fontWeight: '600', color: colors.primary },
+  badges: { position: 'absolute', bottom: 6, left: 6, right: 6, flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+  angle: { backgroundColor: colors.primary },
   cover: {
-    position: 'absolute',
-    bottom: 6,
-    left: 6,
     backgroundColor: 'rgba(32,37,34,0.72)',
     borderRadius: radius.xs,
     paddingHorizontal: 6,

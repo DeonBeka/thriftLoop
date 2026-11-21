@@ -147,10 +147,12 @@ def test_marketplace_flow(client):
     form = {"title": "Green Hoodie", "description": "A lovely green hoodie.", "price": "30",
             "category": "Hoodies", "size": "M", "condition": "Good"}
     files = [("images", ("a.png", _png(), "image/png")), ("images", ("b.png", _png(), "image/png"))]
-    r = client.post("/products", data=form, files=files, headers=seller)
+    r = client.post("/products", data={**form, "image_angles": "front,BACK"}, files=files, headers=seller)
     assert r.status_code == 201, r.text
     product = r.json()
     assert len(product["images"]) == 2
+    assert [i["angle"] for i in product["images"]] == ["front", "back"]  # Live view angle labels
+    assert product["photo_colors"] == []  # not analysed during tests
     assert client.get(product["images"][0]["url"]).status_code == 200
 
     assert client.post("/products", data=form, headers=seller).status_code == 422  # needs photos
@@ -162,10 +164,12 @@ def test_marketplace_flow(client):
 
     # Edit: drop one image, mark sold.
     keep = str(product["images"][1]["id"])
-    r = client.put(f"/products/{product['id']}", data={"price": "25", "keep_image_ids": keep, "status": "sold"},
+    r = client.put(f"/products/{product['id']}",
+                   data={"price": "25", "keep_image_ids": keep, "status": "sold", "image_angles": "side"},
                    headers=seller)
     assert r.status_code == 200, r.text
     assert r.json()["price"] == 25 and len(r.json()["images"]) == 1 and r.json()["status"] == "sold"
+    assert r.json()["images"][0]["angle"] == "side"
     assert client.put(f"/products/{product['id']}", data={"price": "1"}, headers=buyer).status_code == 403
     client.put(f"/products/{product['id']}", data={"status": "active"}, headers=seller)
 

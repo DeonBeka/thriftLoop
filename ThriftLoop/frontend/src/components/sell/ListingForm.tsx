@@ -38,7 +38,7 @@ export function ListingForm({ product, onSaved, header, bottomInset = 0 }: Listi
   const editing = !!product;
 
   const [photos, setPhotos] = useState<ListingPhoto[]>(
-    product?.images.map((img) => ({ kind: 'remote', id: img.id, url: img.url })) ?? [],
+    product?.images.map((img) => ({ kind: 'remote', id: img.id, url: img.url, angle: img.angle ?? null })) ?? [],
   );
   const [title, setTitle] = useState(product?.title ?? '');
   const [description, setDescription] = useState(product?.description ?? '');
@@ -97,15 +97,18 @@ export function ListingForm({ product, onSaved, header, bottomInset = 0 }: Listi
       size,
       condition,
     };
-    const local: LocalImage[] = photos.flatMap((p) => (p.kind === 'local' ? [p] : []));
+    const localPhotos = photos.filter((p) => p.kind === 'local');
+    const remotePhotos = photos.filter((p) => p.kind === 'remote');
+    const local: LocalImage[] = localPhotos.flatMap((p) => (p.kind === 'local' ? [p] : []));
     try {
       let saved: Product;
       if (product) {
         // Server keeps remote photos in the given order and appends new uploads after them.
-        const keep = photos.flatMap((p) => (p.kind === 'remote' ? [p.id] : []));
-        saved = await productsApi.update(product.id, input, keep, local);
+        const keep = remotePhotos.flatMap((p) => (p.kind === 'remote' ? [p.id] : []));
+        const angles = [...remotePhotos, ...localPhotos].map((p) => p.angle);
+        saved = await productsApi.update(product.id, input, keep, local, angles);
       } else {
-        saved = await productsApi.create(input, local);
+        saved = await productsApi.create(input, local, localPhotos.map((p) => p.angle));
       }
       void haptic.success();
       setPreviewing(false);

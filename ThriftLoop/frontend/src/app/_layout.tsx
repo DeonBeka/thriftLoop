@@ -76,6 +76,7 @@ function RootNavigator() {
       <Stack.Screen name="settings" options={{ title: 'Settings' }} />
       <Stack.Screen name="appearance" options={{ title: 'Appearance & accessibility' }} />
       <Stack.Screen name="assistant" options={{ title: 'AI stylist' }} />
+      <Stack.Screen name="live-view/[id]" options={{ title: 'Live view' }} />
       <Stack.Screen name="legal/[doc]" options={{ title: '' }} />
       <Stack.Screen name="orders/index" options={{ title: 'Orders' }} />
       <Stack.Screen name="orders/[id]" options={{ title: 'Order' }} />

@@ -15,6 +15,7 @@ const SCREENS: { match: RegExp; say: string }[] = [
   { match: /^\/profile/, say: 'Your profile. Your listings and sold items.' },
   { match: /^\/settings/, say: 'Settings.' },
   { match: /^\/appearance/, say: 'Appearance and accessibility.' },
+  { match: /^\/live-view/, say: 'Live view. A mannequin with your height and weight wearing the item, with a fit verdict.' },
   { match: /^\/assistant/, say: 'AI stylist. Type what you are looking for, for example blue tops under ten euros.' },
   { match: /^\/messages\/\d+/, say: 'Chat.' },
   { match: /^\/messages/, say: 'Messages.' },

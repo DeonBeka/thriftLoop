@@ -61,5 +61,6 @@ class ProductImage(Base):
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"), index=True)
     image_path: Mapped[str] = mapped_column(String(500))
     display_order: Mapped[int] = mapped_column(Integer, default=0)
+    angle: Mapped[str | None] = mapped_column(String(10), nullable=True, default=None)  # front/back/side
 
     product = relationship("Product", back_populates="images")

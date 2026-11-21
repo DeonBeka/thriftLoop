@@ -9,6 +9,7 @@ class ProductImageOut(BaseModel):
     id: int
     url: str
     display_order: int
+    angle: str | None = None  # "front" / "back" / "side" when the seller labelled the photo
 
 
 class ProductOut(BaseModel):
@@ -25,6 +26,7 @@ class ProductOut(BaseModel):
     seller: UserSummary
     favorites_count: int = 0
     is_favorited: bool = False
+    photo_colors: list[str] = []  # colours seen in the main photo (used by Live view)
 
 
 class ProductListResponse(BaseModel):

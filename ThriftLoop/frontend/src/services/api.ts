@@ -9,6 +9,7 @@ import type {
   CurrentUser,
   LocalImage,
   Message,
+  PhotoAngle,
   Product,
   ProductFilters,
   ProductList,
@@ -200,10 +201,11 @@ export const productsApi = {
       },
     }),
   get: (id: number) => request<Product>('GET', `/products/${id}`),
-  create: (input: ListingInput, images: LocalImage[]) => {
+  create: (input: ListingInput, images: LocalImage[], angles?: (PhotoAngle | null | undefined)[]) => {
     const form = new FormData();
     Object.entries(input).forEach(([k, v]) => form.append(k, v));
     images.forEach((img, i) => appendImage(form, 'images', img, i));
+    if (angles?.some(Boolean)) form.append('image_angles', angles.map((a) => a ?? '').join(','));
     return request<Product>('POST', '/products', { form, timeoutMs: 60000 });
   },
   update: (
@@ -211,10 +213,13 @@ export const productsApi = {
     input: Partial<ListingInput> & { status?: ProductStatus },
     keepImageIds?: number[],
     newImages: LocalImage[] = [],
+    /** One per photo: kept photos first (in keepImageIds order), then new ones. */
+    angles?: (PhotoAngle | null | undefined)[],
   ) => {
     const form = new FormData();
     Object.entries(input).forEach(([k, v]) => v !== undefined && form.append(k, v));
     if (keepImageIds) form.append('keep_image_ids', keepImageIds.join(','));
+    if (angles) form.append('image_angles', angles.map((a) => a ?? '').join(','));
     newImages.forEach((img, i) => appendImage(form, 'images', img, i));
     return request<Product>('PUT', `/products/${id}`, { form, timeoutMs: 60000 });
   },
