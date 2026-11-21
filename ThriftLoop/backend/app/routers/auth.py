@@ -103,6 +103,24 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> Registe
         user = existing
         user.username = payload.username
         user.hashed_password = hash_password(payload.password)
+
+    if not settings.require_email_verification:
+        # Verification turned off: activate right away and sign the user in.
+        user.is_verified = True
+        user.verification_code_hash = None
+        user.verification_expires_at = None
+        db.commit()
+        return RegisterResponse(
+            message="Account created.",
+            email=user.email,
+            expires_in_seconds=0,
+            resend_available_in_seconds=0,
+            verification_required=False,
+            access_token=create_access_token(user.id),
+            user=current_user_out(db, user),
+        )
+
+    if existing is not None:
         if _cooldown_remaining(user) > 0:
             db.commit()
             return _register_response(user)
@@ -177,7 +195,11 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
     if user is None or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect email or password.")
     if not user.is_verified:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Please verify your email before signing in.")
+        if settings.require_email_verification:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Please verify your email before signing in.")
+        # Accounts left unverified from before verification was turned off.
+        user.is_verified = True
+        db.commit()
     return TokenResponse(access_token=create_access_token(user.id), user=current_user_out(db, user))
 
 

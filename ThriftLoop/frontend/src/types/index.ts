@@ -89,6 +89,10 @@ export interface RegisterResponse {
   email: string;
   expires_in_seconds: number;
   resend_available_in_seconds: number;
+  /** False when the backend has email verification turned off; then the user is signed in right away. */
+  verification_required: boolean;
+  access_token: string | null;
+  user: CurrentUser | null;
 }
 
 export interface TokenResponse {

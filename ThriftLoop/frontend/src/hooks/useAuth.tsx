@@ -10,6 +10,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   completeVerification: (email: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
+  /** Sign in with a token the server already issued (e.g. straight after registering). */
+  startSession: (token: string, user: CurrentUser) => Promise<void>;
   refreshUser: () => Promise<void>;
   setUser: (user: CurrentUser) => void;
 }
@@ -74,9 +76,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const startSession = useCallback(
+    async (token: string, me: CurrentUser) => acceptToken({ access_token: token, token_type: 'bearer', user: me }),
+    [acceptToken],
+  );
+
   const value = useMemo(
-    () => ({ user, initializing, login, completeVerification, logout, refreshUser, setUser: setUserState }),
-    [user, initializing, login, completeVerification, logout, refreshUser],
+    () => ({ user, initializing, login, completeVerification, logout, startSession, refreshUser, setUser: setUserState }),
+    [user, initializing, login, completeVerification, logout, startSession, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

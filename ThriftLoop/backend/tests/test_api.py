@@ -8,6 +8,7 @@ _tmp = Path(tempfile.mkdtemp())
 os.environ["DATABASE_URL"] = f"sqlite:///{(_tmp / 'test.db').as_posix()}"
 os.environ["UPLOAD_DIR"] = str(_tmp / "uploads")
 os.environ["EMAIL_DEV_MODE"] = "true"
+os.environ["REQUIRE_EMAIL_VERIFICATION"] = "true"  # most tests exercise the OTP flow
 os.environ["JWT_SECRET_KEY"] = "test-secret-that-is-long-enough-for-hs256-signing"
 
 import pytest  # noqa: E402
@@ -84,6 +85,22 @@ def test_registration_and_otp_rules(client, monkeypatch):
     assert me.status_code == 200 and me.json()["is_verified"] is True
     assert client.post("/auth/login", json={"email": "bob@gmail.com", "password": "password123"}).status_code == 200
     assert client.post("/auth/login", json={"email": "bob@gmail.com", "password": "wrongpass1"}).status_code == 401
+
+
+def test_verification_disabled_signs_in_immediately(client, monkeypatch):
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "require_email_verification", False)
+    sent_codes.pop("quick@gmail.com", None)
+    r = client.post("/auth/register", json={
+        "username": "quick", "email": "quick@gmail.com", "password": "password123", "confirm_password": "password123"})
+    assert r.status_code == 201, r.text
+    body = r.json()
+    assert body["verification_required"] is False and body["access_token"] and body["user"]["is_verified"]
+    assert "quick@gmail.com" not in sent_codes  # no email sent
+    me = client.get("/auth/me", headers={"Authorization": f"Bearer {body['access_token']}"})
+    assert me.status_code == 200
+    assert client.post("/auth/login", json={"email": "quick@gmail.com", "password": "password123"}).status_code == 200
 
 
 def test_attempt_limit(client):

@@ -49,7 +49,11 @@ Interactive API docs are at http://localhost:8000/docs.
 
 **Demo account (from the seed data):** `maya.vintage@gmail.com` / `thriftloop123`. Three more sellers, `leo.threads@gmail.com`, `sofia.loops@gmail.com` and `noah.archive@gmail.com`, use the same password.
 
-### Gmail verification emails
+### Email verification (off by default)
+
+Out of the box, `REQUIRE_EMAIL_VERIFICATION=false`: new accounts are signed in straight after registering and no code is sent. To turn the 6-digit code back on, set `REQUIRE_EMAIL_VERIFICATION=true` in `backend/.env` and set up Gmail as below (or use `EMAIL_DEV_MODE=true` to read codes from the backend terminal).
+
+#### Gmail verification emails
 
 1. Turn on 2-Step Verification on the Gmail account the app sends from. This is your own developer account, not the users' accounts.
 2. Create an App Password at https://myaccount.google.com/apppasswords.

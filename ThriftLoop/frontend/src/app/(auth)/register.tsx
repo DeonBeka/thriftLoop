@@ -7,12 +7,14 @@ import { AuthScreen } from '@/components/auth/AuthScreen';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
 import { colors, font, radius, spacing } from '@/constants/theme';
+import { useAuth } from '@/hooks/useAuth';
 import { authApi } from '@/services/api';
 
 type Field = 'username' | 'email' | 'password' | 'confirm';
 
 export default function Register() {
   const router = useRouter();
+  const { startSession } = useAuth();
   const emailRef = useRef<TextInputInstance>(null);
   const passwordRef = useRef<TextInputInstance>(null);
   const confirmRef = useRef<TextInputInstance>(null);
@@ -46,6 +48,11 @@ export default function Register() {
         password,
         confirm_password: confirm,
       });
+      if (!res.verification_required && res.access_token && res.user) {
+        // Verification is off on the server: signed in, the (auth) layout redirects to Home.
+        await startSession(res.access_token, res.user);
+        return;
+      }
       router.push({
         pathname: '/verify',
         params: { email: res.email, cooldown: String(res.resend_available_in_seconds) },
@@ -62,7 +69,7 @@ export default function Register() {
   return (
     <AuthScreen
       title="Create account"
-      subtitle="Join ThriftLoop to buy and sell pre-loved clothing. We'll email you a code to verify your Gmail."
+      subtitle="Join ThriftLoop to buy and sell pre-loved clothing."
       footer={
         <View style={styles.footer}>
           <Text style={styles.footerText}>Already have an account?</Text>

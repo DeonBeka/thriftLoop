@@ -38,6 +38,10 @@ class RegisterResponse(BaseModel):
     email: str
     expires_in_seconds: int
     resend_available_in_seconds: int
+    # Set when email verification is turned off: the account is active and the user is signed in.
+    verification_required: bool = True
+    access_token: str | None = None
+    user: CurrentUserOut | None = None
 
 
 class VerifyEmailRequest(BaseModel):

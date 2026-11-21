@@ -20,7 +20,8 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24 * 7
 
-    # Email verification
+    # Email verification. When false, new accounts are activated immediately (no code is sent).
+    require_email_verification: bool = False
     otp_expire_minutes: int = 5
     otp_resend_cooldown_seconds: int = 60
     otp_max_attempts: int = 5
