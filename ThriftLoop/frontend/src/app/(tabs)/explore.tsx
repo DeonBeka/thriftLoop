@@ -7,11 +7,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { countActiveFilters, DEFAULT_FILTERS, FilterSheet, type ExploreFilters } from '@/components/explore/FilterSheet';
 import { GRID_PADDING, ProductGrid } from '@/components/product/ProductGrid';
-import { ProductGridSkeleton } from '@/components/skeletons';
+import { LoadMoreSkeleton, ProductGridSkeleton } from '@/components/skeletons';
 import { Chip } from '@/components/ui/Chip';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { SearchBar } from '@/components/ui/SearchBar';
-import { EmptyState, ErrorState, LoadingView } from '@/components/ui/States';
+import { EmptyState, ErrorState } from '@/components/ui/States';
 import { GroupTabs } from '@/components/home/GroupTabs';
 import { categoriesInGroup, PRICE_RANGES, SORT_OPTIONS } from '@/constants/catalog';
 import { colors, control, fs, radius, spacing, themed, type } from '@/constants/theme';
@@ -234,7 +234,7 @@ export default function Explore() {
         refreshing={refreshing}
         onRefresh={() => load('refresh')}
         onEndReached={loadMore}
-        footer={loadingMore ? <LoadingView /> : null}
+        footer={loadingMore ? <LoadMoreSkeleton /> : null}
         empty={
           loading ? (
             <ProductGridSkeleton count={6} />

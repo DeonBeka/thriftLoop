@@ -6,6 +6,7 @@ import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProductCard } from '@/components/product/ProductCard';
+import { ProductRowSkeleton } from '@/components/skeletons';
 import { colors, fs, GUTTER, radius, spacing, themed } from '@/constants/theme';
 import { assistantApi } from '@/services/api';
 import { getPreferences } from '@/services/preferences';
@@ -186,12 +187,18 @@ function AssistantBubble({ item, router }: { item: Extract<ChatItem, { role: 'as
 
 function TypingIndicator() {
   return (
-    <View style={styles.assistantRow} accessibilityLabel="The stylist is looking">
-      <View style={styles.avatar}>
-        <Ionicons name="sparkles" size={14} color={colors.white} />
+    <View style={styles.assistantBlock} accessibilityLabel="The stylist is looking">
+      <View style={styles.assistantRow}>
+        <View style={styles.avatar}>
+          <Ionicons name="sparkles" size={14} color={colors.white} />
+        </View>
+        <View style={[styles.bubble, styles.assistantBubble, styles.typing]}>
+          <Text style={styles.typingText}>Looking through the racks…</Text>
+        </View>
       </View>
-      <View style={[styles.bubble, styles.assistantBubble, styles.typing]}>
-        <Text style={styles.typingText}>Looking through the racks…</Text>
+      {/* Grey placeholders where the matching items will appear. */}
+      <View style={styles.skeletonRow}>
+        <ProductRowSkeleton count={3} width={148} />
       </View>
     </View>
   );
@@ -229,6 +236,7 @@ const styles = themed(() =>
     errorBubble: { backgroundColor: colors.dangerSoft },
     assistantText: { fontSize: fs(15), lineHeight: fs(21), color: colors.text },
     typing: { opacity: 0.85 },
+    skeletonRow: { marginLeft: 36, marginRight: -GUTTER, overflow: 'hidden' },
     typingText: { fontSize: fs(14), color: colors.textSecondary, fontStyle: 'italic' },
     productsScroller: { marginHorizontal: -GUTTER },
     products: { paddingHorizontal: GUTTER + 36, gap: spacing.md },

@@ -15,7 +15,7 @@ type IconName = ComponentProps<typeof Ionicons>['name'];
 
 const STEPS: { icon: IconName; title: string; body: string }[] = [
   { icon: 'person-outline', title: 'Tell us who you are', body: 'Your full name, phone number and city.' },
-  { icon: 'scan-outline', title: 'Take a quick selfie', body: 'A live photo with your front camera so we know you’re a real person.' },
+  { icon: 'scan-outline', title: 'Selfie and photo ID', body: 'A live selfie plus a photo of your ID card, driver’s licence or passport, so we know you’re a real person.' },
   { icon: 'shield-checkmark-outline', title: 'Get approved', body: 'Our team reviews it, usually within a day. Then you can start listing.' },
 ];
 

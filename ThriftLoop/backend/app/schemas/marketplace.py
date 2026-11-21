@@ -15,6 +15,8 @@ class SellerApplicationOut(BaseModel):
     note: str | None = None
     admin_note: str | None = None
     has_id_document: bool = False
+    id_document_type: str | None = None  # "id_card" / "drivers_license" / "passport"
+    id_document_label: str | None = None  # human label, e.g. "Driver's licence"
     created_at: datetime
     reviewed_at: datetime | None = None
     user: UserSummary

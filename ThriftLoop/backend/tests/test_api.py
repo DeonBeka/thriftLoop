@@ -59,7 +59,7 @@ def _register_and_verify(client, username: str, email: str) -> str:
 
 def make_seller(client, headers):
     """Apply with a selfie and get approved by the admin account."""
-    r = client.post("/seller-applications", headers=headers, data={"full_name": "Test Seller", "phone": "+38344111222", "city": "Prishtina", "accept_seller_terms": "true"}, files={"selfie": ("me.png", _png(), "image/png")})
+    r = client.post("/seller-applications", headers=headers, data={"full_name": "Test Seller", "phone": "+38344111222", "city": "Prishtina", "accept_seller_terms": "true", "id_document_type": "passport"}, files={"selfie": ("me.png", _png(), "image/png"), "id_document": ("id.png", _png(), "image/png")})
     assert r.status_code == 201, r.text
     admin = {"Authorization": f"Bearer {admin_token(client)}"}
     r = client.post(f"/admin/applications/{r.json()['id']}/approve", json={}, headers=admin)

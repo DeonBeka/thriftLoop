@@ -9,7 +9,8 @@ import { Mannequin, type View3 } from '@/components/liveview/Mannequin';
 import { ProductImage } from '@/components/product/ProductImage';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
-import { ErrorState, LoadingView } from '@/components/ui/States';
+import { LiveViewSkeleton } from '@/components/skeletons';
+import { ErrorState } from '@/components/ui/States';
 import { colors, fs, GUTTER, radius, spacing, themed, themeState, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { productsApi } from '@/services/api';
@@ -73,7 +74,7 @@ export default function LiveView() {
     [],
   );
 
-  if (loading) return <LoadingView />;
+  if (loading) return <LiveViewSkeleton />;
   if (error || !product) return <ErrorState message={error ?? 'Listing not found.'} onRetry={reload} />;
 
   if (!body || editing) {

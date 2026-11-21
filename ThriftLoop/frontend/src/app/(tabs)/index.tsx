@@ -10,12 +10,12 @@ import { AskAiButton } from '@/components/assistant/AskAiButton';
 import { CategoryTiles } from '@/components/home/CategoryTiles';
 import { GroupTabs } from '@/components/home/GroupTabs';
 import { SellBanner } from '@/components/home/SellBanner';
-import { HomeSkeleton, ProductGridSkeleton } from '@/components/skeletons';
+import { HomeSkeleton, LoadMoreSkeleton, ProductGridSkeleton } from '@/components/skeletons';
 import { IconButton } from '@/components/ui/IconButton';
 import { Logo } from '@/components/ui/Logo';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { EmptyState, ErrorState, LoadingView } from '@/components/ui/States';
+import { EmptyState, ErrorState } from '@/components/ui/States';
 import { GROUPS } from '@/constants/catalog';
 import { colors, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
@@ -184,7 +184,7 @@ export default function Home() {
         refreshing={feed.refreshing}
         onRefresh={refresh}
         onEndReached={loadMore}
-        footer={loadingMore ? <LoadingView /> : null}
+        footer={loadingMore ? <LoadMoreSkeleton /> : null}
         empty={
           feed.loading ? (
             <ProductGridSkeleton count={4} />

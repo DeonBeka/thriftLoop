@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MapPicker, type PickedLocation } from '@/components/checkout/MapPicker';
 import { ProductImage } from '@/components/product/ProductImage';
-import { FormSkeleton } from '@/components/skeletons';
+import { CheckoutSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/Button';
 import { Checkbox, linkStyle } from '@/components/ui/Checkbox';
 import { Chip } from '@/components/ui/Chip';
@@ -39,7 +39,7 @@ export default function Checkout() {
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [placing, setPlacing] = useState(false);
 
-  if (loading) return <FormSkeleton />;
+  if (loading) return <CheckoutSkeleton />;
   if (error || !product) return <ErrorState message={error ?? 'This listing no longer exists.'} onRetry={reload} />;
   if (product.status !== 'active') {
     return <ErrorState title="Not available" message="Someone else has already ordered this item." />;

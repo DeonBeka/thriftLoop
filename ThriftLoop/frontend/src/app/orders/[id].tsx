@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
 import { ProductImage } from '@/components/product/ProductImage';
-import { FormSkeleton } from '@/components/skeletons';
+import { OrderSkeleton } from '@/components/skeletons';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/States';
@@ -29,7 +29,7 @@ export default function OrderDetail() {
   const { data: order, error, loading, reload, setData } = useApi(() => ordersApi.get(Number(id)), [id], { refetchOnFocus: true });
   const [busy, setBusy] = useState<OrderStatus | null>(null);
 
-  if (loading) return <FormSkeleton />;
+  if (loading) return <OrderSkeleton />;
   if (error || !order) return <ErrorState message={error ?? 'Order not found.'} onRetry={reload} />;
 
   const isSeller = user?.id === order.seller.id || (user?.role === 'admin' && user.id !== order.buyer.id);

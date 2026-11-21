@@ -24,15 +24,23 @@ def test_roles_and_seller_verification(client):
     files = [("images", ("a.png", _png(), "image/png"))]
     assert client.post("/products", data=LISTING, files=files, headers=viewer).status_code == 403
 
-    # Apply: selfie is required, seller terms must be accepted.
-    base = {"full_name": "View Er", "phone": "+38344000111", "city": "Prizren"}
-    assert client.post("/seller-applications", data={**base, "accept_seller_terms": "true"}, headers=viewer).status_code == 422
-    r = client.post("/seller-applications", data={**base, "accept_seller_terms": "true"},
-                    files={"selfie": ("s.png", _png(), "image/png")}, headers=viewer)
+    # Apply: selfie AND an official photo ID are required, seller terms must be accepted.
+    base = {"full_name": "View Er", "phone": "+38344000111", "city": "Prizren", "accept_seller_terms": "true"}
+    selfie_only = {"selfie": ("s.png", _png(), "image/png")}
+    both = {"selfie": ("s.png", _png(), "image/png"), "id_document": ("id.png", _png(), "image/png")}
+    assert client.post("/seller-applications", data=base, headers=viewer).status_code == 422
+    r = client.post("/seller-applications", data={**base, "id_document_type": "passport"}, files=selfie_only, headers=viewer)
+    assert r.status_code == 422 and "ID card" in r.json()["detail"]  # no ID photo
+    r = client.post("/seller-applications", data=base, files=both, headers=viewer)
+    assert r.status_code == 422 and "Choose" in r.json()["detail"]  # no document type
+    r = client.post("/seller-applications", data={**base, "id_document_type": "library_card"}, files=both, headers=viewer)
+    assert r.status_code == 422
+    r = client.post("/seller-applications", data={**base, "id_document_type": "drivers_license"}, files=both, headers=viewer)
     assert r.status_code == 201 and r.json()["status"] == "pending"
+    assert r.json()["has_id_document"] and r.json()["id_document_label"] == "Driver's licence"
     app_id = r.json()["id"]
-    assert client.post("/seller-applications", data={**base, "accept_seller_terms": "true"},
-                       files={"selfie": ("s.png", _png(), "image/png")}, headers=viewer).status_code == 409
+    assert client.post("/seller-applications", data={**base, "id_document_type": "passport"}, files=both,
+                       headers=viewer).status_code == 409
     assert client.get("/auth/me", headers=viewer).json()["seller_status"] == "pending"
 
     # Only admins see applications and selfies; selfies are not public files.

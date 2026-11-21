@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import Conversation, Favorite, Message, Order, Product, SellerApplication, User
+from app.models.seller_application import ID_DOCUMENT_TYPES
 from app.schemas import (
     ConversationOut,
     CurrentUserOut,
@@ -114,6 +115,9 @@ def application_out(application: SellerApplication, include_email: bool = False)
         note=application.note,
         admin_note=application.admin_note,
         has_id_document=bool(application.id_document_path),
+        id_document_type=application.id_document_type,
+        id_document_label=ID_DOCUMENT_TYPES.get(application.id_document_type or "")
+        or ("ID document" if application.id_document_path else None),
         created_at=application.created_at,
         reviewed_at=application.reviewed_at,
         user=user_summary(application.user),

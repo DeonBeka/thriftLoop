@@ -12,10 +12,16 @@ import { TextField } from '@/components/ui/TextField';
 import { colors, fs, GUTTER, radius, spacing, themed, type } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { sellerApi } from '@/services/api';
-import type { LocalImage } from '@/types';
+import type { IdDocumentType, LocalImage } from '@/types';
 import { haptic } from '@/utils/haptics';
 
-type Field = 'full_name' | 'phone' | 'city' | 'selfie' | 'terms';
+type Field = 'full_name' | 'phone' | 'city' | 'selfie' | 'id' | 'terms';
+
+const ID_TYPES: { id: IdDocumentType; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { id: 'id_card', label: 'ID card', icon: 'card-outline' },
+  { id: 'drivers_license', label: 'Driver’s licence', icon: 'car-outline' },
+  { id: 'passport', label: 'Passport', icon: 'book-outline' },
+];
 
 export default function ApplyToSell() {
   const router = useRouter();
@@ -28,6 +34,7 @@ export default function ApplyToSell() {
   const [note, setNote] = useState('');
   const [selfie, setSelfie] = useState<LocalImage | null>(null);
   const [idDoc, setIdDoc] = useState<LocalImage | null>(null);
+  const [idType, setIdType] = useState<IdDocumentType | null>(null);
   const [accepted, setAccepted] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -67,8 +74,15 @@ export default function ApplyToSell() {
       if (result.canceled) return;
       const a = result.assets[0];
       setIdDoc({ uri: a.uri, mimeType: a.mimeType ?? 'image/jpeg', fileName: a.fileName });
+      setErrors((e) => ({ ...e, id: undefined }));
+      void haptic.success();
     };
-    Alert.alert('ID document (optional)', 'A photo of your ID card or passport speeds up review. It is only seen by admins.', [
+    if (Platform.OS === 'web') {
+      void pick(false);
+      return;
+    }
+    const name = ID_TYPES.find((t) => t.id === idType)?.label.toLowerCase() ?? 'ID';
+    Alert.alert(`Photo of your ${name}`, 'Lay it flat in good light so the photo, name and date of birth are readable. Only admins see it.', [
       { text: 'Take photo', onPress: () => void pick(true) },
       { text: 'Choose from library', onPress: () => void pick(false) },
       { text: 'Cancel', style: 'cancel' },
@@ -81,19 +95,29 @@ export default function ApplyToSell() {
     if (phone.replace(/\D/g, '').length < 8) next.phone = 'Enter a valid phone number.';
     if (city.trim().length < 2) next.city = 'Enter your city.';
     if (!selfie) next.selfie = 'Take a selfie to verify your face.';
+    if (!idType) next.id = 'Choose which photo ID you are adding.';
+    else if (!idDoc) next.id = 'Add a photo of your ID card, driver’s licence or passport.';
     if (!accepted) next.terms = 'Please accept the Seller Terms.';
     setErrors(next);
     return Object.keys(next).length === 0;
   };
 
   const submit = async () => {
-    if (!validate() || !selfie) {
+    if (!validate() || !selfie || !idDoc || !idType) {
       void haptic.error();
       return;
     }
     setSubmitting(true);
     try {
-      await sellerApi.apply({ full_name: fullName.trim(), phone: phone.trim(), city: city.trim(), note: note.trim(), selfie, idDocument: idDoc });
+      await sellerApi.apply({
+        full_name: fullName.trim(),
+        phone: phone.trim(),
+        city: city.trim(),
+        note: note.trim(),
+        selfie,
+        idDocument: idDoc,
+        idDocumentType: idType,
+      });
       await refreshUser();
       void haptic.success();
       Alert.alert('Application sent', 'Thanks! An admin will review your details and selfie. You’ll be able to sell once approved.', [
@@ -140,12 +164,60 @@ export default function ApplyToSell() {
           <TextField label="Anything we should know? (optional)" placeholder="What you plan to sell" value={note} onChangeText={setNote} multiline maxLength={500} />
         </View>
 
-        <Text style={[type.headline, styles.section]}>ID document (optional)</Text>
-        <Pressable onPress={addIdDocument} style={styles.idRow} accessibilityRole="button">
-          <Ionicons name={idDoc ? 'checkmark-circle' : 'card-outline'} size={22} color={colors.primary} />
-          <Text style={[type.body, styles.flex]}>{idDoc ? 'ID photo added' : 'Add a photo of your ID'}</Text>
-          <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+        <Text style={[type.headline, styles.section]}>Photo ID</Text>
+        <Text style={[type.footnote, styles.idLead]}>
+          Required. Admins check that your selfie matches an official photo ID.
+        </Text>
+        <View style={styles.idTypes} accessibilityRole="radiogroup">
+          {ID_TYPES.map((t) => {
+            const on = idType === t.id;
+            return (
+              <Pressable
+                key={t.id}
+                onPress={() => {
+                  void haptic.selection();
+                  setIdType(t.id);
+                  setErrors((e) => ({ ...e, id: undefined }));
+                }}
+                style={[styles.idType, on && styles.idTypeOn, !!errors.id && !idType && styles.idTypeError]}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: on }}
+                aria-checked={on}
+                accessibilityLabel={t.label}
+              >
+                <Ionicons name={t.icon} size={22} color={on ? colors.white : colors.primary} />
+                <Text style={[styles.idTypeText, on && styles.idTypeTextOn]} numberOfLines={2}>
+                  {t.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <Pressable
+          onPress={addIdDocument}
+          disabled={!idType}
+          style={[styles.idPhoto, !!errors.id && !!idType && !idDoc && styles.idPhotoError, !idType && styles.disabled]}
+          accessibilityRole="button"
+          accessibilityLabel={idDoc ? 'Retake ID photo' : 'Add a photo of your ID'}
+        >
+          {idDoc ? (
+            <>
+              <Image source={{ uri: idDoc.uri }} style={styles.idPreview} contentFit="cover" />
+              <View style={styles.flex}>
+                <Text style={type.bodyStrong}>{ID_TYPES.find((t) => t.id === idType)?.label} added</Text>
+                <Text style={type.footnote}>Tap to retake</Text>
+              </View>
+              <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+            </>
+          ) : (
+            <>
+              <Ionicons name="camera-outline" size={22} color={colors.primary} />
+              <Text style={[type.body, styles.flex]}>{idType ? 'Add a photo of it' : 'Choose a document type first'}</Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+            </>
+          )}
         </Pressable>
+        {errors.id && <Text style={styles.error}>{errors.id}</Text>}
 
         <View style={styles.section}>
           <Checkbox
@@ -200,14 +272,36 @@ const styles = themed(() =>
   selfieEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
   selfieLabel: { fontSize: fs(14), fontWeight: '600', color: colors.primary },
   fields: { gap: spacing.lg },
-  idRow: {
+  idLead: { marginTop: -spacing.sm, marginBottom: spacing.md },
+  idTypes: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
+  idType: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.md,
+    backgroundColor: colors.secondary,
+    borderWidth: 1.5,
+    borderColor: colors.secondary,
+  },
+  idTypeOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  idTypeError: { borderColor: colors.danger },
+  idTypeText: { fontSize: fs(13), fontWeight: '600', color: colors.primary, textAlign: 'center' },
+  idTypeTextOn: { color: colors.white },
+  idPhoto: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
     padding: spacing.lg,
     borderRadius: radius.md,
     backgroundColor: colors.fill,
+    borderWidth: 1.5,
+    borderColor: colors.fill,
   },
+  idPhotoError: { borderColor: colors.danger },
+  idPreview: { width: 64, height: 42, borderRadius: radius.xs },
+  disabled: { opacity: 0.5 },
   error: { color: colors.danger, fontSize: fs(13), marginTop: spacing.sm },
   bar: {
     position: 'absolute',

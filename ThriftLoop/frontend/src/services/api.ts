@@ -7,6 +7,7 @@ import type {
   SellerApplication,
   Conversation,
   CurrentUser,
+  IdDocumentType,
   LocalImage,
   Message,
   PhotoAngle,
@@ -255,7 +256,9 @@ export interface SellerApplicationInput {
   city: string;
   note?: string;
   selfie: LocalImage;
-  idDocument?: LocalImage | null;
+  /** Required: a photo of an ID card, driver's licence or passport. */
+  idDocument: LocalImage;
+  idDocumentType: IdDocumentType;
 }
 
 export const sellerApi = {
@@ -268,7 +271,8 @@ export const sellerApi = {
     form.append('accept_seller_terms', 'true');
     if (input.note) form.append('note', input.note);
     appendImage(form, 'selfie', input.selfie, 0);
-    if (input.idDocument) appendImage(form, 'id_document', input.idDocument, 1);
+    appendImage(form, 'id_document', input.idDocument, 1);
+    form.append('id_document_type', input.idDocumentType);
     return request<SellerApplication>('POST', '/seller-applications', { form, timeoutMs: 60000 });
   },
 };

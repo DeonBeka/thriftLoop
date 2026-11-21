@@ -108,7 +108,7 @@ export const LEGAL: Record<LegalDocId, LegalDoc> = {
     sections: [
       {
         heading: 'Identity verification',
-        body: 'To sell, you must submit your real full name, a phone number, your city and a live selfie taken in the app. You may add a photo of an ID document to speed up review. An administrator compares your details and selfie and approves or rejects your application. Submitting someone else’s photo or false details will get your account closed.',
+        body: 'To sell, you must submit your real full name, a phone number, your city, a live selfie taken in the app, and a clear photo of an official photo ID: an ID card, a driver’s licence or a passport. An administrator checks that your selfie matches the ID and your details, then approves or rejects your application. Verification photos are stored privately and only administrators can see them. Submitting someone else’s photo or false details will get your account closed.',
       },
       {
         heading: 'Your obligations',

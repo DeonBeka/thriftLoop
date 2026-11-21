@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AuthScreen } from '@/components/auth/AuthScreen';
+import { PasswordStrength } from '@/components/auth/PasswordStrength';
 import { Button } from '@/components/ui/Button';
 import { Checkbox, linkStyle } from '@/components/ui/Checkbox';
 import { TextField } from '@/components/ui/TextField';
@@ -130,6 +131,7 @@ export default function Register() {
         returnKeyType="next"
         onSubmitEditing={() => confirmRef.current?.focus()}
       />
+      {!errors.password && <PasswordStrength password={password} context={[username, email.split('@')[0]]} />}
       <TextField
         ref={confirmRef}
         label="Confirm password"

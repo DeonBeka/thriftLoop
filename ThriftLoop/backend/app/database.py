@@ -47,6 +47,9 @@ _ADDED_COLUMNS = {
     "product_images": {
         "angle": "VARCHAR(10)",
     },
+    "seller_applications": {
+        "id_document_type": "VARCHAR(20)",
+    },
 }
 
 

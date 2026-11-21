@@ -3,12 +3,12 @@ import { Stack, usePathname, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Animated, { FadeOut } from 'react-native-reanimated';
-import { Appearance, StyleSheet, View } from 'react-native';
+import { Appearance, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { VoiceGuide } from '@/components/accessibility/VoiceGuide';
-import { Logo } from '@/components/ui/Logo';
+import { HomeSkeleton } from '@/components/skeletons';
 import { applyTheme, colors, subscribeTheme, themed, themeNav, themeState, type } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { FavoritesProvider } from '@/hooks/useFavorites';
@@ -58,14 +58,8 @@ function RootNavigator() {
   }, [ready, router]);
 
   // Wait for the serif headings so titles don't flash in the system font. If fonts fail, carry on.
-  if (!ready) {
-    // Same look as the native splash, so launch doesn't flash a spinner.
-    return (
-      <View style={styles.splash}>
-        <Logo variant="mark" size={64} />
-      </View>
-    );
-  }
+  // Meanwhile show a grey skeleton of the Home layout instead of a spinner or logo.
+  if (!ready) return <HomeSkeleton />;
 
   return (
     // Expo Router's Stack is a native stack (UINavigationController on iOS): pushes slide in from the
@@ -143,9 +137,7 @@ export default function RootLayout() {
                 exiting={FadeOut.duration(250)}
                 style={[StyleSheet.absoluteFill, styles.splash]}
                 pointerEvents="none"
-              >
-                <Logo variant="mark" size={56} />
-              </Animated.View>
+              />
             )}
           </FavoritesProvider>
         </AuthProvider>

@@ -44,6 +44,8 @@ export interface SellerApplication {
   note: string | null;
   admin_note: string | null;
   has_id_document: boolean;
+  id_document_type?: IdDocumentType | null;
+  id_document_label?: string | null;
   created_at: string;
   reviewed_at: string | null;
   user: UserSummary;
@@ -79,6 +81,9 @@ export interface AdminStats {
 }
 
 export type PhotoAngle = 'front' | 'back' | 'side';
+
+/** Official photo IDs accepted for seller verification. */
+export type IdDocumentType = 'id_card' | 'drivers_license' | 'passport';
 
 export interface ProductImage {
   id: number;

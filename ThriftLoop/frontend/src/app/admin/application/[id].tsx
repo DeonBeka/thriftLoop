@@ -63,10 +63,15 @@ export default function ReviewApplication() {
             <Image source={token ? secured(adminApi.selfieUrl(app.id)) : undefined} style={styles.selfie} contentFit="cover" cachePolicy="none" />
             <Text style={type.caption}>Live selfie</Text>
           </View>
+          {!app.has_id_document && (
+            <View style={styles.photoBlock}>
+              <Text style={type.caption}>No photo ID (sent before IDs were required)</Text>
+            </View>
+          )}
           {app.has_id_document && (
             <View style={styles.photoBlock}>
               <Image source={token ? secured(adminApi.idDocumentUrl(app.id)) : undefined} style={styles.idDoc} contentFit="contain" cachePolicy="none" />
-              <Text style={type.caption}>ID document</Text>
+              <Text style={type.caption}>{app.id_document_label ?? 'ID document'}</Text>
             </View>
           )}
         </View>

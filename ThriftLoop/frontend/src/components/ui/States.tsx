@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { colors, fs, spacing, themed, type } from '@/constants/theme';
@@ -9,14 +9,7 @@ import { Button } from './Button';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
-/** Only for tiny inline waits (e.g. loading more). Screens use skeletons instead. */
-export function LoadingView() {
-  return (
-    <View style={styles.inline}>
-      <ActivityIndicator color={colors.textSecondary} />
-    </View>
-  );
-}
+// Loading states are skeletons (see components/skeletons), never a spinner screen.
 
 interface StateProps {
   icon: IconName;
@@ -64,7 +57,6 @@ export function ErrorState({ message, onRetry, title = "Couldn't load this" }: {
 
 const styles = themed(() =>
   StyleSheet.create({
-  inline: { paddingVertical: spacing.xl, alignItems: 'center' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xxxl, paddingVertical: spacing.huge, gap: spacing.sm, minHeight: 320 },
   title: { ...type.headline, textAlign: 'center', marginTop: spacing.sm },
   body: { ...type.callout, textAlign: 'center', maxWidth: 290, lineHeight: fs(20) },
