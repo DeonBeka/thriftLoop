@@ -38,3 +38,4 @@ __pycache__/
 *.pem
 .claude/settings.local.json
 backend/private_uploads/
+backend/.jwt_secret

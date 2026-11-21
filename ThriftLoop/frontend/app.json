@@ -14,11 +14,13 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.thriftloop.app",
+      "bundleIdentifier": "com.thriftloop.marketplace",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "infoPlist": {
         "NSAppTransportSecurity": {
-          "NSAllowsLocalNetworking": true,
-          "NSAllowsArbitraryLoads": true
+          "NSAllowsLocalNetworking": true
         }
       }
     },
@@ -40,7 +42,7 @@
         "expo-image-picker",
         {
           "photosPermission": "ThriftLoop needs access to your photos so you can add pictures to your listings.",
-          "cameraPermission": "ThriftLoop needs camera access so you can photograph items you sell.",
+          "cameraPermission": "ThriftLoop uses the camera to photograph items you sell and to take a verification selfie when you apply to become a seller.",
           "microphonePermission": false
         }
       ],

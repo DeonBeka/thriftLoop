@@ -17,6 +17,10 @@ async def lifespan(_app: FastAPI):
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
     settings.private_upload_dir.mkdir(parents=True, exist_ok=True)
     init_db()
+    if settings.seed_demo_data:
+        from app.seed import seed
+
+        seed()  # no-op when the database already has users
     yield
 
 

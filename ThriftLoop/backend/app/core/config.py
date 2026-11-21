@@ -28,6 +28,8 @@ class Settings(BaseSettings):
 
     # JWT
     jwt_secret_key: str = "change-me-in-backend-env"
+    # Fill an empty database with the demo sellers/listings on startup (handy for a fresh deploy).
+    seed_demo_data: bool = False
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24 * 7
 
@@ -63,9 +65,30 @@ class Settings(BaseSettings):
         return bool(self.smtp_username and self.smtp_password)
 
 
+PLACEHOLDER_SECRET = "change-me-in-backend-env"
+
+
+def _persistent_secret() -> str:
+    """No JWT secret configured (e.g. a fresh cloud deploy): generate one once and keep it on the
+    data volume, so logins survive restarts and nobody ever has to paste a secret anywhere."""
+    import os
+    import secrets
+
+    path = Path(os.environ.get("SECRET_FILE", BACKEND_DIR / ".jwt_secret"))
+    if path.exists():
+        return path.read_text(encoding="utf-8").strip()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    value = secrets.token_urlsafe(48)
+    path.write_text(value, encoding="utf-8")
+    return value
+
+
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    s = Settings()
+    if not s.jwt_secret_key or s.jwt_secret_key == PLACEHOLDER_SECRET:
+        s.jwt_secret_key = _persistent_secret()
+    return s
 
 
 settings = get_settings()
