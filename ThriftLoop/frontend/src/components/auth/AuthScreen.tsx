@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
+import { useCanGoBack, useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,6 +21,7 @@ export function AuthScreen({
 }) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const canGoBack = useCanGoBack();
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
@@ -28,7 +29,7 @@ export function AuthScreen({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {router.canGoBack() && (
+        {canGoBack && (
           <Pressable onPress={() => router.back()} hitSlop={12} style={styles.back} accessibilityLabel="Go back">
             <Ionicons name="chevron-back" size={26} color={colors.text} />
           </Pressable>
