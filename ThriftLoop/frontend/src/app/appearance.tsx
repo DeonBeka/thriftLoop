@@ -148,8 +148,8 @@ export default function AppearanceScreen() {
           />
           <ToggleRow
             icon="volume-high-outline"
-            title="Read items aloud"
-            subtitle="Automatically read the title, price, size and description when you open an item."
+            title="Voice guide"
+            subtitle="Speaks as you move around: announces each screen and reads an item’s title, price, size and description when you open it. Stays quiet while VoiceOver is on."
             value={prefs.autoSpeak}
             onChange={(v) => update({ autoSpeak: v }, true)}
           />
@@ -192,7 +192,7 @@ export default function AppearanceScreen() {
 
       {needsReload && (
         <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
-          <Text style={[type.footnote, styles.barText]}>ThriftLoop restarts for a second to apply your new look.</Text>
+          <Text style={[type.footnote, styles.barText]}>The screen refreshes for a moment to apply your new look.</Text>
           <Button title="Apply changes" icon="color-palette-outline" onPress={apply} loading={applying} />
         </View>
       )}

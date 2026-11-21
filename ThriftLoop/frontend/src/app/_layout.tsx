@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { VoiceGuide } from '@/components/accessibility/VoiceGuide';
 import { Logo } from '@/components/ui/Logo';
 import { colors, isDark, type } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
@@ -69,6 +70,7 @@ export default function RootLayout() {
         <AuthProvider>
           <FavoritesProvider>
             <StatusBar style={isDark ? 'light' : 'dark'} />
+            <VoiceGuide />
             <RootNavigator />
           </FavoritesProvider>
         </AuthProvider>
