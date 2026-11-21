@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: 'rgba(255,255,255,0.94)',
+    backgroundColor: colors.overlayButton,
     alignItems: 'center',
     justifyContent: 'center',
     ...shadow.card,

@@ -7,7 +7,7 @@ import { AuthScreen } from '@/components/auth/AuthScreen';
 import { Button } from '@/components/ui/Button';
 import { Checkbox, linkStyle } from '@/components/ui/Checkbox';
 import { TextField } from '@/components/ui/TextField';
-import { colors, font, radius, spacing } from '@/constants/theme';
+import { colors, font, fs, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { authApi } from '@/services/api';
 
@@ -180,7 +180,7 @@ export default function Register() {
 const styles = StyleSheet.create({
   footer: { alignItems: 'center', gap: 2 },
   footerText: { color: colors.textSecondary, fontSize: font.size.md },
-  termsError: { color: colors.danger, fontSize: 13, marginTop: -spacing.sm },
+  termsError: { color: colors.danger, fontSize: fs(13), marginTop: -spacing.sm },
   errorBox: { backgroundColor: colors.dangerSoft, padding: spacing.md, borderRadius: radius.md },
   errorText: { color: colors.danger, fontSize: font.size.sm, fontWeight: font.weight.medium },
 });

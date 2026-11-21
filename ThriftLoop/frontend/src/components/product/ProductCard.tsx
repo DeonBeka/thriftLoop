@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/ui/PressableScale';
-import { colors, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, radius, spacing, type } from '@/constants/theme';
 import type { Product } from '@/types';
 import { formatPrice } from '@/utils/format';
 
@@ -63,14 +63,14 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderRadius: radius.md,
-    backgroundColor: 'rgba(246,241,234,0.55)',
+    backgroundColor: colors.soldScrim,
     alignItems: 'flex-start',
     padding: spacing.sm,
   },
   soldText: {
-    backgroundColor: colors.text,
+    backgroundColor: 'rgba(20,16,14,0.88)', // dark tag reads on photos in light and dark mode
     color: colors.white,
-    fontSize: 11,
+    fontSize: fs(11),
     fontWeight: '700',
     letterSpacing: 0.4,
     paddingHorizontal: 7,
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   body: { paddingTop: spacing.sm + 2, gap: 1 },
-  price: { fontFamily: 'Fraunces_600SemiBold', fontSize: 17, lineHeight: 22, color: colors.text },
+  price: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(17), lineHeight: fs(22), color: colors.text },
   soldPrice: { color: colors.textSecondary, textDecorationLine: 'line-through' },
-  title: { fontSize: 14, lineHeight: 19, color: colors.text },
+  title: { fontSize: fs(14), lineHeight: fs(19), color: colors.text },
 });

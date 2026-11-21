@@ -11,7 +11,7 @@ import { FormSkeleton } from '@/components/skeletons';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/States';
-import { colors, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { messagesApi, ordersApi } from '@/services/api';
@@ -197,9 +197,9 @@ const styles = StyleSheet.create({
   person: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, borderRadius: radius.lg, backgroundColor: colors.card },
   card: { padding: spacing.lg, borderRadius: radius.lg, backgroundColor: colors.card, gap: 4 },
   payRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  price: { fontFamily: 'Fraunces_600SemiBold', fontSize: 20, color: colors.text },
+  price: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(20), color: colors.text },
   mapLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm },
-  mapLinkText: { color: colors.primary, fontWeight: '600', fontSize: 14 },
+  mapLinkText: { color: colors.primary, fontWeight: '600', fontSize: fs(14) },
   bar: {
     position: 'absolute',
     left: 0,

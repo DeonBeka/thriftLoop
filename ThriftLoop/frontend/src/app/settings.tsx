@@ -46,6 +46,7 @@ export default function Settings() {
 
       <Group title="Account">
         <Row icon="person-outline" label="Edit profile" onPress={() => router.push('/profile/edit')} />
+        <Row icon="color-palette-outline" label="Appearance & accessibility" onPress={() => router.push('/appearance')} />
         <Row icon="receipt-outline" label="Orders" onPress={() => router.push('/orders')} />
         <Row icon="heart-outline" label="Favorites" onPress={() => router.push('/favorites')} />
         <Row icon="chatbubble-outline" label="Messages" onPress={() => router.push('/messages')} last />

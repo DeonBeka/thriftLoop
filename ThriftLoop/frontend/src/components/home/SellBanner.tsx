@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/ui/PressableScale';
 import { HERO_PHOTO } from '@/constants/catalog';
-import { colors, radius, spacing } from '@/constants/theme';
+import { colors, fs, radius, spacing } from '@/constants/theme';
 
 /** Warm editorial banner inviting people to list something. */
 export function SellBanner({ onPress }: { onPress: () => void }) {
@@ -32,8 +32,8 @@ const styles = StyleSheet.create({
     minHeight: 150,
   },
   copy: { flex: 1, padding: spacing.xl, justifyContent: 'space-between', gap: spacing.md },
-  kicker: { fontSize: 12, fontWeight: '600', letterSpacing: 0.6, textTransform: 'uppercase', color: colors.accent },
-  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 22, lineHeight: 27, color: colors.background, letterSpacing: -0.3 },
+  kicker: { fontSize: fs(12), fontWeight: '600', letterSpacing: 0.6, textTransform: 'uppercase', color: 'rgba(255,255,255,0.78)' },
+  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(22), lineHeight: fs(27), color: colors.white, letterSpacing: -0.3 },
   cta: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -44,6 +44,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
   },
-  ctaText: { fontSize: 14, fontWeight: '600', color: colors.primary },
+  ctaText: { fontSize: fs(14), fontWeight: '600', color: colors.primary },
   photo: { width: '38%', backgroundColor: colors.primaryPressed },
 });

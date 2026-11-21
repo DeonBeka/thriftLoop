@@ -7,7 +7,7 @@ import { ConversationSkeleton } from '@/components/skeletons';
 import { Avatar } from '@/components/ui/Avatar';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState, ErrorState } from '@/components/ui/States';
-import { colors, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { adminApi } from '@/services/api';
 import type { SellerApplication } from '@/types';
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1, gap: 2 },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
   tile: { flexGrow: 1, minWidth: '30%', backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.md, gap: 2 },
-  tileValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: 26, color: colors.text },
+  tileValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(26), color: colors.text },
   usersRow: {
     flexDirection: 'row',
     alignItems: 'center',

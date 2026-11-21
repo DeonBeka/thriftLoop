@@ -4,7 +4,7 @@ import type { ComponentProps } from 'react';
 import { StyleSheet, type ColorValue } from 'react-native';
 
 import { TermsGate } from '@/components/legal/TermsGate';
-import { colors } from '@/constants/theme';
+import { colors, fs } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { haptic } from '@/utils/haptics';
 
@@ -28,7 +28,7 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
-        tabBarLabelStyle: { fontSize: 10.5, fontWeight: '600', letterSpacing: 0.1 },
+        tabBarLabelStyle: { fontSize: fs(10.5), fontWeight: '600', letterSpacing: 0.1 },
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.separator,

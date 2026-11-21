@@ -3,7 +3,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { forwardRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
-import { colors, control, radius, spacing, type } from '@/constants/theme';
+import { colors, control, fs, radius, spacing, type } from '@/constants/theme';
 
 interface TextFieldProps extends TextInputProps {
   label?: string;
@@ -65,7 +65,7 @@ export const TextField = forwardRef<TextInputInstance, TextFieldProps>(function 
 const styles = StyleSheet.create({
   wrapper: { gap: spacing.sm - 2 },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  label: { fontSize: 13, fontWeight: '600', color: colors.text },
+  label: { fontSize: fs(13), fontWeight: '600', color: colors.text },
   field: {
     minHeight: control.lg,
     borderRadius: radius.md,
@@ -80,8 +80,8 @@ const styles = StyleSheet.create({
   multiline: { alignItems: 'flex-start', paddingVertical: spacing.md },
   focused: { borderColor: colors.primary, backgroundColor: colors.card },
   errored: { borderColor: colors.danger, backgroundColor: colors.card },
-  prefix: { fontSize: 17, color: colors.textSecondary, fontWeight: '500' },
-  input: { flex: 1, fontSize: 16, color: colors.text, paddingVertical: 12 },
-  inputMultiline: { minHeight: 104, textAlignVertical: 'top', paddingVertical: 0, lineHeight: 22 },
-  error: { fontSize: 13, color: colors.danger },
+  prefix: { fontSize: fs(17), color: colors.textSecondary, fontWeight: '500' },
+  input: { flex: 1, fontSize: fs(16), color: colors.text, paddingVertical: 12 },
+  inputMultiline: { minHeight: 104, textAlignVertical: 'top', paddingVertical: 0, lineHeight: fs(22) },
+  error: { fontSize: fs(13), color: colors.danger },
 });

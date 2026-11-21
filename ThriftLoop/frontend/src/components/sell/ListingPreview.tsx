@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ImageGallery } from '@/components/product/ImageGallery';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
-import { colors, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
 import type { CurrentUser } from '@/types';
 import { formatPrice } from '@/utils/format';
 
@@ -86,13 +86,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.separator,
   },
-  headerAction: { fontSize: 16, color: colors.primary },
+  headerAction: { fontSize: fs(16), color: colors.primary },
   headerSpacer: { width: 90 },
   content: { paddingHorizontal: GUTTER, paddingTop: spacing.xl, gap: spacing.sm },
-  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 24, lineHeight: 30, letterSpacing: -0.3, color: colors.text },
+  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(24), lineHeight: fs(30), letterSpacing: -0.3, color: colors.text },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.xs },
   pill: { backgroundColor: colors.secondary, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 5 },
-  pillText: { fontSize: 13, fontWeight: '600', color: colors.primary },
+  pillText: { fontSize: fs(13), fontWeight: '600', color: colors.primary },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.separator, marginVertical: spacing.lg },
   seller: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   notice: {
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondary,
     marginTop: spacing.xl,
   },
-  noticeText: { color: colors.primary, fontSize: 13, flex: 1 },
+  noticeText: { color: colors.primary, fontSize: fs(13), flex: 1 },
   footer: {
     paddingHorizontal: GUTTER,
     paddingTop: spacing.md,

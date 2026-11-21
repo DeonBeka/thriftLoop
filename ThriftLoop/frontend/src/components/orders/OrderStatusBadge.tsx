@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius } from '@/constants/theme';
+import { colors, fs, radius } from '@/constants/theme';
 import type { OrderStatus } from '@/types';
 
 export const ORDER_STATUS: Record<OrderStatus, { label: string; bg: string; fg: string }> = {
@@ -21,5 +21,5 @@ export function OrderStatusBadge({ status }: { status: OrderStatus }) {
 
 const styles = StyleSheet.create({
   badge: { paddingHorizontal: 9, paddingVertical: 3, borderRadius: radius.pill, alignSelf: 'flex-start' },
-  text: { fontSize: 12, fontWeight: '600' },
+  text: { fontSize: fs(12), fontWeight: '600' },
 });

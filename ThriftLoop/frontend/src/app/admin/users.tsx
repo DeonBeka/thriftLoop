@@ -5,7 +5,7 @@ import { ConversationSkeleton } from '@/components/skeletons';
 import { Avatar } from '@/components/ui/Avatar';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { EmptyState, ErrorState } from '@/components/ui/States';
-import { colors, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { adminApi } from '@/services/api';
 import type { AdminUser } from '@/types';
@@ -102,5 +102,5 @@ const styles = StyleSheet.create({
   flex: { flex: 1, gap: 2 },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md, borderRadius: radius.md },
   badge: { paddingHorizontal: spacing.sm + 2, paddingVertical: 4, borderRadius: radius.pill },
-  badgeText: { fontSize: 12, fontWeight: '600' },
+  badgeText: { fontSize: fs(12), fontWeight: '600' },
 });

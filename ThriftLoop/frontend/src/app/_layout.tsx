@@ -6,7 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { Logo } from '@/components/ui/Logo';
-import { colors, type } from '@/constants/theme';
+import { colors, isDark, type } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { FavoritesProvider } from '@/hooks/useFavorites';
 
@@ -48,6 +48,7 @@ function RootNavigator() {
       <Stack.Screen name="messages/index" options={{ title: 'Messages' }} />
       <Stack.Screen name="messages/[id]" options={{ title: '' }} />
       <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+      <Stack.Screen name="appearance" options={{ title: 'Appearance & accessibility' }} />
       <Stack.Screen name="legal/[doc]" options={{ title: '' }} />
       <Stack.Screen name="orders/index" options={{ title: 'Orders' }} />
       <Stack.Screen name="orders/[id]" options={{ title: 'Order' }} />
@@ -67,7 +68,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <AuthProvider>
           <FavoritesProvider>
-            <StatusBar style="dark" />
+            <StatusBar style={isDark ? 'light' : 'dark'} />
             <RootNavigator />
           </FavoritesProvider>
         </AuthProvider>

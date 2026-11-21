@@ -5,7 +5,7 @@ import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanim
 
 import { ProductImage } from '@/components/product/ProductImage';
 import { PressableScale } from '@/components/ui/PressableScale';
-import { colors, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
 import { haptic } from '@/utils/haptics';
 
 export const MAX_PHOTOS = 8;
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   addError: { borderColor: colors.danger },
-  addLabel: { fontSize: 13, fontWeight: '600', color: colors.primary },
+  addLabel: { fontSize: fs(13), fontWeight: '600', color: colors.primary },
   cover: {
     position: 'absolute',
     bottom: 6,
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
-  coverText: { color: colors.white, fontSize: 11, fontWeight: '600' },
+  coverText: { color: colors.white, fontSize: fs(11), fontWeight: '600' },
   remove: {
     position: 'absolute',
     top: 6,

@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 import { CATEGORIES } from '@/constants/catalog';
-import { colors, GUTTER, spacing } from '@/constants/theme';
+import { colors, fs, GUTTER, spacing } from '@/constants/theme';
 import type { Category } from '@/types';
 import { haptic } from '@/utils/haptics';
 
@@ -34,7 +34,7 @@ export function CategoryTiles({ selected, onSelect }: CategoryTilesProps) {
 
 function Tile({ label, photo, active, onPress }: { label: string; photo?: string; active: boolean; onPress: () => void }) {
   const ring = useAnimatedStyle(() => ({
-    borderColor: withTiming(active ? colors.primary : 'rgba(24,61,50,0)', { duration: 180 }),
+    borderColor: withTiming(active ? colors.primary : 'rgba(0,0,0,0)', { duration: 180 }),
     transform: [{ scale: withTiming(active ? 1 : 0.96, { duration: 180 }) }],
   }));
   return (
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   ring: { padding: 2.5, borderRadius: (SIZE + 9) / 2, borderWidth: 2 },
   photo: { width: SIZE, height: SIZE, borderRadius: SIZE / 2, backgroundColor: colors.placeholder },
   all: { backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  allText: { fontFamily: 'Fraunces_600SemiBold', fontSize: 17, color: colors.background },
-  label: { fontSize: 12, fontWeight: '500', color: colors.textSecondary },
+  allText: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(17), color: colors.white },
+  label: { fontSize: fs(12), fontWeight: '500', color: colors.textSecondary },
   labelActive: { color: colors.text, fontWeight: '600' },
 });

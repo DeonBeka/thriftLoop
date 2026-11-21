@@ -5,7 +5,7 @@ import { ProductImage } from '@/components/product/ProductImage';
 import { ConversationSkeleton } from '@/components/skeletons';
 import { Avatar } from '@/components/ui/Avatar';
 import { EmptyState, ErrorState } from '@/components/ui/States';
-import { colors, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { messagesApi } from '@/services/api';
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   topLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
   name: { flex: 1 },
   timeUnread: { color: colors.primary, fontWeight: '600' },
-  product: { fontSize: 13, color: colors.primary, fontWeight: '500' },
+  product: { fontSize: fs(13), color: colors.primary, fontWeight: '500' },
   previewUnread: { color: colors.text, fontWeight: '500' },
   thumb: { width: 42, height: 52, borderRadius: radius.sm },
 });

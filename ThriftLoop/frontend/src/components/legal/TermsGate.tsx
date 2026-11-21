@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/Button';
 import { Checkbox, linkStyle } from '@/components/ui/Checkbox';
 import { Logo } from '@/components/ui/Logo';
-import { colors, GUTTER, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, spacing, type } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { authApi } from '@/services/api';
 import { haptic } from '@/utils/haptics';
@@ -74,6 +74,6 @@ const styles = StyleSheet.create({
   },
   text: { color: colors.textSecondary },
   links: { gap: spacing.md, marginTop: spacing.sm },
-  link: { fontSize: 16 },
+  link: { fontSize: fs(16) },
   footer: { gap: spacing.md },
 });

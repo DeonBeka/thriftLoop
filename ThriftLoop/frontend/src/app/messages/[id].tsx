@@ -8,7 +8,7 @@ import { ProductImage } from '@/components/product/ProductImage';
 import { Avatar } from '@/components/ui/Avatar';
 import { ChatSkeleton } from '@/components/skeletons';
 import { ErrorState } from '@/components/ui/States';
-import { colors, font, radius, spacing } from '@/constants/theme';
+import { colors, font, fs, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { messagesApi } from '@/services/api';
 import type { Conversation, Message } from '@/types';
@@ -235,9 +235,9 @@ const styles = StyleSheet.create({
   bubble: { paddingHorizontal: spacing.md + 2, paddingVertical: 9, borderRadius: 18 },
   mine: { backgroundColor: colors.primary, borderBottomRightRadius: 6 },
   theirs: { backgroundColor: colors.fill, borderBottomLeftRadius: 6 },
-  bubbleText: { fontSize: font.size.md, color: colors.text, lineHeight: 21 },
+  bubbleText: { fontSize: font.size.md, color: colors.text, lineHeight: fs(21) },
   bubbleTextMine: { color: colors.white },
-  timestamp: { fontSize: 11, color: colors.textSecondary, marginTop: 3, marginHorizontal: 4 },
+  timestamp: { fontSize: fs(11), color: colors.textSecondary, marginTop: 3, marginHorizontal: 4 },
   composer: {
     flexDirection: 'row',
     alignItems: 'flex-end',

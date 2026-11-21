@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActionSheetIOS, Alert, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,12 +12,14 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
 import { ErrorState } from '@/components/ui/States';
-import { colors, GUTTER, radius, shadow, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, shadow, spacing, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { messagesApi, productsApi } from '@/services/api';
 import { formatPrice, timeAgo } from '@/utils/format';
+import { getPreferences } from '@/services/preferences';
 import { haptic } from '@/utils/haptics';
+import { describeProduct, speak, stopSpeaking } from '@/utils/speech';
 
 export default function ProductDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,9 +34,40 @@ export default function ProductDetails() {
     { refetchOnFocus: true },
   );
 
+  // Read-aloud: optional auto-play when opening an item, always stopped when leaving the screen.
+  const [speaking, setSpeaking] = useState(false);
+  const spokenFor = useRef<number | null>(null);
+  useEffect(() => {
+    if (product && getPreferences().autoSpeak && spokenFor.current !== product.id) {
+      spokenFor.current = product.id;
+      setSpeaking(true);
+      speak(describeProduct(product), () => setSpeaking(false));
+    }
+  }, [product]);
+  useEffect(() => () => stopSpeaking(), []);
+
+  const toggleSpeech = () => {
+    if (!product) return;
+    if (speaking) {
+      stopSpeaking();
+      setSpeaking(false);
+      return;
+    }
+    setSpeaking(true);
+    speak(describeProduct(product), () => setSpeaking(false));
+  };
+
   const back = (
     <View style={[styles.topBar, { top: insets.top + spacing.xs }]} pointerEvents="box-none">
       <IconButton icon="chevron-back" label="Back" floating onPress={() => router.back()} />
+      {product && (
+        <IconButton
+          icon={speaking ? 'stop-circle-outline' : 'volume-high-outline'}
+          label={speaking ? 'Stop reading' : 'Read item details aloud'}
+          floating
+          onPress={toggleSpeech}
+        />
+      )}
     </View>
   );
 
@@ -261,11 +294,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   soldText: { ...type.callout, color: colors.text, fontWeight: '500' },
-  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 24, lineHeight: 30, letterSpacing: -0.3, color: colors.text },
+  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(24), lineHeight: fs(30), letterSpacing: -0.3, color: colors.text },
   soldPrice: { color: colors.textSecondary, textDecorationLine: 'line-through' },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.xs, marginBottom: spacing.xs },
   pill: { backgroundColor: colors.secondary, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 5 },
-  pillText: { fontSize: 13, fontWeight: '600', color: colors.primary },
+  pillText: { fontSize: fs(13), fontWeight: '600', color: colors.primary },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.separator, marginVertical: spacing.lg },
   description: { marginTop: spacing.xs },
   seller: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm },
@@ -278,7 +311,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: GUTTER,
     paddingTop: spacing.md,
-    backgroundColor: 'rgba(246,241,234,0.97)',
+    backgroundColor: colors.bar,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.separator,
     ...shadow.card,

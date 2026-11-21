@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/Button';
 import { Checkbox, linkStyle } from '@/components/ui/Checkbox';
 import { TextField } from '@/components/ui/TextField';
-import { colors, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { sellerApi } from '@/services/api';
 import type { LocalImage } from '@/types';
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   selfieError: { borderColor: colors.danger },
   selfieImage: { width: '100%', height: '100%' },
   selfieEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
-  selfieLabel: { fontSize: 14, fontWeight: '600', color: colors.primary },
+  selfieLabel: { fontSize: fs(14), fontWeight: '600', color: colors.primary },
   fields: { gap: spacing.lg },
   idRow: {
     flexDirection: 'row',
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: colors.fill,
   },
-  error: { color: colors.danger, fontSize: 13, marginTop: spacing.sm },
+  error: { color: colors.danger, fontSize: fs(13), marginTop: spacing.sm },
   bar: {
     position: 'absolute',
     left: 0,

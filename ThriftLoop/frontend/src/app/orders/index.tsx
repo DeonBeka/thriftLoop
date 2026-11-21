@@ -7,7 +7,7 @@ import { ProductImage } from '@/components/product/ProductImage';
 import { ConversationSkeleton } from '@/components/skeletons';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState, ErrorState } from '@/components/ui/States';
-import { colors, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { ordersApi } from '@/services/api';
@@ -76,5 +76,5 @@ const styles = StyleSheet.create({
   flex: { flex: 1, gap: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md, borderRadius: radius.md },
   thumb: { width: 58, height: 72, borderRadius: radius.sm },
-  price: { fontFamily: 'Fraunces_600SemiBold', fontSize: 17, color: colors.text },
+  price: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(17), color: colors.text },
 });

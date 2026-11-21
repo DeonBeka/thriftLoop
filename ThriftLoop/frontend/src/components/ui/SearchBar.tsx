@@ -4,7 +4,7 @@ import { forwardRef, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import Animated, { FadeIn, FadeOut, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { colors, control, radius, spacing } from '@/constants/theme';
+import { colors, control, fs, radius, spacing } from '@/constants/theme';
 
 interface SearchBarProps extends Omit<TextInputProps, 'style'> {
   onClear?: () => void;
@@ -19,7 +19,7 @@ export const SearchBar = forwardRef<TextInputInstance, SearchBarProps>(function 
   const focus = useSharedValue(0);
   const [focused, setFocused] = useState(false);
   const animated = useAnimatedStyle(() => ({
-    borderColor: interpolateColor(focus.value, [0, 1], ['rgba(24,61,50,0)', colors.primary]),
+    borderColor: interpolateColor(focus.value, [0, 1], ['rgba(0,0,0,0)', colors.primary]),
     backgroundColor: interpolateColor(focus.value, [0, 1], [colors.fill, colors.card]),
   }));
 
@@ -70,5 +70,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     gap: spacing.sm,
   },
-  input: { flex: 1, fontSize: 16, color: colors.text, height: '100%' },
+  input: { flex: 1, fontSize: fs(16), color: colors.text, height: '100%' },
 });

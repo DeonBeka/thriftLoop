@@ -6,13 +6,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { Logo } from '@/components/ui/Logo';
-import { colors, font, radius, shadow, spacing } from '@/constants/theme';
+import { colors, font, fs, radius, shadow, spacing } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { productsApi } from '@/services/api';
 import { imageUrl } from '@/services/config';
 
 // Tiles show the newest listings' photos (public endpoint); soft colour blocks if offline.
-const TILES = ['#DDE8DF', '#EFEBE3', '#E1E7EF', '#ECE8E1'];
+const TILES = [colors.secondary, colors.fill, colors.placeholder, colors.warmSoft];
 
 export default function Welcome() {
   const router = useRouter();
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   },
   tile: { borderRadius: radius.xl, overflow: 'hidden', ...shadow.card },
   copy: { gap: spacing.md, marginBottom: spacing.xxl },
-  headline: { fontFamily: 'Fraunces_600SemiBold', fontSize: 36, lineHeight: 42, color: colors.text, letterSpacing: -0.8 },
-  body: { fontSize: font.size.md, lineHeight: 22, color: colors.textSecondary },
+  headline: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(36), lineHeight: fs(42), color: colors.text, letterSpacing: -0.8 },
+  body: { fontSize: font.size.md, lineHeight: fs(22), color: colors.textSecondary },
   actions: { gap: spacing.sm },
 });

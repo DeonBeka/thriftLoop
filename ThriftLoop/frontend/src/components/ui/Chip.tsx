@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { colors, control, radius, spacing } from '@/constants/theme';
+import { colors, control, fs, radius, spacing } from '@/constants/theme';
 import { haptic } from '@/utils/haptics';
 
 interface ChipProps {
@@ -59,5 +59,5 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   pressed: { opacity: 0.75 },
-  label: { fontSize: 14, fontWeight: '500', letterSpacing: -0.1 },
+  label: { fontSize: fs(14), fontWeight: '500', letterSpacing: -0.1 },
 });

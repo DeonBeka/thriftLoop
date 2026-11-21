@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/components/ui/Avatar';
-import { colors, spacing, type } from '@/constants/theme';
+import { colors, fs, spacing, type } from '@/constants/theme';
 import type { UserProfile } from '@/types';
 import { joinedDate } from '@/utils/format';
 import { haptic } from '@/utils/haptics';
@@ -97,9 +97,9 @@ const styles = StyleSheet.create({
   identity: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   bio: { marginTop: spacing.lg },
   verified: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
-  verifiedText: { fontSize: 12, fontWeight: '600', color: colors.primary },
+  verifiedText: { fontSize: fs(12), fontWeight: '600', color: colors.primary },
   stats: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md },
-  stat: { fontSize: 15, color: colors.textSecondary },
+  stat: { fontSize: fs(15), color: colors.textSecondary },
   statValue: { fontWeight: '700', color: colors.text },
   dot: { color: colors.textTertiary },
   actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.separator,
   },
   tab: { flex: 1, alignItems: 'center', paddingTop: spacing.sm },
-  tabText: { fontSize: 15, fontWeight: '600', color: colors.textSecondary, paddingBottom: spacing.md },
+  tabText: { fontSize: fs(15), fontWeight: '600', color: colors.textSecondary, paddingBottom: spacing.md },
   tabTextActive: { color: colors.text },
   tabLine: { height: 2, alignSelf: 'stretch', backgroundColor: 'transparent', marginHorizontal: spacing.xxxl },
   tabLineActive: { backgroundColor: colors.primary },

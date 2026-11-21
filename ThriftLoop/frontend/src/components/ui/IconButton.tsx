@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, shadow } from '@/constants/theme';
+import { colors, fs, shadow } from '@/constants/theme';
 
 import { PressableScale } from './PressableScale';
 
@@ -41,7 +41,7 @@ export function IconButton({ icon, onPress, label, badge, floating, color = colo
 
 const styles = StyleSheet.create({
   button: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
-  floating: { backgroundColor: 'rgba(255,255,255,0.96)', ...shadow.floating },
+  floating: { backgroundColor: colors.overlayButton, ...shadow.floating },
   badge: {
     position: 'absolute',
     top: 1,
@@ -56,5 +56,5 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.background,
   },
-  badgeText: { color: colors.white, fontSize: 9, fontWeight: '700' },
+  badgeText: { color: colors.white, fontSize: fs(9), fontWeight: '700' },
 });

@@ -13,7 +13,7 @@ import { PressableScale } from '@/components/ui/PressableScale';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { EmptyState, ErrorState, LoadingView } from '@/components/ui/States';
 import { CATEGORIES, PRICE_RANGES, SORT_OPTIONS } from '@/constants/catalog';
-import { colors, control, radius, spacing, type } from '@/constants/theme';
+import { colors, control, fs, radius, spacing, type } from '@/constants/theme';
 import { productsApi } from '@/services/api';
 import type { Category, Product, SortOption } from '@/types';
 import { formatPrice } from '@/utils/format';
@@ -274,10 +274,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.background,
   },
-  filterBadgeText: { fontSize: 10, fontWeight: '700', color: colors.white },
+  filterBadgeText: { fontSize: fs(10), fontWeight: '700', color: colors.white },
   headerBlock: { gap: spacing.md, marginBottom: spacing.lg },
   bleed: { marginHorizontal: -GRID_PADDING },
   chips: { gap: spacing.sm, paddingHorizontal: GRID_PADDING },
   resultsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  clear: { fontSize: 13, color: colors.primary, fontWeight: '600' },
+  clear: { fontSize: fs(13), color: colors.primary, fontWeight: '600' },
 });

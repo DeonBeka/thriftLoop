@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, control, radius, spacing, type } from '@/constants/theme';
+import { colors, control, fs, radius, spacing, type } from '@/constants/theme';
 
 import { PressableScale } from './PressableScale';
 
@@ -80,6 +80,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  smallLabel: { fontSize: 14 },
+  smallLabel: { fontSize: fs(14) },
   disabled: { opacity: 0.45 },
 });

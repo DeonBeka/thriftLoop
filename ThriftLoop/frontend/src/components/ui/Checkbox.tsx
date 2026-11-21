@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/constants/theme';
+import { colors, fs, radius, spacing } from '@/constants/theme';
 import { haptic } from '@/utils/haptics';
 
 /** Agreement checkbox. `label` can contain tappable links (pass <Text onPress>). */
@@ -43,5 +43,5 @@ const styles = StyleSheet.create({
   },
   boxOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   boxError: { borderColor: colors.danger },
-  label: { flex: 1, fontSize: 14, lineHeight: 20, color: colors.text },
+  label: { flex: 1, fontSize: fs(14), lineHeight: fs(20), color: colors.text },
 });

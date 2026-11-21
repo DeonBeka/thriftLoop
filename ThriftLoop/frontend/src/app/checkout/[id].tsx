@@ -12,7 +12,7 @@ import { Checkbox, linkStyle } from '@/components/ui/Checkbox';
 import { Chip } from '@/components/ui/Chip';
 import { ErrorState } from '@/components/ui/States';
 import { TextField } from '@/components/ui/TextField';
-import { colors, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { ordersApi, productsApi } from '@/services/api';
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1, gap: 2 },
   summary: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, borderRadius: radius.lg, backgroundColor: colors.card },
   thumb: { width: 60, height: 75, borderRadius: radius.sm },
-  price: { fontFamily: 'Fraunces_600SemiBold', fontSize: 20, color: colors.text },
+  price: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(20), color: colors.text },
   section: { marginTop: spacing.xxl, marginBottom: spacing.md },
   modes: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
   fields: { gap: spacing.lg },
@@ -208,9 +208,9 @@ const styles = StyleSheet.create({
   payIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   totals: { marginTop: spacing.lg, gap: spacing.sm },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  totalValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: 20, color: colors.text },
+  totalValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(20), color: colors.text },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.separator, marginVertical: spacing.xs },
-  error: { color: colors.danger, fontSize: 13, marginTop: spacing.sm },
+  error: { color: colors.danger, fontSize: fs(13), marginTop: spacing.sm },
   bar: {
     position: 'absolute',
     left: 0,

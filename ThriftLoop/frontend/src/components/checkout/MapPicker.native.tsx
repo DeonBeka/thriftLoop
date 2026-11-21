@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { type Region } from 'react-native-maps';
 
-import { colors, radius, shadow, spacing } from '@/constants/theme';
+import { colors, fs, radius, shadow, spacing } from '@/constants/theme';
 import { haptic } from '@/utils/haptics';
 
 export interface PickedLocation {
@@ -127,10 +127,10 @@ const styles = StyleSheet.create({
     left: spacing.sm,
     right: spacing.sm,
     bottom: spacing.sm,
-    backgroundColor: 'rgba(255,252,247,0.95)',
+    backgroundColor: colors.mapHint,
     borderRadius: radius.sm,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
-  hintText: { fontSize: 13, color: colors.text },
+  hintText: { fontSize: fs(13), color: colors.text },
 });

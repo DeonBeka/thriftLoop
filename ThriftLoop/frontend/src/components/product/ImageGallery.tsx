@@ -31,7 +31,11 @@ export function ImageGallery({ urls, bottomInset = 0 }: { urls: string[]; bottom
         decelerationRate="fast"
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onMomentumEnd}
-        renderItem={({ item }) => <ProductImage uri={item} style={{ width, height }} />}
+        renderItem={({ item, index: i }) => (
+          <View accessible accessibilityRole="image" accessibilityLabel={`Photo ${i + 1} of ${pages.length}`}>
+            <ProductImage uri={item} style={{ width, height }} />
+          </View>
+        )}
         getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
       />
       {pages.length > 1 && (

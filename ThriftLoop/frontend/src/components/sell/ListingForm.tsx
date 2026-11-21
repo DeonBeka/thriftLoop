@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { TextField } from '@/components/ui/TextField';
 import { CATEGORIES, CONDITIONS, sizesForCategory } from '@/constants/catalog';
-import { colors, GUTTER, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, spacing, type } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { productsApi } from '@/services/api';
 import type { Category, Condition, LocalImage, Product } from '@/types';
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   conditionRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md },
   rowDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
-  error: { fontSize: 13, color: colors.danger, marginTop: spacing.sm },
+  error: { fontSize: fs(13), color: colors.danger, marginTop: spacing.sm },
   actionBar: {
     position: 'absolute',
     left: 0,
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     paddingHorizontal: GUTTER,
     paddingTop: spacing.md,
-    backgroundColor: 'rgba(246,241,234,0.97)',
+    backgroundColor: colors.bar,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.separator,
   },

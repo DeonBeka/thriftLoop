@@ -1,7 +1,10 @@
 import { Image } from 'expo-image';
 import { type StyleProp, type ImageStyle } from 'react-native';
 
-const WORDMARK = require('../../../assets/brand/wordmark.png');
+import { isDark } from '@/constants/theme';
+
+// Dark mode uses a cream version of the lettering so it stays readable.
+const WORDMARK = isDark ? require('../../../assets/brand/wordmark-light.png') : require('../../../assets/brand/wordmark.png');
 const MARK = require('../../../assets/brand/mark.png');
 
 // Intrinsic aspect ratios of the exported artwork (width / height).

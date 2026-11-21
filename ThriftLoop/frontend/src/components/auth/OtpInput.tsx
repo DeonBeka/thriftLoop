@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 
-import { colors, font, radius } from '@/constants/theme';
+import { colors, font, fs, radius } from '@/constants/theme';
 
 interface OtpInputProps {
   value: string;
@@ -82,6 +82,6 @@ const styles = StyleSheet.create({
   active: { borderColor: colors.primary },
   filled: { backgroundColor: colors.secondary, borderColor: colors.secondary },
   error: { borderColor: colors.danger, backgroundColor: colors.dangerSoft },
-  char: { fontSize: 26, fontWeight: font.weight.bold, color: colors.primary },
+  char: { fontSize: fs(26), fontWeight: font.weight.bold, color: colors.primary },
   hidden: { position: 'absolute', opacity: 0, width: 1, height: 1 },
 });
