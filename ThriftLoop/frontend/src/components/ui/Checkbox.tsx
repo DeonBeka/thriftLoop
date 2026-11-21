@@ -27,7 +27,11 @@ export function Checkbox({ checked, onChange, label, error }: { checked: boolean
   );
 }
 
-export const linkStyle = themed(() => ({ color: colors.primary, fontWeight: '600' as const, textDecorationLine: 'underline' as const }));
+// Use as `linkStyles.link`. Never pass a themed() object itself as a style: it's a Proxy, and React
+// Native's dev-mode style freezing crashes on iOS when it meets one. Its properties are plain objects.
+export const linkStyles = themed(() =>
+  StyleSheet.create({ link: { color: colors.primary, fontWeight: '600', textDecorationLine: 'underline' } }),
+);
 
 const styles = themed(() =>
   StyleSheet.create({

@@ -103,6 +103,40 @@ def test_cash_on_delivery_order_flow(client):
     assert client.get(f"/products/{p2['id']}").json()["status"] == "active"
 
 
+
+def test_basket_checkout_is_all_or_nothing(client):
+    seller = auth(_register_and_verify(client, "seller3", "seller3@gmail.com"))
+    make_seller(client, seller)
+    buyer = auth(_register_and_verify(client, "buyer3", "buyer3@gmail.com"))
+    other = auth(_register_and_verify(client, "buyer4", "buyer4@gmail.com"))
+    files = [("images", ("a.png", _png(), "image/png"))]
+    a, b, c = (client.post("/products", data=LISTING, files=files, headers=seller).json() for _ in range(3))
+    details = {"delivery_name": "Buyer Three", "phone": "+38344777666", "address_text": "Rr. Agim Ramadani 5, Prishtina"}
+
+    assert client.post("/orders/checkout", json={**details, "product_ids": [a["id"]]}, headers=buyer).status_code == 422
+    assert client.post("/orders/checkout", json={**details, "product_ids": [], "accept_terms": True},
+                       headers=buyer).status_code == 422
+
+    # Someone else orders C first: a basket with A + C places nothing, and A stays on sale.
+    client.post("/orders/checkout", json={**details, "product_ids": [c["id"]], "accept_terms": True}, headers=other)
+    r = client.post("/orders/checkout", json={**details, "product_ids": [a["id"], c["id"]], "accept_terms": True},
+                    headers=buyer)
+    assert r.status_code == 409 and "was just ordered" in r.json()["detail"]
+    assert client.get(f"/products/{a['id']}").json()["status"] == "active"
+
+    # A + B (duplicates ignored) -> two orders with the same delivery details, both items reserved.
+    r = client.post("/orders/checkout", json={**details, "product_ids": [a["id"], b["id"], a["id"]], "accept_terms": True},
+                    headers=buyer)
+    assert r.status_code == 201, r.text
+    orders = r.json()
+    assert len(orders) == 2 and {o["product_id"] for o in orders} == {a["id"], b["id"]}
+    assert all(o["address_text"] == details["address_text"] and o["status"] == "pending" for o in orders)
+    assert client.get(f"/products/{b['id']}").json()["status"] == "reserved"
+    # Can't buy your own items through the basket either.
+    d = client.post("/products", data=LISTING, files=files, headers=seller).json()
+    assert client.post("/orders/checkout", json={**details, "product_ids": [d["id"]], "accept_terms": True},
+                       headers=seller).status_code == 400
+
 def test_rate_limit(client, monkeypatch):
     from app.core.config import settings
     from app.core.rate_limit import limiter

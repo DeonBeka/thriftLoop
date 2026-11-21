@@ -5,7 +5,7 @@ import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
-import { Checkbox, linkStyle } from '@/components/ui/Checkbox';
+import { Checkbox, linkStyles } from '@/components/ui/Checkbox';
 import { Logo } from '@/components/ui/Logo';
 import { colors, fs, GUTTER, spacing, themed, type } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
@@ -45,7 +45,7 @@ export function TermsGate() {
         </Text>
         <View style={styles.links}>
           {(['terms', 'privacy', 'delivery'] as const).map((doc) => (
-            <Text key={doc} style={[linkStyle, styles.link]} onPress={() => router.push(`/legal/${doc}`)}>
+            <Text key={doc} style={[linkStyles.link, styles.link]} onPress={() => router.push(`/legal/${doc}`)}>
               {doc === 'terms' ? 'Terms of Service' : doc === 'privacy' ? 'Privacy Policy' : 'Cash-on-Delivery Terms'}
             </Text>
           ))}

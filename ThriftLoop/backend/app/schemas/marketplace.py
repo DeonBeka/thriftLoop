@@ -47,6 +47,29 @@ class OrderCreate(BaseModel):
         return value.strip()
 
 
+class BasketCheckout(BaseModel):
+    """Order every item in the basket at once (one order per item, same delivery details)."""
+
+    product_ids: list[int] = Field(min_length=1, max_length=20)
+    delivery_name: str = Field(min_length=2, max_length=100)
+    phone: str = Field(min_length=6, max_length=30)
+    address_text: str = Field(min_length=5, max_length=500)
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+    note: str | None = Field(default=None, max_length=500)
+    accept_terms: bool = False
+
+    @field_validator("delivery_name", "phone", "address_text")
+    @classmethod
+    def strip(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("product_ids")
+    @classmethod
+    def unique(cls, value: list[int]) -> list[int]:
+        return list(dict.fromkeys(value))
+
+
 class OrderStatusUpdate(BaseModel):
     status: Literal["confirmed", "delivered", "cancelled"]
 

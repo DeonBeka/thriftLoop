@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user
 from app.database import get_db
 from app.models import Conversation, Message, Order, Product, User
-from app.schemas.marketplace import OrderCreate, OrderOut, OrderStatusUpdate
+from app.schemas.marketplace import BasketCheckout, OrderCreate, OrderOut, OrderStatusUpdate
 from app.services.serializers import order_out
 from app.utils_format import price_text
 
@@ -41,18 +41,7 @@ def _notify(db: Session, order: Order, sender_id: int, text: str) -> None:
     db.add(Message(conversation_id=convo.id, sender_id=sender_id, content=text))
 
 
-@router.post("", response_model=OrderOut, status_code=status.HTTP_201_CREATED)
-def place_order(payload: OrderCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> OrderOut:
-    if not payload.accept_terms:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Please accept the cash-on-delivery terms.")
-    product = db.get(Product, payload.product_id)
-    if product is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "This listing no longer exists.")
-    if product.seller_id == user.id:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "You can't buy your own listing.")
-    if product.status != "active":
-        raise HTTPException(status.HTTP_409_CONFLICT, "Sorry, someone else just ordered this item.")
-
+def _create_order(db: Session, product: Product, user: User, payload: OrderCreate | BasketCheckout) -> Order:
     order = Order(
         product_id=product.id,
         buyer_id=user.id,
@@ -73,8 +62,39 @@ def place_order(payload: OrderCreate, db: Session = Depends(get_db), user: User 
     db.add(order)
     db.flush()
     _notify(db, order, user.id, f"🛍️ I ordered this for {price_text(order.price)}, cash on delivery. Order #{order.id}.")
+    return order
+
+
+def _check_buyable(product: Product | None, user: User) -> Product:
+    if product is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "This listing no longer exists.")
+    if product.seller_id == user.id:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "You can't buy your own listing.")
+    if product.status != "active":
+        raise HTTPException(status.HTTP_409_CONFLICT, f"Sorry, “{product.title}” was just ordered by someone else.")
+    return product
+
+
+@router.post("", response_model=OrderOut, status_code=status.HTTP_201_CREATED)
+def place_order(payload: OrderCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> OrderOut:
+    if not payload.accept_terms:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Please accept the cash-on-delivery terms.")
+    product = _check_buyable(db.get(Product, payload.product_id), user)
+    order = _create_order(db, product, user, payload)
     db.commit()
     return order_out(order)
+
+
+@router.post("/checkout", response_model=list[OrderOut], status_code=status.HTTP_201_CREATED)
+def checkout_basket(payload: BasketCheckout, db: Session = Depends(get_db),
+                    user: User = Depends(get_current_user)) -> list[OrderOut]:
+    """Order everything in the basket. All or nothing: if any item can't be bought, no order is placed."""
+    if not payload.accept_terms:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Please accept the cash-on-delivery terms.")
+    products = [_check_buyable(db.get(Product, pid), user) for pid in payload.product_ids]
+    orders = [_create_order(db, product, user, payload) for product in products]
+    db.commit()
+    return [order_out(o) for o in orders]
 
 
 @router.get("", response_model=list[OrderOut])

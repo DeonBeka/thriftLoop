@@ -5,6 +5,7 @@ import { ActionSheetIOS, Alert, Platform, Pressable, RefreshControl, ScrollView,
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AddedToBasketSheet } from '@/components/basket/AddedToBasketSheet';
 import { FavoriteButton } from '@/components/product/FavoriteButton';
 import { ImageGallery } from '@/components/product/ImageGallery';
 import { ProductDetailsSkeleton } from '@/components/skeletons';
@@ -15,6 +16,7 @@ import { ErrorState } from '@/components/ui/States';
 import { colors, fs, GUTTER, radius, shadow, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
+import { useBasket } from '@/hooks/useBasket';
 import { messagesApi, productsApi } from '@/services/api';
 import { formatPrice, timeAgo } from '@/utils/format';
 import { getPreferences } from '@/services/preferences';
@@ -27,6 +29,9 @@ export default function ProductDetails() {
   const insets = useSafeAreaInsets();
   const { user, refreshUser } = useAuth();
   const [busy, setBusy] = useState<null | 'message' | 'status' | 'delete'>(null);
+  const basket = useBasket();
+  const [addedOpen, setAddedOpen] = useState(false);
+  const inBasket = basket.has(Number(id));
 
   const { data: product, error, loading, refreshing, refresh, reload, setData } = useApi(
     () => productsApi.get(Number(id)),
@@ -61,12 +66,15 @@ export default function ProductDetails() {
     <View style={[styles.topBar, { top: insets.top + spacing.xs }]} pointerEvents="box-none">
       <IconButton icon="chevron-back" label="Back" floating onPress={() => router.back()} />
       {product && (
-        <IconButton
-          icon={speaking ? 'stop-circle-outline' : 'volume-high-outline'}
-          label={speaking ? 'Stop reading' : 'Read item details aloud'}
-          floating
-          onPress={toggleSpeech}
-        />
+        <View style={styles.topRight}>
+          <IconButton
+            icon={speaking ? 'stop-circle-outline' : 'volume-high-outline'}
+            label={speaking ? 'Stop reading' : 'Read item details aloud'}
+            floating
+            onPress={toggleSpeech}
+          />
+          <IconButton icon="bag-outline" label="Basket" badge={basket.count} floating onPress={() => router.push('/basket')} />
+        </View>
       )}
     </View>
   );
@@ -269,11 +277,21 @@ export default function ProductDetails() {
               loading={busy === 'message'}
             />
             <Button
-              title={sold ? 'Sold' : reserved ? 'Reserved' : 'Buy now'}
-              icon={sold || reserved ? undefined : 'bag-handle-outline'}
+              title={sold ? 'Sold' : reserved ? 'Reserved' : inBasket ? 'In basket' : 'Add to basket'}
+              icon={sold || reserved ? undefined : inBasket ? 'bag-check-outline' : 'bag-add-outline'}
+              variant={inBasket && !sold && !reserved ? 'secondary' : 'primary'}
               style={styles.flex}
-              onPress={() => router.push(`/checkout/${product.id}`)}
+              onPress={() => {
+                if (inBasket) {
+                  router.push('/basket');
+                  return;
+                }
+                basket.add(product);
+                void haptic.success();
+                setAddedOpen(true);
+              }}
               disabled={sold || reserved}
+              accessibilityLabel={inBasket ? 'In basket. Open basket' : 'Add to basket'}
             />
             {user?.role === 'admin' && (
               <Button title="" icon="trash-outline" variant="danger" accessibilityLabel="Remove listing (admin)" loading={busy === 'delete'} onPress={deleteListing} />
@@ -281,6 +299,17 @@ export default function ProductDetails() {
           </>
         )}
       </View>
+
+      <AddedToBasketSheet
+        visible={addedOpen}
+        product={product}
+        count={basket.count}
+        onClose={() => setAddedOpen(false)}
+        onGoToBasket={() => {
+          setAddedOpen(false);
+          router.push('/basket');
+        }}
+      />
     </View>
   );
 }
@@ -298,6 +327,7 @@ const styles = themed(() =>
   container: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   topBar: { position: 'absolute', left: GUTTER - 4, right: GUTTER - 4, flexDirection: 'row', justifyContent: 'space-between' },
+  topRight: { flexDirection: 'row', gap: spacing.sm },
   content: { paddingHorizontal: GUTTER, paddingTop: spacing.xl, gap: spacing.sm },
   soldBanner: {
     flexDirection: 'row',

@@ -20,6 +20,7 @@ import { GROUPS } from '@/constants/catalog';
 import { colors, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
+import { useBasket } from '@/hooks/useBasket';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useUnreadCount } from '@/hooks/useUnreadCount';
 import { productsApi } from '@/services/api';
@@ -40,6 +41,7 @@ export default function Home() {
   const { width } = useWindowDimensions();
   const { user } = useAuth();
   const unread = useUnreadCount();
+  const basket = useBasket();
   const { ids: favoriteIds } = useFavorites();
 
   const [query, setQuery] = useState('');
@@ -114,6 +116,7 @@ export default function Home() {
         <Logo size={24} />
         <View style={styles.topActions}>
           <IconButton icon="sparkles-outline" label="Ask the AI shopping assistant" onPress={() => router.push('/assistant')} />
+          <IconButton icon="bag-outline" label="Basket" badge={basket.count} onPress={() => router.push('/basket')} />
           <IconButton icon="chatbubble-outline" label="Messages" badge={unread} onPress={() => router.push('/messages')} />
         </View>
       </View>

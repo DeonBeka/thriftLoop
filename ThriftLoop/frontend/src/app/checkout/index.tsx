@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,26 +8,38 @@ import { MapPicker, type PickedLocation } from '@/components/checkout/MapPicker'
 import { ProductImage } from '@/components/product/ProductImage';
 import { CheckoutSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/Button';
-import { Checkbox, linkStyle } from '@/components/ui/Checkbox';
+import { Checkbox, linkStyles } from '@/components/ui/Checkbox';
 import { Chip } from '@/components/ui/Chip';
-import { ErrorState } from '@/components/ui/States';
+import { EmptyState, ErrorState } from '@/components/ui/States';
 import { TextField } from '@/components/ui/TextField';
 import { colors, fs, GUTTER, radius, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
+import { useBasket } from '@/hooks/useBasket';
 import { ordersApi, productsApi } from '@/services/api';
+import type { Product } from '@/types';
 import { formatPrice } from '@/utils/format';
 import { haptic } from '@/utils/haptics';
 
 type Mode = 'map' | 'text';
 type Field = 'name' | 'phone' | 'address' | 'terms';
 
+/** Checkout for everything in the basket: one set of delivery details, cash on delivery. */
 export default function Checkout() {
-  const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const { data: product, error, loading, reload } = useApi(() => productsApi.get(Number(id)), [id]);
+  const basket = useBasket();
+  const ids = basket.items.map((i) => i.id);
+
+  // Re-check every item with the server: price and availability may have changed since it was added.
+  const { data, error, loading, reload } = useApi(
+    async () => {
+      const results = await Promise.allSettled(ids.map((id) => productsApi.get(id)));
+      return results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
+    },
+    [ids.join(',')],
+  );
 
   const [mode, setMode] = useState<Mode>('map');
   const [location, setLocation] = useState<PickedLocation | null>(null);
@@ -39,12 +51,35 @@ export default function Checkout() {
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [placing, setPlacing] = useState(false);
 
-  if (loading) return <CheckoutSkeleton />;
-  if (error || !product) return <ErrorState message={error ?? 'This listing no longer exists.'} onRetry={reload} />;
-  if (product.status !== 'active') {
-    return <ErrorState title="Not available" message="Someone else has already ordered this item." />;
+  if (!user) {
+    return (
+      <EmptyState
+        icon="person-circle-outline"
+        title="Sign in to check out"
+        message="Your basket is saved. Sign in or create an account to place your order."
+        actionLabel="Sign in"
+        onAction={() => router.push('/login')}
+      />
+    );
   }
-  if (product.seller.id === user?.id) return <ErrorState title="That's your item" message="You can't buy your own listing." />;
+  if (!ids.length) {
+    return (
+      <EmptyState
+        icon="bag-outline"
+        title="Your basket is empty"
+        message="Add items to your basket, then come back to check out."
+        actionLabel="Find something"
+        onAction={() => router.replace('/explore')}
+      />
+    );
+  }
+  if (loading && !data) return <CheckoutSkeleton />;
+  if (error && !data) return <ErrorState message={error} onRetry={reload} />;
+
+  const buyable: Product[] = (data ?? []).filter((p) => p.status === 'active' && p.seller.id !== user?.id);
+  const unavailable = basket.items.filter((i) => !buyable.some((p) => p.id === i.id));
+  const total = buyable.reduce((sum, p) => sum + p.price, 0);
+  const sellers = new Set(buyable.map((p) => p.seller.id)).size;
 
   const onPick = (loc: PickedLocation) => {
     setLocation(loc);
@@ -64,14 +99,15 @@ export default function Checkout() {
   };
 
   const placeOrder = async () => {
+    if (!buyable.length) return;
     if (!validate()) {
       void haptic.error();
       return;
     }
     setPlacing(true);
     try {
-      const order = await ordersApi.place({
-        product_id: product.id,
+      const orders = await ordersApi.checkout({
+        product_ids: buyable.map((p) => p.id),
         delivery_name: name.trim(),
         phone: phone.trim(),
         address_text: address.trim(),
@@ -80,11 +116,17 @@ export default function Checkout() {
         note: note.trim() || undefined,
         accept_terms: true,
       });
+      basket.removeMany(orders.map((o) => o.product_id).filter((id): id is number => id != null));
       void haptic.success();
-      router.replace(`/orders/${order.id}?placed=1`);
+      if (orders.length === 1) router.replace(`/orders/${orders[0].id}?placed=1`);
+      else router.replace(`/orders?placed=${orders.length}`);
     } catch (err) {
       void haptic.error();
-      Alert.alert("Couldn't place order", err instanceof Error ? err.message : 'Please try again.');
+      Alert.alert(
+        "Couldn't place order",
+        `${err instanceof Error ? err.message : 'Please try again.'}\n\nNothing was ordered. Your basket and details are still here.`,
+      );
+      void reload();
     } finally {
       setPlacing(false);
     }
@@ -97,18 +139,43 @@ export default function Checkout() {
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
       >
-        <View style={styles.summary}>
-          <ProductImage uri={product.images[0]?.url} style={styles.thumb} />
-          <View style={styles.flex}>
-            <Text style={type.bodyStrong} numberOfLines={2}>
-              {product.title}
+        <Text style={type.headline}>
+          {buyable.length} {buyable.length === 1 ? 'item' : 'items'}
+          {sellers > 1 ? ` from ${sellers} sellers` : ''}
+        </Text>
+        <View style={styles.items}>
+          {buyable.map((p) => (
+            <View key={p.id} style={styles.summary}>
+              <ProductImage uri={p.images[0]?.url} style={styles.thumb} />
+              <View style={styles.flex}>
+                <Text style={type.bodyStrong} numberOfLines={1}>
+                  {p.title}
+                </Text>
+                <Text style={type.footnote} numberOfLines={1}>
+                  Size {p.size} · {p.condition} · @{p.seller.username}
+                </Text>
+              </View>
+              <Text style={styles.price}>{formatPrice(p.price)}</Text>
+            </View>
+          ))}
+        </View>
+        {unavailable.length > 0 && (
+          <View style={styles.warning}>
+            <Ionicons name="alert-circle-outline" size={18} color={colors.danger} />
+            <Text style={[type.footnote, styles.flex]}>
+              {unavailable.map((i) => i.title).join(', ')} {unavailable.length === 1 ? 'is' : 'are'} no longer available and
+              won’t be ordered.
             </Text>
-            <Text style={type.footnote}>
-              Size {product.size} · {product.condition} · from @{product.seller.username}
+            <Text style={styles.removeLink} onPress={() => basket.removeMany(unavailable.map((i) => i.id))} suppressHighlighting>
+              Remove
             </Text>
           </View>
-          <Text style={styles.price}>{formatPrice(product.price)}</Text>
-        </View>
+        )}
+        {sellers > 1 && (
+          <Text style={[type.footnote, styles.note]}>
+            Each seller gets their own order and delivers separately. You pay each one in cash when their item arrives.
+          </Text>
+        )}
 
         <Text style={[type.headline, styles.section]}>Delivery address</Text>
         <View style={styles.modes}>
@@ -145,16 +212,16 @@ export default function Checkout() {
           </View>
           <View style={styles.flex}>
             <Text style={type.bodyStrong}>Cash on delivery</Text>
-            <Text style={type.footnote}>Pay {formatPrice(product.price)} in cash when you receive the item. No card needed.</Text>
+            <Text style={type.footnote}>Pay in cash when you receive your items. No card needed.</Text>
           </View>
           <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
         </View>
 
         <View style={styles.totals}>
-          <Row label="Item" value={formatPrice(product.price)} />
+          <Row label={`Items (${buyable.length})`} value={formatPrice(total)} />
           <Row label="Delivery" value="Agree with the seller" muted />
           <View style={styles.divider} />
-          <Row label="Pay on delivery" value={formatPrice(product.price)} strong />
+          <Row label="Pay on delivery" value={formatPrice(total)} strong />
         </View>
 
         <View style={{ marginTop: spacing.xl }}>
@@ -168,7 +235,7 @@ export default function Checkout() {
             label={
               <>
                 I’ll pay in cash on delivery and agree to the{' '}
-                <Text style={linkStyle} onPress={() => router.push('/legal/delivery')}>
+                <Text style={linkStyles.link} onPress={() => router.push('/legal/delivery')}>
                   Cash-on-Delivery Terms
                 </Text>
                 .
@@ -180,7 +247,12 @@ export default function Checkout() {
       </ScrollView>
 
       <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
-        <Button title={`Place order · ${formatPrice(product.price)}`} onPress={placeOrder} loading={placing} />
+        <Button
+          title={buyable.length ? `Place order · ${formatPrice(total)}` : 'Nothing available to order'}
+          onPress={placeOrder}
+          loading={placing}
+          disabled={!buyable.length}
+        />
       </View>
     </View>
   );
@@ -197,31 +269,43 @@ function Row({ label, value, strong, muted }: { label: string; value: string; st
 
 const styles = themed(() =>
   StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  flex: { flex: 1, gap: 2 },
-  summary: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, borderRadius: radius.lg, backgroundColor: colors.card },
-  thumb: { width: 60, height: 75, borderRadius: radius.sm },
-  price: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(20), color: colors.text },
-  section: { marginTop: spacing.xxl, marginBottom: spacing.md },
-  modes: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
-  fields: { gap: spacing.lg },
-  payment: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.lg, borderRadius: radius.lg, backgroundColor: colors.secondary },
-  payIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-  totals: { marginTop: spacing.lg, gap: spacing.sm },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  totalValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(20), color: colors.text },
-  divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.separator, marginVertical: spacing.xs },
-  error: { color: colors.danger, fontSize: fs(13), marginTop: spacing.sm },
-  bar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingHorizontal: GUTTER,
-    paddingTop: spacing.md,
-    backgroundColor: colors.background,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.separator,
-  },
+    container: { flex: 1, backgroundColor: colors.background },
+    flex: { flex: 1, gap: 2 },
+    items: { gap: spacing.sm, marginTop: spacing.md },
+    summary: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, borderRadius: radius.lg, backgroundColor: colors.card },
+    thumb: { width: 52, height: 65, borderRadius: radius.sm },
+    price: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(18), color: colors.text },
+    warning: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.md,
+      padding: spacing.md,
+      borderRadius: radius.md,
+      backgroundColor: colors.dangerSoft,
+    },
+    removeLink: { fontSize: fs(14), fontWeight: '600', color: colors.danger },
+    note: { marginTop: spacing.md },
+    section: { marginTop: spacing.xxl, marginBottom: spacing.md },
+    modes: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
+    fields: { gap: spacing.lg },
+    payment: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.lg, borderRadius: radius.lg, backgroundColor: colors.secondary },
+    payIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
+    totals: { marginTop: spacing.lg, gap: spacing.sm },
+    row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+    totalValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(20), color: colors.text },
+    divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.separator, marginVertical: spacing.xs },
+    error: { color: colors.danger, fontSize: fs(13), marginTop: spacing.sm },
+    bar: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      paddingHorizontal: GUTTER,
+      paddingTop: spacing.md,
+      backgroundColor: colors.background,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.separator,
+    },
   }),
 );

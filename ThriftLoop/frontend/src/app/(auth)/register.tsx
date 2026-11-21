@@ -6,7 +6,7 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { AuthScreen } from '@/components/auth/AuthScreen';
 import { PasswordStrength } from '@/components/auth/PasswordStrength';
 import { Button } from '@/components/ui/Button';
-import { Checkbox, linkStyle } from '@/components/ui/Checkbox';
+import { Checkbox, linkStyles } from '@/components/ui/Checkbox';
 import { TextField } from '@/components/ui/TextField';
 import { colors, font, fs, radius, spacing, themed } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
@@ -157,11 +157,11 @@ export default function Register() {
         label={
           <>
             I agree to the{' '}
-            <Text style={linkStyle} onPress={() => router.push('/legal/terms')}>
+            <Text style={linkStyles.link} onPress={() => router.push('/legal/terms')}>
               Terms of Service
             </Text>{' '}
             and{' '}
-            <Text style={linkStyle} onPress={() => router.push('/legal/privacy')}>
+            <Text style={linkStyles.link} onPress={() => router.push('/legal/privacy')}>
               Privacy Policy
             </Text>
             .

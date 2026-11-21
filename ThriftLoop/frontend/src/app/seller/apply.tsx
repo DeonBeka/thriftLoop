@@ -7,7 +7,7 @@ import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
-import { Checkbox, linkStyle } from '@/components/ui/Checkbox';
+import { Checkbox, linkStyles } from '@/components/ui/Checkbox';
 import { TextField } from '@/components/ui/TextField';
 import { colors, fs, GUTTER, radius, spacing, themed, type } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
@@ -230,7 +230,7 @@ export default function ApplyToSell() {
             label={
               <>
                 I confirm these details are mine and agree to the{' '}
-                <Text style={linkStyle} onPress={() => router.push('/legal/seller')}>
+                <Text style={linkStyles.link} onPress={() => router.push('/legal/seller')}>
                   Seller Terms
                 </Text>
                 .

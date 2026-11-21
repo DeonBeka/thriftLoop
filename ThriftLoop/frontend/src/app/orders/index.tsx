@@ -1,4 +1,5 @@
-import { useRouter } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
@@ -15,6 +16,7 @@ import { formatPrice, timeAgo } from '@/utils/format';
 
 export default function Orders() {
   const router = useRouter();
+  const { placed } = useLocalSearchParams<{ placed?: string }>();
   const { user } = useAuth();
   const canSell = user?.role === 'seller' || user?.role === 'admin';
   const [tab, setTab] = useState<'buyer' | 'seller'>('buyer');
@@ -26,6 +28,15 @@ export default function Orders() {
         <View style={styles.tabs}>
           <Chip label="Purchases" selected={tab === 'buyer'} onPress={() => setTab('buyer')} />
           <Chip label="Sales" selected={tab === 'seller'} onPress={() => setTab('seller')} />
+        </View>
+      )}
+      {!!placed && tab === 'buyer' && (
+        <View style={styles.placed}>
+          <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+          <View style={styles.flex}>
+            <Text style={type.bodyStrong}>{placed === '1' ? 'Order placed' : `${placed} orders placed`}</Text>
+            <Text style={type.footnote}>Each seller has your details and will confirm soon. Pay in cash when items arrive.</Text>
+          </View>
         </View>
       )}
       {error && !data ? (
@@ -71,6 +82,16 @@ export default function Orders() {
 
 const styles = themed(() =>
   StyleSheet.create({
+  placed: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginHorizontal: GUTTER,
+    marginTop: spacing.md,
+    padding: spacing.lg,
+    borderRadius: radius.lg,
+    backgroundColor: colors.secondary,
+  },
   container: { flex: 1, backgroundColor: colors.background },
   tabs: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: GUTTER, paddingVertical: spacing.sm },
   content: { paddingHorizontal: GUTTER, paddingBottom: spacing.huge, flexGrow: 1 },

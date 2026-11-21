@@ -289,8 +289,13 @@ export interface OrderInput {
   accept_terms: boolean;
 }
 
+/** Same delivery details as a single order, for every item in the basket. */
+export type BasketCheckoutInput = Omit<OrderInput, 'product_id'> & { product_ids: number[] };
+
 export const ordersApi = {
   place: (body: OrderInput) => request<Order>('POST', '/orders', { body }),
+  /** Orders everything at once; if any item is gone, nothing is ordered. */
+  checkout: (body: BasketCheckoutInput) => request<Order[]>('POST', '/orders/checkout', { body }),
   list: (role: 'buyer' | 'seller' | 'all' = 'all') => request<Order[]>('GET', '/orders', { query: { role } }),
   get: (id: number) => request<Order>('GET', `/orders/${id}`),
   setStatus: (id: number, status: 'confirmed' | 'delivered' | 'cancelled') =>

@@ -11,6 +11,7 @@ import { VoiceGuide } from '@/components/accessibility/VoiceGuide';
 import { HomeSkeleton } from '@/components/skeletons';
 import { applyTheme, colors, subscribeTheme, themed, themeNav, themeState, type } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
+import { BasketProvider } from '@/hooks/useBasket';
 import { FavoritesProvider } from '@/hooks/useFavorites';
 import { getPreferences } from '@/services/preferences';
 import { installWebAlert } from '@/utils/webAlert';
@@ -91,7 +92,8 @@ function RootNavigator() {
       <Stack.Screen name="legal/[doc]" options={{ title: '' }} />
       <Stack.Screen name="orders/index" options={{ title: 'Orders' }} />
       <Stack.Screen name="orders/[id]" options={{ title: 'Order' }} />
-      <Stack.Screen name="checkout/[id]" options={{ title: 'Checkout' }} />
+      <Stack.Screen name="basket" options={{ title: 'Basket' }} />
+      <Stack.Screen name="checkout/index" options={{ title: 'Checkout' }} />
       <Stack.Screen name="seller/apply" options={{ title: 'Become a seller', presentation: 'modal' }} />
       <Stack.Screen name="admin" options={{ headerShown: false }} />
       {/* Editing flows are sheets: swipe down to dismiss, like iOS Mail/Notes. */}
@@ -129,6 +131,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <AuthProvider>
           <FavoritesProvider>
+          <BasketProvider>
             <StatusBar style={themeState.isDark ? 'light' : 'dark'} />
             <VoiceGuide />
             <RootNavigator key={themeVersion} />
@@ -139,6 +142,7 @@ export default function RootLayout() {
                 pointerEvents="none"
               />
             )}
+          </BasketProvider>
           </FavoritesProvider>
         </AuthProvider>
       </SafeAreaProvider>
