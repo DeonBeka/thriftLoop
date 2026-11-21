@@ -1,32 +1,31 @@
 import type { TextInputInstance } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { forwardRef, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { forwardRef, useState, type ReactNode } from 'react';
+import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import Animated, { FadeIn, FadeOut, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { colors, font, radius, spacing } from '@/constants/theme';
+import { colors, control, radius, spacing } from '@/constants/theme';
 
 interface SearchBarProps extends Omit<TextInputProps, 'style'> {
-  /** Render as a tappable placeholder (e.g. on Home) instead of a text input. */
-  onPressFake?: () => void;
   onClear?: () => void;
   right?: ReactNode;
 }
 
+/** iOS-style search field: filled background, focus ring fades in, clear button appears with text. */
 export const SearchBar = forwardRef<TextInputInstance, SearchBarProps>(function SearchBar(
-  { onPressFake, onClear, value, placeholder = 'Search hoodies, jeans, sneakers…', right, ...rest },
+  { onClear, value, placeholder = 'Search for items or brands', right, onFocus, onBlur, ...rest },
   ref,
 ) {
-  if (onPressFake) {
-    return (
-      <Pressable onPress={onPressFake} style={styles.bar} accessibilityRole="search" accessibilityLabel="Search">
-        <Ionicons name="search" size={18} color={colors.textSecondary} />
-        <Text style={styles.placeholder}>{placeholder}</Text>
-      </Pressable>
-    );
-  }
+  const focus = useSharedValue(0);
+  const [focused, setFocused] = useState(false);
+  const animated = useAnimatedStyle(() => ({
+    borderColor: interpolateColor(focus.value, [0, 1], ['rgba(24,61,50,0)', colors.primary]),
+    backgroundColor: interpolateColor(focus.value, [0, 1], [colors.fill, colors.card]),
+  }));
+
   return (
-    <View style={styles.bar}>
-      <Ionicons name="search" size={18} color={colors.textSecondary} />
+    <Animated.View style={[styles.bar, animated]}>
+      <Ionicons name="search" size={17} color={focused ? colors.text : colors.textSecondary} />
       <TextInput
         ref={ref}
         value={value}
@@ -35,31 +34,41 @@ export const SearchBar = forwardRef<TextInputInstance, SearchBarProps>(function 
         selectionColor={colors.primary}
         returnKeyType="search"
         autoCorrect={false}
+        clearButtonMode="never"
         style={styles.input}
+        onFocus={(e) => {
+          setFocused(true);
+          focus.value = withTiming(1, { duration: 160 });
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocused(false);
+          focus.value = withTiming(0, { duration: 160 });
+          onBlur?.(e);
+        }}
         {...rest}
       />
       {!!value && onClear && (
-        <Pressable onPress={onClear} hitSlop={10} accessibilityLabel="Clear search">
-          <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
-        </Pressable>
+        <Animated.View entering={FadeIn.duration(120)} exiting={FadeOut.duration(120)}>
+          <Pressable onPress={onClear} hitSlop={10} accessibilityLabel="Clear search">
+            <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
+          </Pressable>
+        </Animated.View>
       )}
-      {right}
-    </View>
+      {right && <View>{right}</View>}
+    </Animated.View>
   );
 });
 
 const styles = StyleSheet.create({
   bar: {
-    height: 46,
+    height: control.md,
     borderRadius: radius.md,
-    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: colors.border,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
     gap: spacing.sm,
   },
-  placeholder: { fontSize: font.size.md, color: colors.textSecondary, flex: 1 },
-  input: { flex: 1, fontSize: font.size.md, color: colors.text, height: '100%' },
+  input: { flex: 1, fontSize: 16, color: colors.text, height: '100%' },
 });

@@ -4,7 +4,8 @@ import { StyleSheet, View } from 'react-native';
 
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { ProfileHeader, type ListingTab } from '@/components/profile/ProfileHeader';
-import { EmptyState, ErrorState, LoadingView } from '@/components/ui/States';
+import { ProfileSkeleton } from '@/components/skeletons';
+import { EmptyState, ErrorState } from '@/components/ui/States';
 import { colors, spacing } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { usersApi } from '@/services/api';
@@ -27,7 +28,7 @@ export default function SellerProfile() {
     <View style={styles.container}>
       <Stack.Screen options={{ title: data?.profile.username ?? '' }} />
       {loading ? (
-        <LoadingView />
+        <ProfileSkeleton />
       ) : error || !data ? (
         <ErrorState message={error ?? 'User not found.'} onRetry={reload} />
       ) : (
@@ -39,8 +40,8 @@ export default function SellerProfile() {
           empty={
             <EmptyState
               icon={tab === 'active' ? 'pricetag-outline' : 'bag-check-outline'}
-              title={tab === 'active' ? 'No active listings' : 'No sold items yet'}
-              message={tab === 'active' ? `${data.profile.username} has nothing for sale right now.` : undefined}
+              title={tab === 'active' ? 'Nothing for sale right now' : 'No sold items yet'}
+              message={tab === 'active' ? `Check back later to see what ${data.profile.username} lists next.` : undefined}
             />
           }
         />

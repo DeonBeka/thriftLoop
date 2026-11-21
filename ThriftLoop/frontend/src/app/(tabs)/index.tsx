@@ -1,26 +1,28 @@
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
-import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { FlatList, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProductCard } from '@/components/product/ProductCard';
-import { GRID_GAP, GRID_PADDING, useCardWidth } from '@/components/product/ProductGrid';
-import { ProductImage } from '@/components/product/ProductImage';
+import { GRID_PADDING, ProductGrid } from '@/components/product/ProductGrid';
+import { HomeSkeleton, ProductGridSkeleton } from '@/components/skeletons';
+import { Chip } from '@/components/ui/Chip';
 import { IconButton } from '@/components/ui/IconButton';
 import { Logo } from '@/components/ui/Logo';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { EmptyState, ErrorState, LoadingView } from '@/components/ui/States';
 import { CATEGORIES } from '@/constants/catalog';
-import { colors, font, radius, shadow, spacing } from '@/constants/theme';
+import { colors, spacing, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useUnreadCount } from '@/hooks/useUnreadCount';
 import { productsApi } from '@/services/api';
-import type { Product } from '@/types';
-import { formatPrice } from '@/utils/format';
+import type { Category, Product } from '@/types';
+
+const PAGE = 20;
 
 function greeting() {
   const h = new Date().getHours();
@@ -30,198 +32,174 @@ function greeting() {
 export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const { user } = useAuth();
   const unread = useUnreadCount();
   const { ids: favoriteIds } = useFavorites();
-  const cardWidth = useCardWidth();
-  const { width } = useWindowDimensions();
 
-  const { data, error, loading, refreshing, refresh, reload } = useApi(
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState<Category | null>(null);
+  const [extra, setExtra] = useState<Product[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const firstLoad = useRef(true);
+
+  // "Popular" row is fetched once; the grid re-fetches when the category changes.
+  const popular = useApi(() => productsApi.list({ sort: 'popular', limit: 12, excludeOwn: true }), [], {
+    refetchOnFocus: true,
+  });
+  const feed = useApi(
     async () => {
-      const [featured, recent, all] = await Promise.all([
-        productsApi.list({ sort: 'popular', limit: 6, excludeOwn: true }),
-        productsApi.list({ sort: 'newest', limit: 8 }),
-        productsApi.list({ sort: 'newest', limit: 40, excludeOwn: true }),
-      ]);
-      return { featured: featured.items, recent: recent.items, all: all.items };
+      setExtra([]);
+      return productsApi.list({ sort: 'newest', category, limit: PAGE, excludeOwn: true });
     },
-    [],
+    [category],
     { refetchOnFocus: true },
   );
 
-  // "Picked for you": favour categories the shopper already saves/browses, else newest.
-  const recommended = useMemo<Product[]>(() => {
-    if (!data) return [];
-    const liked = new Set(data.all.filter((p) => favoriteIds.has(p.id)).map((p) => p.category));
-    const seen = new Set([...data.featured, ...data.recent].map((p) => p.id));
-    return data.all
-      .filter((p) => !seen.has(p.id) && !favoriteIds.has(p.id))
+  const items = useMemo(() => {
+    const base = feed.data?.items ?? [];
+    const seen = new Set(base.map((p) => p.id));
+    return [...base, ...extra.filter((p) => !seen.has(p.id))];
+  }, [feed.data, extra]);
+  const total = feed.data?.total ?? 0;
+
+  // Favour the categories this shopper saves; fall back to plain popularity.
+  const picks = useMemo(() => {
+    const list = popular.data?.items ?? [];
+    const liked = new Set(list.filter((p) => favoriteIds.has(p.id)).map((p) => p.category));
+    return [...list]
+      .filter((p) => !favoriteIds.has(p.id))
       .sort((a, b) => Number(liked.has(b.category)) - Number(liked.has(a.category)))
-      .slice(0, 10);
-  }, [data, favoriteIds]);
+      .slice(0, 8);
+  }, [popular.data, favoriteIds]);
 
-  const openCategory = (category: string) => router.push({ pathname: '/explore', params: { category } });
+  const loadMore = useCallback(async () => {
+    if (loadingMore || feed.loading || items.length >= total) return;
+    setLoadingMore(true);
+    try {
+      const res = await productsApi.list({ sort: 'newest', category, limit: PAGE, offset: items.length, excludeOwn: true });
+      setExtra((prev) => [...prev, ...res.items]);
+    } catch {
+      // keep what we have; the next scroll retries
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, feed.loading, items.length, total, category]);
 
-  if (loading) return <LoadingView />;
+  const refresh = async () => {
+    await Promise.all([feed.refresh(), popular.reload()]);
+  };
 
-  return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingTop: insets.top + spacing.sm, paddingBottom: spacing.xxxl }}
-      showsVerticalScrollIndicator={false}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
-    >
-      <View style={styles.header}>
-        <Logo size={22} />
-        <IconButton icon="chatbubble-ellipses-outline" label="Messages" badge={unread} onPress={() => router.push('/messages')} />
+  const search = () => {
+    const q = query.trim();
+    if (!q) return;
+    router.push({ pathname: '/explore', params: { q } });
+  };
+
+  // Full skeleton only on the very first load; afterwards keep the header and skeleton just the grid.
+  if (firstLoad.current && feed.loading && !feed.data) return <HomeSkeleton />;
+  firstLoad.current = false;
+
+  const picksWidth = Math.min(168, width * 0.42);
+
+  const header = (
+    <View>
+      <View style={styles.topBar}>
+        <Logo size={21} />
+        <IconButton icon="chatbubble-outline" label="Messages" badge={unread} onPress={() => router.push('/messages')} />
       </View>
 
-      <Animated.View entering={FadeInDown.duration(400)} style={styles.welcome}>
-        <Text style={styles.greeting}>
-          {greeting()}, {user?.username}
-        </Text>
-        <Text style={styles.headline}>Find your next favourite piece</Text>
-      </Animated.View>
+      <Text style={styles.greeting}>
+        {greeting()}, {user?.username}
+      </Text>
 
-      <View style={styles.padded}>
-        <SearchBar onPressFake={() => router.push({ pathname: '/explore', params: { focus: '1' } })} />
-      </View>
+      <SearchBar value={query} onChangeText={setQuery} onClear={() => setQuery('')} onSubmitEditing={search} />
 
-      {error && !data ? (
-        <ErrorState message={error} onRetry={reload} />
-      ) : (
-        <>
-          <View style={styles.section}>
-            <View style={styles.padded}>
-              <SectionHeader title="Popular categories" action="See all" onAction={() => router.push('/explore')} />
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categories}>
-              {CATEGORIES.map((c) => (
-                <Pressable
-                  key={c.name}
-                  onPress={() => openCategory(c.name)}
-                  style={({ pressed }) => [styles.category, { backgroundColor: c.tint }, pressed && styles.pressed]}
-                >
-                  <Text style={styles.categoryText}>{c.name}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.categoriesScroller}
+        contentContainerStyle={styles.categories}
+      >
+        <Chip label="All" selected={!category} onPress={() => setCategory(null)} />
+        {CATEGORIES.map((c) => (
+          <Chip key={c.name} label={c.name} selected={category === c.name} onPress={() => setCategory(category === c.name ? null : c.name)} />
+        ))}
+      </ScrollView>
 
-          {!!data?.featured.length && (
-            <View style={styles.section}>
-              <View style={styles.padded}>
-                <SectionHeader title="Featured" />
-              </View>
-              <FlatList
-                data={data.featured}
-                horizontal
-                keyExtractor={(p) => String(p.id)}
-                showsHorizontalScrollIndicator={false}
-                snapToInterval={width * 0.72 + spacing.md}
-                decelerationRate="fast"
-                contentContainerStyle={styles.featuredList}
-                renderItem={({ item }) => <FeaturedCard product={item} width={width * 0.72} />}
-              />
-            </View>
-          )}
-
-          <View style={styles.section}>
-            <View style={styles.padded}>
-              <SectionHeader
-                title="Recently added"
-                action="View all"
-                onAction={() => router.push({ pathname: '/explore', params: { sort: 'newest' } })}
-              />
-            </View>
-            {data?.recent.length ? (
-              <FlatList
-                data={data.recent}
-                horizontal
-                keyExtractor={(p) => String(p.id)}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.horizontalCards}
-                renderItem={({ item }) => <ProductCard product={item} width={cardWidth * 0.9} />}
-              />
-            ) : (
-              <EmptyState
-                icon="shirt-outline"
-                title="No listings yet"
-                message="Be the first to list something!"
-                actionLabel="Sell an item"
-                onAction={() => router.push('/sell')}
-              />
-            )}
-          </View>
-
-          {recommended.length > 0 && (
-            <View style={[styles.section, styles.padded]}>
-              <SectionHeader title="Picked for you" />
-              <View style={styles.grid}>
-                {recommended.map((p) => (
-                  <ProductCard key={p.id} product={p} width={cardWidth} />
-                ))}
-              </View>
-            </View>
-          )}
-        </>
+      {!category && picks.length > 0 && (
+        <Animated.View entering={FadeIn.duration(250)} style={styles.section}>
+          <SectionHeader
+            title={favoriteIds.size ? 'Picked for you' : 'Popular right now'}
+            action="See all"
+            onAction={() => router.push({ pathname: '/explore', params: { sort: 'popular' } })}
+          />
+          <FlatList
+            data={picks}
+            horizontal
+            keyExtractor={(p) => String(p.id)}
+            showsHorizontalScrollIndicator={false}
+            style={styles.bleed}
+            contentContainerStyle={styles.picks}
+            renderItem={({ item }) => <ProductCard product={item} width={picksWidth} />}
+          />
+        </Animated.View>
       )}
-    </ScrollView>
-  );
-}
 
-function FeaturedCard({ product, width }: { product: Product; width: number }) {
-  const router = useRouter();
-  return (
-    <Pressable
-      onPress={() => router.push(`/product/${product.id}`)}
-      style={({ pressed }) => [styles.featured, { width }, pressed && styles.pressed]}
-    >
-      <ProductImage uri={product.images[0]?.url} style={{ width, height: width * 0.95 }} />
-      <View style={styles.featuredOverlay}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.featuredTitle} numberOfLines={1}>
-            {product.title}
-          </Text>
-          <Text style={styles.featuredMeta}>
-            {product.size} · {product.condition}
-          </Text>
-        </View>
-        <Text style={styles.featuredPrice}>{formatPrice(product.price)}</Text>
+      <View style={styles.section}>
+        <SectionHeader
+          title={category ?? 'Just in'}
+          action={category ? `${total} ${total === 1 ? 'item' : 'items'}` : 'View all'}
+          onAction={category ? undefined : () => router.push({ pathname: '/explore', params: { sort: 'newest' } })}
+        />
       </View>
-    </Pressable>
+    </View>
+  );
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <ProductGrid
+        products={feed.loading ? [] : items}
+        header={header}
+        refreshing={feed.refreshing}
+        onRefresh={refresh}
+        onEndReached={loadMore}
+        footer={loadingMore ? <LoadingView /> : null}
+        empty={
+          feed.loading ? (
+            <ProductGridSkeleton count={4} />
+          ) : feed.error ? (
+            <ErrorState message={feed.error} onRetry={feed.reload} />
+          ) : (
+            <EmptyState
+              icon="shirt-outline"
+              title={category ? `No ${category.toLowerCase()} yet` : 'Nothing listed yet'}
+              message={category ? 'Check back soon, or be the first to list one.' : 'Be the first to list something.'}
+              actionLabel="Sell an item"
+              onAction={() => router.push('/sell')}
+              secondaryLabel={category ? 'Show everything' : undefined}
+              onSecondary={category ? () => setCategory(null) : undefined}
+            />
+          )
+        }
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: {
+  topBar: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: GRID_PADDING,
-    marginBottom: spacing.lg,
+    height: 48,
+    marginRight: -spacing.sm,
   },
-  welcome: { paddingHorizontal: GRID_PADDING, marginBottom: spacing.lg, gap: 2 },
-  greeting: { fontSize: font.size.md, color: colors.textSecondary },
-  headline: { fontSize: font.size.xxl, fontWeight: font.weight.heavy, color: colors.text, letterSpacing: -0.6 },
-  padded: { paddingHorizontal: GRID_PADDING },
-  section: { marginTop: spacing.xxl },
+  greeting: { ...type.footnote, marginTop: spacing.xs, marginBottom: spacing.md },
+  categoriesScroller: { marginHorizontal: -GRID_PADDING, marginTop: spacing.md },
   categories: { paddingHorizontal: GRID_PADDING, gap: spacing.sm },
-  category: { paddingHorizontal: spacing.xl, paddingVertical: spacing.md, borderRadius: radius.pill },
-  categoryText: { fontSize: font.size.md, fontWeight: font.weight.semibold, color: colors.text },
-  pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
-  featuredList: { paddingHorizontal: GRID_PADDING, gap: spacing.md },
-  featured: { borderRadius: radius.xl, overflow: 'hidden', backgroundColor: colors.card, ...shadow.card },
-  featuredOverlay: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  featuredTitle: { fontSize: font.size.lg, fontWeight: font.weight.semibold, color: colors.text },
-  featuredMeta: { fontSize: font.size.sm, color: colors.textSecondary, marginTop: 2 },
-  featuredPrice: { fontSize: font.size.xl, fontWeight: font.weight.heavy, color: colors.primary },
-  horizontalCards: { paddingHorizontal: GRID_PADDING, gap: spacing.md, paddingBottom: spacing.sm },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP },
+  section: { marginTop: spacing.xxl },
+  bleed: { marginHorizontal: -GRID_PADDING },
+  picks: { paddingHorizontal: GRID_PADDING, gap: spacing.md },
 });

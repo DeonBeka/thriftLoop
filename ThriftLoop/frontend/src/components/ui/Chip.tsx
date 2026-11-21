@@ -1,25 +1,50 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { useEffect } from 'react';
+import { Pressable, StyleSheet } from 'react-native';
+import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { colors, font, radius, spacing } from '@/constants/theme';
+import { colors, control, radius, spacing } from '@/constants/theme';
+import { haptic } from '@/utils/haptics';
 
 interface ChipProps {
   label: string;
   selected?: boolean;
   onPress?: () => void;
   removable?: boolean;
+  /** Plays a selection tick; on by default. */
+  haptics?: boolean;
 }
 
-export function Chip({ label, selected, onPress, removable }: ChipProps) {
+/** Selectable pill. Active state cross-fades instead of snapping. */
+export function Chip({ label, selected = false, onPress, removable, haptics = true }: ChipProps) {
+  const progress = useSharedValue(selected ? 1 : 0);
+  useEffect(() => {
+    progress.value = withTiming(selected ? 1 : 0, { duration: 180 });
+  }, [selected, progress]);
+
+  const container = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(progress.value, [0, 1], [colors.fill, colors.primary]),
+  }));
+  const text = useAnimatedStyle(() => ({
+    color: interpolateColor(progress.value, [0, 1], [colors.text, colors.white]),
+  }));
+
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        if (haptics) void haptic.selection();
+        onPress?.();
+      }}
       accessibilityRole="button"
-      accessibilityState={{ selected: !!selected }}
-      style={({ pressed }) => [styles.chip, selected && styles.selected, pressed && styles.pressed]}
+      accessibilityState={{ selected }}
+      hitSlop={4}
     >
-      <Text style={[styles.label, selected && styles.selectedLabel]}>{label}</Text>
-      {removable && <Ionicons name="close" size={14} color={selected ? colors.white : colors.textSecondary} />}
+      {({ pressed }) => (
+        <Animated.View style={[styles.chip, container, pressed && styles.pressed]}>
+          <Animated.Text style={[styles.label, text]}>{label}</Animated.Text>
+          {removable && <Ionicons name="close" size={14} color={selected ? colors.white : colors.textSecondary} />}
+        </Animated.View>
+      )}
     </Pressable>
   );
 }
@@ -29,15 +54,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: spacing.lg,
-    height: 36,
+    paddingHorizontal: spacing.md + 2,
+    height: control.sm,
     borderRadius: radius.pill,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
-  selected: { backgroundColor: colors.primary, borderColor: colors.primary },
-  pressed: { opacity: 0.8 },
-  label: { fontSize: font.size.sm, fontWeight: font.weight.medium, color: colors.text },
-  selectedLabel: { color: colors.white },
+  pressed: { opacity: 0.75 },
+  label: { fontSize: 14, fontWeight: '500', letterSpacing: -0.1 },
 });

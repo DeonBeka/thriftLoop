@@ -2,9 +2,10 @@ import { useRouter } from 'expo-router';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { ProductImage } from '@/components/product/ProductImage';
+import { ConversationSkeleton } from '@/components/skeletons';
 import { Avatar } from '@/components/ui/Avatar';
-import { EmptyState, ErrorState, LoadingView } from '@/components/ui/States';
-import { colors, font, radius, spacing } from '@/constants/theme';
+import { EmptyState, ErrorState } from '@/components/ui/States';
+import { colors, GUTTER, radius, spacing, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { messagesApi } from '@/services/api';
@@ -18,7 +19,7 @@ export default function Inbox() {
     refetchOnFocus: true,
   });
 
-  if (loading) return <LoadingView />;
+  if (loading) return <ConversationSkeleton />;
   if (error && !data) return <ErrorState message={error} onRetry={reload} />;
 
   return (
@@ -27,13 +28,13 @@ export default function Inbox() {
       data={data ?? []}
       keyExtractor={(c) => String(c.id)}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
+      contentInsetAdjustmentBehavior="automatic"
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.textSecondary} />}
       ListEmptyComponent={
         <EmptyState
           icon="chatbubbles-outline"
           title="No messages yet"
-          message="When you message a seller (or a buyer messages you), the conversation shows up here."
+          message="Message a seller from any listing, and when buyers write to you, the chat shows up here."
           actionLabel="Browse items"
           onAction={() => router.push('/explore')}
         />
@@ -46,30 +47,24 @@ export default function Inbox() {
 function Row({ convo, meId, onPress }: { convo: Conversation; meId?: number; onPress: () => void }) {
   const last = convo.last_message;
   const unread = convo.unread_count > 0;
-  const preview = last ? `${last.sender_id === meId ? 'You: ' : ''}${last.content}` : 'Say hi 👋';
+  const preview = last ? `${last.sender_id === meId ? 'You: ' : ''}${last.content}` : 'No messages yet — say hi';
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.secondary }]}>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.fill }]}>
+      <View style={[styles.unreadDot, unread && styles.unreadDotOn]} />
       <Avatar uri={convo.other_user.profile_image} name={convo.other_user.username} size={50} />
       <View style={styles.body}>
         <View style={styles.topLine}>
-          <Text style={[styles.name, unread && styles.bold]} numberOfLines={1}>
+          <Text style={[type.bodyStrong, styles.name]} numberOfLines={1}>
             {convo.other_user.username}
           </Text>
-          {last && <Text style={[styles.time, unread && styles.timeUnread]}>{messageTime(last.created_at)}</Text>}
+          {last && <Text style={[type.caption, unread && styles.timeUnread]}>{messageTime(last.created_at)}</Text>}
         </View>
         <Text style={styles.product} numberOfLines={1}>
           {convo.product ? `${convo.product.title}${convo.product.status === 'sold' ? ' · Sold' : ''}` : 'Listing removed'}
         </Text>
-        <View style={styles.topLine}>
-          <Text style={[styles.preview, unread && styles.previewUnread]} numberOfLines={1}>
-            {preview}
-          </Text>
-          {unread && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{convo.unread_count}</Text>
-            </View>
-          )}
-        </View>
+        <Text style={[type.callout, unread && styles.previewUnread]} numberOfLines={1}>
+          {preview}
+        </Text>
       </View>
       <ProductImage uri={convo.product?.image_url} style={styles.thumb} />
     </Pressable>
@@ -78,27 +73,27 @@ function Row({ convo, meId, onPress }: { convo: Conversation; meId?: number; onP
 
 const styles = StyleSheet.create({
   list: { flex: 1, backgroundColor: colors.background },
-  content: { flexGrow: 1, paddingVertical: spacing.sm },
-  separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 82 },
-  row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: spacing.md },
-  body: { flex: 1, gap: 2 },
-  topLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
-  name: { fontSize: font.size.md, color: colors.text, fontWeight: font.weight.semibold, flex: 1 },
-  bold: { fontWeight: font.weight.bold },
-  time: { fontSize: font.size.xs, color: colors.textSecondary },
-  timeUnread: { color: colors.primary, fontWeight: font.weight.semibold },
-  product: { fontSize: font.size.sm, color: colors.primary },
-  preview: { fontSize: font.size.sm, color: colors.textSecondary, flex: 1 },
-  previewUnread: { color: colors.text, fontWeight: font.weight.medium },
-  badge: {
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    backgroundColor: colors.primary,
+  content: { flexGrow: 1, paddingVertical: spacing.xs },
+  row: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingLeft: spacing.sm,
+    paddingRight: GUTTER,
+    paddingVertical: spacing.md,
+    gap: spacing.md,
+  },
+  unreadDot: { width: 8, height: 8, borderRadius: 4, marginRight: -spacing.xs },
+  unreadDotOn: { backgroundColor: colors.primary },
+  body: {
+    flex: 1,
+    gap: 1,
+    alignSelf: 'stretch',
     justifyContent: 'center',
   },
-  badgeText: { color: colors.white, fontSize: 11, fontWeight: font.weight.bold },
-  thumb: { width: 46, height: 56, borderRadius: radius.sm },
+  topLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+  name: { flex: 1 },
+  timeUnread: { color: colors.primary, fontWeight: '600' },
+  product: { fontSize: 13, color: colors.primary, fontWeight: '500' },
+  previewUnread: { color: colors.text, fontWeight: '500' },
+  thumb: { width: 42, height: 52, borderRadius: radius.sm },
 });

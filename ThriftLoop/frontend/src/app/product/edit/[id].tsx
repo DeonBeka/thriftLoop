@@ -3,8 +3,9 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ListingForm } from '@/components/sell/ListingForm';
-import { ErrorState, LoadingView } from '@/components/ui/States';
-import { colors, spacing } from '@/constants/theme';
+import { FormSkeleton } from '@/components/skeletons';
+import { ErrorState } from '@/components/ui/States';
+import { colors } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { productsApi } from '@/services/api';
@@ -16,9 +17,9 @@ export default function EditListing() {
   const { user } = useAuth();
   const { data, error, loading, reload } = useApi(() => productsApi.get(Number(id)), [id]);
 
-  if (loading) return <LoadingView />;
+  if (loading) return <FormSkeleton />;
   if (error || !data) return <ErrorState message={error ?? 'Listing not found.'} onRetry={reload} />;
-  if (data.seller.id !== user?.id) return <ErrorState message="You can only edit your own listings." />;
+  if (data.seller.id !== user?.id) return <ErrorState title="Not your listing" message="You can only edit your own listings." />;
 
   return (
     <View style={styles.container}>
@@ -28,5 +29,5 @@ export default function EditListing() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingTop: spacing.lg },
+  container: { flex: 1, backgroundColor: colors.background },
 });

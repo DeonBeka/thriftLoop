@@ -1,70 +1,84 @@
 import { useRouter } from 'expo-router';
 import { memo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, font, radius, shadow, spacing } from '@/constants/theme';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { colors, radius, spacing, type } from '@/constants/theme';
 import type { Product } from '@/types';
 import { formatPrice } from '@/utils/format';
 
 import { FavoriteButton } from './FavoriteButton';
 import { ProductImage } from './ProductImage';
 
+export const IMAGE_RATIO = 1.25; // 4:5 portrait, the standard for clothing photos
+
 interface ProductCardProps {
   product: Product;
   width: number;
 }
 
+/** Photo-first card: no box around it, just the image and three tight lines of text. */
 export const ProductCard = memo(function ProductCard({ product, width }: ProductCardProps) {
   const router = useRouter();
   const sold = product.status === 'sold';
   return (
-    <Pressable
+    <PressableScale
       onPress={() => router.push(`/product/${product.id}`)}
       accessibilityRole="button"
-      accessibilityLabel={`${product.title}, ${formatPrice(product.price)}, size ${product.size}`}
-      style={({ pressed }) => [styles.card, { width }, pressed && styles.pressed]}
+      accessibilityLabel={`${product.title}, ${formatPrice(product.price)}, size ${product.size}, ${product.condition}`}
+      scaleTo={0.975}
+      style={{ width }}
     >
       <View>
-        <ProductImage uri={product.images[0]?.url} style={[styles.image, { height: width * 1.25 }]} />
+        <ProductImage uri={product.images[0]?.url} style={[styles.image, { height: width * IMAGE_RATIO }]} />
+        {sold && (
+          <View style={styles.soldScrim}>
+            <Text style={styles.soldText}>Sold</Text>
+          </View>
+        )}
         <View style={styles.favorite}>
           <FavoriteButton product={product} />
         </View>
-        {sold && (
-          <View style={styles.soldBadge}>
-            <Text style={styles.soldText}>SOLD</Text>
-          </View>
-        )}
       </View>
       <View style={styles.body}>
-        <Text style={styles.price}>{formatPrice(product.price)}</Text>
+        <Text style={[type.price, sold && styles.soldPrice]}>{formatPrice(product.price)}</Text>
         <Text style={styles.title} numberOfLines={1}>
           {product.title}
         </Text>
-        <Text style={styles.meta} numberOfLines={1}>
+        <Text style={type.caption} numberOfLines={1}>
           {product.size} · {product.condition}
         </Text>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 });
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.card, borderRadius: radius.lg, overflow: 'hidden', ...shadow.card },
-  pressed: { transform: [{ scale: 0.98 }], opacity: 0.95 },
-  image: { width: '100%', borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg },
-  favorite: { position: 'absolute', top: spacing.sm, right: spacing.sm },
-  soldBadge: {
+  image: { width: '100%', borderRadius: radius.md },
+  favorite: { position: 'absolute', right: spacing.sm, bottom: spacing.sm },
+  soldScrim: {
     position: 'absolute',
-    left: spacing.sm,
-    top: spacing.sm,
-    backgroundColor: colors.text,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: radius.sm,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(248,248,246,0.55)',
+    alignItems: 'flex-start',
+    padding: spacing.sm,
   },
-  soldText: { color: colors.white, fontSize: 11, fontWeight: font.weight.bold, letterSpacing: 0.6 },
-  body: { padding: spacing.md, gap: 2 },
-  price: { fontSize: font.size.lg, fontWeight: font.weight.bold, color: colors.text, letterSpacing: -0.3 },
-  title: { fontSize: font.size.md, color: colors.text, fontWeight: font.weight.medium },
-  meta: { fontSize: font.size.sm, color: colors.textSecondary },
+  soldText: {
+    backgroundColor: colors.text,
+    color: colors.white,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: radius.xs,
+    overflow: 'hidden',
+  },
+  body: { paddingTop: spacing.sm + 2, gap: 1 },
+  soldPrice: { color: colors.textSecondary, textDecorationLine: 'line-through' },
+  title: { fontSize: 14, lineHeight: 19, color: colors.text },
 });

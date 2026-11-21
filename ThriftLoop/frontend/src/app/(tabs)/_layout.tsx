@@ -1,22 +1,23 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Redirect, Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
-import { StyleSheet, View, type ColorValue } from 'react-native';
+import { StyleSheet, type ColorValue } from 'react-native';
 
-import { colors, font } from '@/constants/theme';
+import { colors } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { haptic } from '@/utils/haptics';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
-function tabIcon(name: IconName, activeName: IconName) {
+function tabIcon(name: IconName, activeName: IconName, size = 24) {
   return ({ color, focused }: { color: ColorValue; focused: boolean }) => (
-    <Ionicons name={focused ? activeName : name} size={24} color={color as string} />
+    <Ionicons name={focused ? activeName : name} size={size} color={color as string} />
   );
 }
 
 export default function TabsLayout() {
   const { user } = useAuth();
-  // Protected area: only verified, signed-in users get past here.
+  // Protected area: only signed-in users get past here.
   if (!user) return <Redirect href="/welcome" />;
 
   return (
@@ -25,42 +26,21 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: font.weight.semibold },
+        tabBarLabelStyle: { fontSize: 10.5, fontWeight: '600', letterSpacing: 0.1 },
         tabBarStyle: {
           backgroundColor: colors.card,
-          borderTopColor: colors.border,
+          borderTopColor: colors.separator,
           borderTopWidth: StyleSheet.hairlineWidth,
         },
         sceneStyle: { backgroundColor: colors.background },
       }}
+      screenListeners={{ tabPress: () => void haptic.selection() }}
     >
       <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: tabIcon('home-outline', 'home') }} />
       <Tabs.Screen name="explore" options={{ title: 'Explore', tabBarIcon: tabIcon('search-outline', 'search') }} />
-      <Tabs.Screen
-        name="sell"
-        options={{
-          title: 'Sell',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.sell, focused && styles.sellFocused]}>
-              <Ionicons name="add" size={24} color={focused ? colors.white : colors.primary} />
-            </View>
-          ),
-        }}
-      />
+      <Tabs.Screen name="sell" options={{ title: 'Sell', tabBarIcon: tabIcon('add-circle-outline', 'add-circle', 27) }} />
       <Tabs.Screen name="favorites" options={{ title: 'Favorites', tabBarIcon: tabIcon('heart-outline', 'heart') }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: tabIcon('person-outline', 'person') }} />
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  sell: {
-    width: 40,
-    height: 30,
-    borderRadius: 10,
-    backgroundColor: colors.secondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sellFocused: { backgroundColor: colors.primary },
-});

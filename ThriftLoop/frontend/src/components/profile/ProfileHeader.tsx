@@ -1,56 +1,76 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/components/ui/Avatar';
-import { colors, font, radius, shadow, spacing } from '@/constants/theme';
+import { colors, spacing, type } from '@/constants/theme';
 import type { UserProfile } from '@/types';
 import { joinedDate } from '@/utils/format';
+import { haptic } from '@/utils/haptics';
 
 export type ListingTab = 'active' | 'sold';
 
 interface ProfileHeaderProps {
   profile: UserProfile;
+  /** Private count, only passed on your own profile. */
   savedCount?: number;
   onPressSaved?: () => void;
   tab: ListingTab;
   onTabChange: (tab: ListingTab) => void;
+  /** Buttons under the bio (e.g. Edit profile). */
+  actions?: ReactNode;
 }
 
-export function ProfileHeader({ profile, savedCount, onPressSaved, tab, onTabChange }: ProfileHeaderProps) {
+/** Typography-led header: no card, hierarchy from size and weight. */
+export function ProfileHeader({ profile, savedCount, onPressSaved, tab, onTabChange, actions }: ProfileHeaderProps) {
   return (
     <View style={styles.wrapper}>
-      <View style={styles.card}>
-        <Avatar uri={profile.profile_image} name={profile.username} size={84} />
-        <Text style={styles.username}>{profile.username}</Text>
-        <View style={styles.joinedRow}>
-          <Ionicons name="calendar-outline" size={14} color={colors.textSecondary} />
-          <Text style={styles.joined}>Joined {joinedDate(profile.created_at)}</Text>
-        </View>
-        {profile.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
-
-        <View style={styles.stats}>
-          <Stat value={profile.active_listings_count} label="Active" />
-          <View style={styles.divider} />
-          <Stat value={profile.sold_count} label="Sold" />
-          {savedCount !== undefined && (
-            <>
-              <View style={styles.divider} />
-              <Pressable onPress={onPressSaved} style={styles.statPress}>
-                <Stat value={savedCount} label="Saved" />
-              </Pressable>
-            </>
-          )}
+      <View style={styles.identity}>
+        <Avatar uri={profile.profile_image} name={profile.username} size={76} />
+        <View style={styles.flex}>
+          <Text style={type.title} numberOfLines={1}>
+            {profile.username}
+          </Text>
+          <Text style={type.footnote}>Joined {joinedDate(profile.created_at)}</Text>
         </View>
       </View>
 
-      <View style={styles.segment}>
-        {(['active', 'sold'] as const).map((t) => (
-          <Pressable key={t} onPress={() => onTabChange(t)} style={[styles.segmentItem, tab === t && styles.segmentActive]}>
-            <Text style={[styles.segmentText, tab === t && styles.segmentTextActive]}>
-              {t === 'active' ? `Listings (${profile.active_listings_count})` : `Sold (${profile.sold_count})`}
-            </Text>
-          </Pressable>
-        ))}
+      {profile.bio ? <Text style={[type.body, styles.bio]}>{profile.bio}</Text> : null}
+
+      <View style={styles.stats}>
+        <Stat value={profile.active_listings_count} label={profile.active_listings_count === 1 ? 'listing' : 'listings'} />
+        <Text style={styles.dot}>·</Text>
+        <Stat value={profile.sold_count} label="sold" />
+        {savedCount !== undefined && (
+          <>
+            <Text style={styles.dot}>·</Text>
+            <Pressable onPress={onPressSaved} hitSlop={8}>
+              <Stat value={savedCount} label="saved" />
+            </Pressable>
+          </>
+        )}
+      </View>
+
+      {actions && <View style={styles.actions}>{actions}</View>}
+
+      <View style={styles.tabs}>
+        {(['active', 'sold'] as const).map((t) => {
+          const active = tab === t;
+          return (
+            <Pressable
+              key={t}
+              onPress={() => {
+                if (!active) void haptic.selection();
+                onTabChange(t);
+              }}
+              style={styles.tab}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
+            >
+              <Text style={[styles.tabText, active && styles.tabTextActive]}>{t === 'active' ? 'Listings' : 'Sold'}</Text>
+              <View style={[styles.tabLine, active && styles.tabLineActive]} />
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
@@ -58,43 +78,31 @@ export function ProfileHeader({ profile, savedCount, onPressSaved, tab, onTabCha
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
+    <Text style={styles.stat}>
+      <Text style={styles.statValue}>{value}</Text> {label}
+    </Text>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: { gap: spacing.lg, marginBottom: spacing.lg },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: radius.xl,
-    padding: spacing.xl,
-    alignItems: 'center',
-    ...shadow.card,
-  },
-  username: { fontSize: font.size.xl, fontWeight: font.weight.bold, color: colors.text, marginTop: spacing.md },
-  joinedRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  joined: { fontSize: font.size.sm, color: colors.textSecondary },
-  bio: { fontSize: font.size.md, color: colors.text, textAlign: 'center', lineHeight: 21, marginTop: spacing.md },
-  stats: {
+  wrapper: { marginBottom: spacing.lg },
+  flex: { flex: 1, gap: 2 },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
+  bio: { marginTop: spacing.lg },
+  stats: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md },
+  stat: { fontSize: 15, color: colors.textSecondary },
+  statValue: { fontWeight: '700', color: colors.text },
+  dot: { color: colors.textTertiary },
+  actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
+  tabs: {
     flexDirection: 'row',
-    alignItems: 'center',
     marginTop: spacing.xl,
-    paddingTop: spacing.lg,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.borderStrong,
-    alignSelf: 'stretch',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.separator,
   },
-  stat: { flex: 1, alignItems: 'center' },
-  statPress: { flex: 1 },
-  statValue: { fontSize: font.size.xl, fontWeight: font.weight.bold, color: colors.text },
-  statLabel: { fontSize: font.size.sm, color: colors.textSecondary, marginTop: 2 },
-  divider: { width: StyleSheet.hairlineWidth, height: 30, backgroundColor: colors.borderStrong },
-  segment: { flexDirection: 'row', backgroundColor: colors.secondary, borderRadius: radius.md, padding: 3 },
-  segmentItem: { flex: 1, paddingVertical: 9, borderRadius: radius.sm + 2, alignItems: 'center' },
-  segmentActive: { backgroundColor: colors.card, ...shadow.card },
-  segmentText: { fontSize: font.size.sm, fontWeight: font.weight.semibold, color: colors.textSecondary },
-  segmentTextActive: { color: colors.text },
+  tab: { flex: 1, alignItems: 'center', paddingTop: spacing.sm },
+  tabText: { fontSize: 15, fontWeight: '600', color: colors.textSecondary, paddingBottom: spacing.md },
+  tabTextActive: { color: colors.text },
+  tabLine: { height: 2, alignSelf: 'stretch', backgroundColor: 'transparent', marginHorizontal: spacing.xxxl },
+  tabLineActive: { backgroundColor: colors.primary },
 });

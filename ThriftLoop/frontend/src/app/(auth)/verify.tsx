@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { colors, font, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { ApiError, authApi } from '@/services/api';
+import { haptic } from '@/utils/haptics';
 
 type Feedback = { tone: 'error' | 'info' | 'success'; text: string } | null;
 
@@ -69,9 +70,11 @@ export default function Verify() {
     setFeedback(null);
     try {
       await completeVerification(email, value);
+      void haptic.success();
       setVerified(true);
       // AuthLayout redirects to Home once the user is set; show a brief success state meanwhile.
     } catch (err) {
+      void haptic.error();
       setShakeKey((k) => k + 1);
       setCode('');
       setFeedback({ tone: 'error', text: err instanceof Error ? err.message : 'Verification failed.' });

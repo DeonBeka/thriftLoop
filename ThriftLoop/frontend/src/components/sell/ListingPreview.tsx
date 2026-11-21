@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ImageGallery } from '@/components/product/ImageGallery';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
-import { colors, font, radius, spacing } from '@/constants/theme';
+import { colors, GUTTER, radius, spacing, type } from '@/constants/theme';
 import type { CurrentUser } from '@/types';
 import { formatPrice } from '@/utils/format';
 
@@ -25,41 +25,44 @@ interface ListingPreviewProps {
   condition: string;
 }
 
-/** Shows the listing exactly as buyers will see it before publishing. */
+/** Page-sheet preview that mirrors the product screen, so sellers see exactly what buyers will. */
 export function ListingPreview(props: ListingPreviewProps) {
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={props.visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={props.onClose}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={props.onClose} hitSlop={10}>
-            <Text style={styles.headerAction}>Edit</Text>
+          <Pressable onPress={props.onClose} hitSlop={12} disabled={props.publishing}>
+            <Text style={styles.headerAction}>Back to edit</Text>
           </Pressable>
-          <Text style={styles.headerTitle}>Preview</Text>
-          <View style={{ width: 32 }} />
+          <Text style={type.headline}>Preview</Text>
+          <View style={styles.headerSpacer} />
         </View>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <ImageGallery urls={props.photos} aspect={1.1} />
-          <View style={styles.sheet}>
-            <Text style={styles.price}>{formatPrice(props.price || 0)}</Text>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.xxl }}>
+          <ImageGallery urls={props.photos} />
+          <View style={styles.content}>
             <Text style={styles.title}>{props.title}</Text>
-            <View style={styles.tags}>
-              {[props.category, props.size, props.condition].map((t) => (
-                <View key={t} style={styles.tag}>
-                  <Text style={styles.tagText}>{t}</Text>
+            <Text style={type.priceLarge}>{formatPrice(props.price || 0)}</Text>
+            <View style={styles.pills}>
+              {[`Size ${props.size}`, props.condition, props.category].map((t) => (
+                <View key={t} style={styles.pill}>
+                  <Text style={styles.pillText}>{t}</Text>
                 </View>
               ))}
             </View>
-            <Text style={styles.description}>{props.description}</Text>
+            <View style={styles.divider} />
+            <Text style={type.overline}>Description</Text>
+            <Text style={type.body}>{props.description}</Text>
+            <View style={styles.divider} />
             <View style={styles.seller}>
               <Avatar uri={props.user.profile_image} name={props.user.username} size={40} />
               <View>
-                <Text style={styles.sellerName}>{props.user.username}</Text>
-                <Text style={styles.sellerMeta}>That's you</Text>
+                <Text style={type.bodyStrong}>{props.user.username}</Text>
+                <Text style={type.footnote}>That’s you</Text>
               </View>
             </View>
             <View style={styles.notice}>
-              <Ionicons name="eye-outline" size={18} color={colors.primary} />
+              <Ionicons name="eye-outline" size={17} color={colors.primary} />
               <Text style={styles.noticeText}>This is how buyers will see your listing.</Text>
             </View>
           </View>
@@ -78,37 +81,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    backgroundColor: colors.card,
+    paddingHorizontal: GUTTER,
+    height: 56,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.separator,
   },
-  headerTitle: { fontSize: font.size.lg, fontWeight: font.weight.semibold, color: colors.text },
-  headerAction: { fontSize: font.size.md, fontWeight: font.weight.semibold, color: colors.primary },
-  sheet: {
-    marginTop: -spacing.xl,
-    backgroundColor: colors.background,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    padding: spacing.xl,
-    gap: spacing.md,
-  },
-  price: { fontSize: font.size.display, fontWeight: font.weight.heavy, color: colors.text, letterSpacing: -0.8 },
-  title: { fontSize: font.size.xl, fontWeight: font.weight.semibold, color: colors.text },
-  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  tag: { backgroundColor: colors.secondary, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 6 },
-  tagText: { color: colors.primary, fontSize: font.size.sm, fontWeight: font.weight.semibold },
-  description: { fontSize: font.size.md, lineHeight: 22, color: colors.text },
-  seller: {
+  headerAction: { fontSize: 16, color: colors.primary },
+  headerSpacer: { width: 90 },
+  content: { paddingHorizontal: GUTTER, paddingTop: spacing.xl, gap: spacing.sm },
+  title: { fontSize: 21, lineHeight: 27, fontWeight: '600', letterSpacing: -0.3, color: colors.text },
+  pills: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.xs },
+  pill: { backgroundColor: colors.secondary, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 5 },
+  pillText: { fontSize: 13, fontWeight: '600', color: colors.primary },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.separator, marginVertical: spacing.lg },
+  seller: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  notice: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    padding: spacing.lg,
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.sm,
+    backgroundColor: colors.secondary,
+    marginTop: spacing.xl,
   },
-  sellerName: { fontSize: font.size.md, fontWeight: font.weight.semibold, color: colors.text },
-  sellerMeta: { fontSize: font.size.sm, color: colors.textSecondary },
-  notice: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, borderRadius: radius.md, backgroundColor: colors.secondary },
-  noticeText: { color: colors.primary, fontSize: font.size.sm, flex: 1 },
-  footer: { paddingHorizontal: spacing.xl, paddingTop: spacing.md, backgroundColor: colors.card },
+  noticeText: { color: colors.primary, fontSize: 13, flex: 1 },
+  footer: {
+    paddingHorizontal: GUTTER,
+    paddingTop: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.separator,
+  },
 });

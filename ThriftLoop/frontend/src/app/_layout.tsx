@@ -4,9 +4,8 @@ import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { LoadingView } from '@/components/ui/States';
 import { Logo } from '@/components/ui/Logo';
-import { colors, font } from '@/constants/theme';
+import { colors, type } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { FavoritesProvider } from '@/hooks/useFavorites';
 
@@ -14,21 +13,25 @@ function RootNavigator() {
   const { initializing } = useAuth();
 
   if (initializing) {
+    // Same look as the native splash, so launch doesn't flash a spinner.
     return (
       <View style={styles.splash}>
         <Logo size={30} />
-        <View style={{ height: 80 }}>
-          <LoadingView />
-        </View>
       </View>
     );
   }
 
   return (
+    // Expo Router's Stack is a native stack (UINavigationController on iOS): pushes slide in from the
+    // right and the left-edge swipe-back is the real interactive gesture — the screen tracks the finger
+    // and cancels if you drag back. Full-screen swipe stays off so horizontal galleries keep working.
     <Stack
       screenOptions={{
+        gestureEnabled: true,
+        fullScreenGestureEnabled: false,
+        animation: 'default',
         headerTintColor: colors.primary,
-        headerTitleStyle: { fontWeight: font.weight.semibold, color: colors.text },
+        headerTitleStyle: { ...type.headline },
         headerShadowVisible: false,
         headerBackButtonDisplayMode: 'minimal',
         headerStyle: { backgroundColor: colors.background },
@@ -38,10 +41,12 @@ function RootNavigator() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false, animation: 'fade' }} />
       <Stack.Screen name="product/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="product/edit/[id]" options={{ title: 'Edit listing', presentation: 'modal' }} />
       <Stack.Screen name="user/[id]" options={{ title: '' }} />
       <Stack.Screen name="messages/index" options={{ title: 'Messages' }} />
       <Stack.Screen name="messages/[id]" options={{ title: '' }} />
+      <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+      {/* Editing flows are sheets: swipe down to dismiss, like iOS Mail/Notes. */}
+      <Stack.Screen name="product/edit/[id]" options={{ title: 'Edit listing', presentation: 'modal' }} />
       <Stack.Screen name="profile/edit" options={{ title: 'Edit profile', presentation: 'modal' }} />
     </Stack>
   );
@@ -49,7 +54,7 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={styles.flex}>
       <SafeAreaProvider>
         <AuthProvider>
           <FavoritesProvider>
@@ -63,5 +68,6 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   splash: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
 });

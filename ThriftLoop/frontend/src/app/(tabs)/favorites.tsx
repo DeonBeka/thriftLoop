@@ -3,9 +3,10 @@ import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ProductGrid } from '@/components/product/ProductGrid';
-import { EmptyState, ErrorState, LoadingView } from '@/components/ui/States';
-import { colors, font, spacing } from '@/constants/theme';
+import { GRID_PADDING, ProductGrid } from '@/components/product/ProductGrid';
+import { ProductGridSkeleton } from '@/components/skeletons';
+import { EmptyState, ErrorState } from '@/components/ui/States';
+import { colors, spacing, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useFavorites } from '@/hooks/useFavorites';
 import { favoritesApi } from '@/services/api';
@@ -24,37 +25,42 @@ export default function Favorites() {
     if (version !== firstVersion.current) void reload();
   }, [version]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Hide items un-hearted on this screen immediately (before the refetch lands).
+  // Un-hearted items fade out immediately, before the refetch lands.
   const items = (data ?? []).filter((p) => isFavorite(p));
   const soldCount = items.filter((p) => p.status === 'sold').length;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.sm }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Favorites</Text>
-        {items.length > 0 && (
-          <Text style={styles.subtitle}>
-            {items.length} saved{soldCount ? ` · ${soldCount} sold` : ''}
-          </Text>
-        )}
+        <Text style={type.largeTitle}>Favorites</Text>
+        <Text style={type.footnote}>
+          {loading
+            ? ' '
+            : items.length
+              ? `${items.length} saved${soldCount ? ` · ${soldCount} sold` : ''} · only you can see these`
+              : 'Only you can see the items you save'}
+        </Text>
       </View>
-      {loading ? (
-        <LoadingView />
-      ) : error && !data ? (
+      {error && !data ? (
         <ErrorState message={error} onRetry={reload} />
       ) : (
         <ProductGrid
-          products={items}
+          products={loading ? [] : items}
           refreshing={refreshing}
           onRefresh={refresh}
+          animateChanges
           empty={
-            <EmptyState
-              icon="heart-outline"
-              title="Nothing saved yet"
-              message="Tap the heart on any item to keep it here. Deleted listings are removed automatically."
-              actionLabel="Start exploring"
-              onAction={() => router.push('/explore')}
-            />
+            loading ? (
+              <ProductGridSkeleton count={4} />
+            ) : (
+              <EmptyState
+                icon="heart-outline"
+                title="Save what you love"
+                message="Tap the heart on any item and it'll wait for you here. Items that get deleted disappear automatically."
+                actionLabel="Start exploring"
+                onAction={() => router.push('/explore')}
+              />
+            )
           }
         />
       )}
@@ -64,7 +70,5 @@ export default function Favorites() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: { paddingHorizontal: spacing.lg, marginBottom: spacing.lg, gap: 2 },
-  title: { fontSize: font.size.display, fontWeight: font.weight.heavy, color: colors.text, letterSpacing: -0.8 },
-  subtitle: { fontSize: font.size.md, color: colors.textSecondary },
+  header: { paddingHorizontal: GRID_PADDING, marginBottom: spacing.lg, gap: 2 },
 });

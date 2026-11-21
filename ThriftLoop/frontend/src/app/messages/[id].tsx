@@ -6,7 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProductImage } from '@/components/product/ProductImage';
 import { Avatar } from '@/components/ui/Avatar';
-import { ErrorState, LoadingView } from '@/components/ui/States';
+import { ChatSkeleton } from '@/components/skeletons';
+import { ErrorState } from '@/components/ui/States';
 import { colors, font, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { messagesApi } from '@/services/api';
@@ -118,7 +119,7 @@ export default function Chat() {
         }}
       />
       {loading ? (
-        <LoadingView />
+        <ChatSkeleton />
       ) : error && !conversation ? (
         <ErrorState message={error} onRetry={loadAll} />
       ) : (
@@ -217,9 +218,9 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
-    backgroundColor: colors.card,
+    backgroundColor: colors.background,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.separator,
   },
   productThumb: { width: 40, height: 48, borderRadius: radius.sm },
   productTitle: { fontSize: font.size.sm, fontWeight: font.weight.semibold, color: colors.text },
@@ -233,7 +234,7 @@ const styles = StyleSheet.create({
   rowTheirs: { alignSelf: 'flex-start', alignItems: 'flex-start' },
   bubble: { paddingHorizontal: spacing.md + 2, paddingVertical: 9, borderRadius: 18 },
   mine: { backgroundColor: colors.primary, borderBottomRightRadius: 6 },
-  theirs: { backgroundColor: colors.card, borderBottomLeftRadius: 6, borderWidth: 1, borderColor: colors.border },
+  theirs: { backgroundColor: colors.fill, borderBottomLeftRadius: 6 },
   bubbleText: { fontSize: font.size.md, color: colors.text, lineHeight: 21 },
   bubbleTextMine: { color: colors.white },
   timestamp: { fontSize: 11, color: colors.textSecondary, marginTop: 3, marginHorizontal: 4 },
@@ -243,18 +244,16 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
-    backgroundColor: colors.card,
+    backgroundColor: colors.background,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
+    borderTopColor: colors.separator,
   },
   input: {
     flex: 1,
     minHeight: 40,
     maxHeight: 120,
     borderRadius: 20,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.fill,
     paddingHorizontal: spacing.lg,
     paddingTop: 10,
     paddingBottom: 10,

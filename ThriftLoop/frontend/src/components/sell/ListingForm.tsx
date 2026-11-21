@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { TextField } from '@/components/ui/TextField';
 import { CATEGORIES, CONDITIONS, sizesForCategory } from '@/constants/catalog';
-import { colors, font, radius, spacing } from '@/constants/theme';
+import { colors, GUTTER, spacing, type } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { productsApi } from '@/services/api';
 import type { Category, Condition, LocalImage, Product } from '@/types';
+import { haptic } from '@/utils/haptics';
 
 import { ListingPreview } from './ListingPreview';
 import { PhotoPicker, photoUri, type ListingPhoto } from './PhotoPicker';
@@ -19,10 +20,18 @@ interface ListingFormProps {
   product?: Product;
   onSaved: (product: Product) => void;
   header?: ReactNode;
+  /** Space below the sticky action bar (home indicator when shown as a sheet). */
   bottomInset?: number;
 }
 
 type Errors = Partial<Record<'photos' | 'title' | 'description' | 'price' | 'category' | 'size' | 'condition', string>>;
+
+function normalizePrice(text: string): string {
+  // Keep one decimal separator and at most two decimals: "12,5" → "12.5"
+  const cleaned = text.replace(',', '.').replace(/[^0-9.]/g, '');
+  const [whole, ...rest] = cleaned.split('.');
+  return rest.length ? `${whole}.${rest.join('').slice(0, 2)}` : whole;
+}
 
 export function ListingForm({ product, onSaved, header, bottomInset = 0 }: ListingFormProps) {
   const { user, refreshUser } = useAuth();
@@ -41,7 +50,7 @@ export function ListingForm({ product, onSaved, header, bottomInset = 0 }: Listi
   const [previewing, setPreviewing] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const priceValue = parseFloat(price.replace(',', '.'));
+  const priceValue = parseFloat(price);
   const sizes = sizesForCategory(category);
 
   const validate = (): boolean => {
@@ -58,8 +67,12 @@ export function ListingForm({ product, onSaved, header, bottomInset = 0 }: Listi
   };
 
   const openPreview = () => {
-    if (validate()) setPreviewing(true);
-    else Alert.alert('Almost there', 'Please fill in the highlighted fields.');
+    if (validate()) {
+      setPreviewing(true);
+    } else {
+      void haptic.error();
+      Alert.alert('Almost there', 'Please complete the highlighted fields.');
+    }
   };
 
   const reset = () => {
@@ -94,12 +107,15 @@ export function ListingForm({ product, onSaved, header, bottomInset = 0 }: Listi
       } else {
         saved = await productsApi.create(input, local);
       }
+      void haptic.success();
       setPreviewing(false);
       if (!product) reset();
       void refreshUser();
       onSaved(saved);
     } catch (err) {
-      Alert.alert(editing ? "Couldn't save changes" : "Couldn't publish", err instanceof Error ? err.message : 'Please try again.');
+      void haptic.error();
+      const message = err instanceof Error ? err.message : 'Please try again.';
+      Alert.alert(editing ? "Couldn't save changes" : "Couldn't publish", `${message}\n\nYour details are still here, so you can try again.`);
     } finally {
       setSaving(false);
     }
@@ -108,16 +124,17 @@ export function ListingForm({ product, onSaved, header, bottomInset = 0 }: Listi
   const clear = (key: keyof Errors) => errors[key] && setErrors((e) => ({ ...e, [key]: undefined }));
 
   return (
-    <>
+    <View style={styles.flex}>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: bottomInset + spacing.xxxl }]}
+        contentContainerStyle={[styles.content, { paddingBottom: 96 + bottomInset }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
         automaticallyAdjustKeyboardInsets
         showsVerticalScrollIndicator={false}
       >
         {header}
-        <Section title="Photos" step={1}>
+
+        <Section title="Photos">
           <PhotoPicker
             photos={photos}
             onChange={(p) => {
@@ -128,7 +145,7 @@ export function ListingForm({ product, onSaved, header, bottomInset = 0 }: Listi
           />
         </Section>
 
-        <Section title="Details" step={2}>
+        <Section title="About the item">
           <TextField
             label="Title"
             placeholder="e.g. Vintage Levi's denim jacket"
@@ -143,7 +160,8 @@ export function ListingForm({ product, onSaved, header, bottomInset = 0 }: Listi
           />
           <TextField
             label="Description"
-            placeholder="Fit, material, measurements, any flaws…"
+            meta={`${description.length}/2000`}
+            placeholder="Fit, fabric, measurements and any flaws"
             value={description}
             onChangeText={(t) => {
               setDescription(t);
@@ -152,11 +170,10 @@ export function ListingForm({ product, onSaved, header, bottomInset = 0 }: Listi
             multiline
             maxLength={2000}
             error={errors.description}
-            hint={`${description.length}/2000`}
           />
         </Section>
 
-        <Section title="Category" step={3} error={errors.category}>
+        <Section title="Category" error={errors.category}>
           <View style={styles.wrap}>
             {CATEGORIES.map((c) => (
               <Chip
@@ -173,7 +190,7 @@ export function ListingForm({ product, onSaved, header, bottomInset = 0 }: Listi
           </View>
         </Section>
 
-        <Section title="Size" step={4} error={errors.size}>
+        <Section title="Size" error={errors.size} hint={category ? undefined : 'Pick a category to see matching sizes.'}>
           <View style={styles.wrap}>
             {sizes.map((s) => (
               <Chip
@@ -189,28 +206,29 @@ export function ListingForm({ product, onSaved, header, bottomInset = 0 }: Listi
           </View>
         </Section>
 
-        <Section title="Condition" step={5} error={errors.condition}>
-          <View style={styles.conditions}>
-            {CONDITIONS.map((c) => {
+        <Section title="Condition" error={errors.condition}>
+          <View>
+            {CONDITIONS.map((c, i) => {
               const selected = condition === c.name;
               return (
                 <Pressable
                   key={c.name}
                   onPress={() => {
+                    void haptic.selection();
                     setCondition(c.name);
                     clear('condition');
                   }}
-                  style={[styles.condition, selected && styles.conditionSelected]}
+                  style={({ pressed }) => [styles.conditionRow, i > 0 && styles.rowDivider, pressed && { opacity: 0.6 }]}
                   accessibilityRole="radio"
                   accessibilityState={{ selected }}
                 >
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.conditionName}>{c.name}</Text>
-                    <Text style={styles.conditionHint}>{c.hint}</Text>
+                  <View style={styles.flex}>
+                    <Text style={[type.bodyStrong, selected && { color: colors.primary }]}>{c.name}</Text>
+                    <Text style={type.footnote}>{c.hint}</Text>
                   </View>
                   <Ionicons
                     name={selected ? 'checkmark-circle' : 'ellipse-outline'}
-                    size={22}
+                    size={23}
                     color={selected ? colors.primary : colors.borderStrong}
                   />
                 </Pressable>
@@ -219,22 +237,30 @@ export function ListingForm({ product, onSaved, header, bottomInset = 0 }: Listi
           </View>
         </Section>
 
-        <Section title="Price" step={6}>
+        <Section title="Price">
           <TextField
             prefix="€"
             placeholder="0.00"
             keyboardType="decimal-pad"
             value={price}
             onChangeText={(t) => {
-              setPrice(t.replace(/[^0-9.,]/g, ''));
+              setPrice(normalizePrice(t));
               clear('price');
             }}
+            onBlur={() => {
+              const n = parseFloat(price);
+              if (Number.isFinite(n) && price.includes('.')) setPrice(n.toFixed(2));
+            }}
             error={errors.price}
+            hint="Buyers can message you to make an offer."
           />
         </Section>
-
-        <Button title={editing ? 'Preview changes' : 'Preview listing'} icon="eye-outline" onPress={openPreview} />
       </ScrollView>
+
+      {/* Sticky action bar, always reachable above the tab bar / home indicator. */}
+      <View style={[styles.actionBar, { paddingBottom: spacing.md + bottomInset }]}>
+        <Button title={editing ? 'Review changes' : 'Preview listing'} onPress={openPreview} />
+      </View>
 
       {user && (
         <ListingPreview
@@ -253,53 +279,44 @@ export function ListingForm({ product, onSaved, header, bottomInset = 0 }: Listi
           condition={condition ?? ''}
         />
       )}
-    </>
+    </View>
   );
 }
 
-function Section({ title, step, error, children }: { title: string; step: number; error?: string; children: ReactNode }) {
+function Section({ title, error, hint, children }: { title: string; error?: string; hint?: string; children: ReactNode }) {
   return (
     <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.step}>
-          <Text style={styles.stepText}>{step}</Text>
-        </View>
-        <Text style={styles.sectionTitle}>{title}</Text>
-      </View>
-      {children}
+      <Text style={type.headline}>{title}</Text>
+      {hint && <Text style={[type.footnote, styles.sectionHint]}>{hint}</Text>}
+      <View style={styles.sectionBody}>{children}</View>
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: spacing.lg, gap: spacing.xxl },
-  section: { gap: spacing.md },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  step: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: colors.secondary,
-    alignItems: 'center',
-    justifyContent: 'center',
+  flex: { flex: 1 },
+  content: { paddingHorizontal: GUTTER },
+  section: {
+    paddingVertical: spacing.xl,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.separator,
   },
-  stepText: { fontSize: 12, fontWeight: font.weight.bold, color: colors.primary },
-  sectionTitle: { fontSize: font.size.lg, fontWeight: font.weight.bold, color: colors.text },
+  sectionHint: { marginTop: 2 },
+  sectionBody: { marginTop: spacing.md, gap: spacing.lg },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  conditions: { gap: spacing.sm },
-  condition: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.lg,
-    borderRadius: radius.md,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.md,
+  conditionRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md },
+  rowDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
+  error: { fontSize: 13, color: colors.danger, marginTop: spacing.sm },
+  actionBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: GUTTER,
+    paddingTop: spacing.md,
+    backgroundColor: 'rgba(248,248,246,0.97)',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.separator,
   },
-  conditionSelected: { borderColor: colors.primary, backgroundColor: '#F3F8F4' },
-  conditionName: { fontSize: font.size.md, fontWeight: font.weight.semibold, color: colors.text },
-  conditionHint: { fontSize: font.size.sm, color: colors.textSecondary, marginTop: 2 },
-  error: { fontSize: font.size.sm, color: colors.danger },
 });

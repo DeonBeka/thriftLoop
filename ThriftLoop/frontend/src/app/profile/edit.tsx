@@ -11,6 +11,7 @@ import { colors, font, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { usersApi } from '@/services/api';
 import type { LocalImage } from '@/types';
+import { haptic } from '@/utils/haptics';
 
 export default function EditProfile() {
   const router = useRouter();
@@ -59,6 +60,7 @@ export default function EditProfile() {
     try {
       const updated = await usersApi.updateMe({ username: username.trim(), bio: bio.trim(), image, removeImage });
       setUser(updated);
+      void haptic.success();
       router.back();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't save your profile.");
@@ -89,7 +91,7 @@ export default function EditProfile() {
         placeholder="Tell buyers a bit about your style and how you ship."
         multiline
         maxLength={300}
-        hint={`${bio.length}/300`}
+        meta={`${bio.length}/300`}
       />
       <View style={styles.readonly}>
         <Text style={styles.readonlyLabel}>Email</Text>

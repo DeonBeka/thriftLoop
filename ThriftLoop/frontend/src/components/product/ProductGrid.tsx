@@ -1,10 +1,21 @@
 import type { ReactElement } from 'react';
-import { FlatList, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { RefreshControl, StyleSheet, useWindowDimensions } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import { colors, spacing } from '@/constants/theme';
+import { colors, GUTTER, spacing } from '@/constants/theme';
 import type { Product } from '@/types';
 
-import { ProductCard } from './ProductCard';
+import { IMAGE_RATIO, ProductCard } from './ProductCard';
+
+export { IMAGE_RATIO };
+export const GRID_GAP = spacing.md;
+export const GRID_PADDING = GUTTER;
+
+export function useCardWidth() {
+  const { width } = useWindowDimensions();
+  // Floor to whole pixels so both columns line up exactly on every iPhone width.
+  return Math.floor((width - GRID_PADDING * 2 - GRID_GAP) / 2);
+}
 
 interface ProductGridProps {
   products: Product[];
@@ -14,19 +25,12 @@ interface ProductGridProps {
   empty?: ReactElement | null;
   footer?: ReactElement | null;
   onEndReached?: () => void;
-  scrollEnabled?: boolean;
   bottomInset?: number;
+  /** Fade cards out when they leave the list (e.g. un-favorited). */
+  animateChanges?: boolean;
 }
 
-export const GRID_GAP = spacing.md;
-export const GRID_PADDING = spacing.lg;
-
-export function useCardWidth() {
-  const { width } = useWindowDimensions();
-  return (width - GRID_PADDING * 2 - GRID_GAP) / 2;
-}
-
-/** Two-column, pull-to-refresh product grid. */
+/** Two-column, pull-to-refresh photo grid used by Home, Explore, Favorites and profiles. */
 export function ProductGrid({
   products,
   refreshing = false,
@@ -35,29 +39,39 @@ export function ProductGrid({
   empty,
   footer,
   onEndReached,
-  scrollEnabled = true,
-  bottomInset = spacing.xxl,
+  bottomInset = spacing.xxxl,
+  animateChanges = false,
 }: ProductGridProps) {
   const cardWidth = useCardWidth();
   return (
-    <FlatList
+    <Animated.FlatList
       data={products}
       keyExtractor={(item) => String(item.id)}
       numColumns={2}
-      renderItem={({ item }) => <ProductCard product={item} width={cardWidth} />}
+      renderItem={({ item }) =>
+        animateChanges ? (
+          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(180)}>
+            <ProductCard product={item} width={cardWidth} />
+          </Animated.View>
+        ) : (
+          <ProductCard product={item} width={cardWidth} />
+        )
+      }
       columnWrapperStyle={styles.row}
       contentContainerStyle={[styles.content, { paddingBottom: bottomInset }]}
       ListHeaderComponent={header ?? undefined}
       ListEmptyComponent={empty ?? undefined}
       ListFooterComponent={footer ?? undefined}
-      ItemSeparatorComponent={() => <View style={{ height: GRID_GAP }} />}
       showsVerticalScrollIndicator={false}
       keyboardDismissMode="on-drag"
-      scrollEnabled={scrollEnabled}
+      keyboardShouldPersistTaps="handled"
       onEndReached={onEndReached}
-      onEndReachedThreshold={0.4}
+      onEndReachedThreshold={0.5}
+      removeClippedSubviews
+      initialNumToRender={6}
+      windowSize={7}
       refreshControl={
-        onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} /> : undefined
+        onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textSecondary} /> : undefined
       }
     />
   );
@@ -65,5 +79,5 @@ export function ProductGrid({
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: GRID_PADDING, flexGrow: 1 },
-  row: { gap: GRID_GAP },
+  row: { gap: GRID_GAP, marginBottom: spacing.xl },
 });

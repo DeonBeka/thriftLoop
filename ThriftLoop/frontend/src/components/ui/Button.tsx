@@ -1,8 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, font, radius, spacing } from '@/constants/theme';
+import { colors, control, radius, spacing, type } from '@/constants/theme';
+
+import { PressableScale } from './PressableScale';
 
 type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 
@@ -13,34 +15,47 @@ interface ButtonProps {
   loading?: boolean;
   disabled?: boolean;
   icon?: ComponentProps<typeof Ionicons>['name'];
-  size?: 'md' | 'lg' | 'sm';
+  size?: 'lg' | 'md' | 'sm';
   style?: StyleProp<ViewStyle>;
+  accessibilityLabel?: string;
 }
 
-const palette: Record<Variant, { bg: string; fg: string; border?: string; pressed: string }> = {
-  primary: { bg: colors.primary, fg: colors.white, pressed: colors.primaryPressed },
-  secondary: { bg: colors.secondary, fg: colors.primary, pressed: '#CFDDD2' },
-  outline: { bg: colors.card, fg: colors.text, border: colors.borderStrong, pressed: colors.background },
-  ghost: { bg: 'transparent', fg: colors.primary, pressed: colors.secondary },
-  danger: { bg: colors.dangerSoft, fg: colors.danger, pressed: '#F2D3CE' },
+const palette: Record<Variant, { bg: string; fg: string; border: string }> = {
+  primary: { bg: colors.primary, fg: colors.white, border: colors.primary },
+  secondary: { bg: colors.secondary, fg: colors.primary, border: colors.secondary },
+  outline: { bg: 'transparent', fg: colors.text, border: colors.borderStrong },
+  ghost: { bg: 'transparent', fg: colors.primary, border: 'transparent' },
+  danger: { bg: colors.dangerSoft, fg: colors.danger, border: colors.dangerSoft },
 };
 
-export function Button({ title, onPress, variant = 'primary', loading, disabled, icon, size = 'lg', style }: ButtonProps) {
+export function Button({
+  title,
+  onPress,
+  variant = 'primary',
+  loading,
+  disabled,
+  icon,
+  size = 'lg',
+  style,
+  accessibilityLabel,
+}: ButtonProps) {
   const p = palette[variant];
-  const inactive = disabled || loading;
-  const height = size === 'lg' ? 54 : size === 'md' ? 46 : 36;
+  const inactive = disabled || loading; // also blocks double submits while a request runs
+  const height = control[size];
+  const iconOnly = !title && !!icon;
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? title}
       accessibilityState={{ disabled: !!inactive, busy: !!loading }}
       onPress={onPress}
       disabled={inactive}
-      style={({ pressed }) => [
+      scaleTo={0.97}
+      style={[
         styles.base,
-        { height, backgroundColor: pressed ? p.pressed : p.bg, borderColor: p.border ?? 'transparent' },
-        size === 'sm' && styles.small,
-        inactive && styles.disabled,
-        pressed && styles.pressed,
+        { height, backgroundColor: p.bg, borderColor: p.border },
+        iconOnly && { width: height, paddingHorizontal: 0 },
+        disabled && !loading && styles.disabled,
         style,
       ]}
     >
@@ -49,10 +64,10 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled,
       ) : (
         <View style={styles.row}>
           {icon && <Ionicons name={icon} size={size === 'sm' ? 16 : 19} color={p.fg} />}
-          <Text style={[styles.label, { color: p.fg }, size === 'sm' && styles.smallLabel]}>{title}</Text>
+          {!!title && <Text style={[type.button, { color: p.fg }, size === 'sm' && styles.smallLabel]}>{title}</Text>}
         </View>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -64,10 +79,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     borderWidth: 1,
   },
-  small: { borderRadius: radius.pill, paddingHorizontal: spacing.lg },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  label: { fontSize: font.size.lg, fontWeight: font.weight.semibold, letterSpacing: -0.2 },
-  smallLabel: { fontSize: font.size.sm },
-  disabled: { opacity: 0.5 },
-  pressed: { transform: [{ scale: 0.985 }] },
+  smallLabel: { fontSize: 14 },
+  disabled: { opacity: 0.45 },
 });

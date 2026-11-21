@@ -1,57 +1,53 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { colors, shadow } from '@/constants/theme';
+
+import { PressableScale } from './PressableScale';
 
 interface IconButtonProps {
   icon: ComponentProps<typeof Ionicons>['name'];
   onPress?: () => void;
   label: string;
   badge?: number;
+  /** White circle with a soft shadow, for buttons drawn over photos. */
   floating?: boolean;
   color?: string;
+  size?: number;
   style?: StyleProp<ViewStyle>;
 }
 
-export function IconButton({ icon, onPress, label, badge, floating, color = colors.text, style }: IconButtonProps) {
+/** Bare icon (nav-bar style) by default; `floating` for over-image controls. */
+export function IconButton({ icon, onPress, label, badge, floating, color = colors.text, size = 22, style }: IconButtonProps) {
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       accessibilityLabel={label}
       accessibilityRole="button"
-      hitSlop={6}
-      style={({ pressed }) => [styles.button, floating && styles.floating, pressed && styles.pressed, style]}
+      hitSlop={8}
+      scaleTo={0.9}
+      style={[styles.button, floating && styles.floating, style]}
     >
-      <Ionicons name={icon} size={21} color={color} />
+      <Ionicons name={icon} size={size} color={color} />
       {!!badge && badge > 0 && (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{badge > 9 ? '9+' : badge}</Text>
         </View>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  floating: { borderWidth: 0, backgroundColor: 'rgba(255,255,255,0.94)', ...shadow.card },
-  pressed: { opacity: 0.7, transform: [{ scale: 0.95 }] },
+  button: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
+  floating: { backgroundColor: 'rgba(255,255,255,0.96)', ...shadow.floating },
   badge: {
     position: 'absolute',
-    top: -3,
-    right: -3,
-    minWidth: 18,
-    height: 18,
+    top: 1,
+    right: 0,
+    minWidth: 17,
+    height: 17,
     paddingHorizontal: 4,
     borderRadius: 9,
     backgroundColor: colors.primary,
@@ -60,5 +56,5 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.background,
   },
-  badgeText: { color: colors.white, fontSize: 10, fontWeight: '700' },
+  badgeText: { color: colors.white, fontSize: 9, fontWeight: '700' },
 });
