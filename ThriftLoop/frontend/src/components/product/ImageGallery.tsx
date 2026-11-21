@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FlatList, StyleSheet, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 
-import { colors, radius, spacing } from '@/constants/theme';
+import { colors, radius, spacing, themed } from '@/constants/theme';
 
 import { IMAGE_RATIO } from './ProductCard';
 import { ProductImage } from './ProductImage';
@@ -51,7 +51,8 @@ export function ImageGallery({ urls, bottomInset = 0 }: { urls: string[]; bottom
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   indicator: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
   dots: {
     flexDirection: 'row',
@@ -63,4 +64,5 @@ const styles = StyleSheet.create({
   },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.5)' },
   dotActive: { backgroundColor: colors.white },
-});
+  }),
+);

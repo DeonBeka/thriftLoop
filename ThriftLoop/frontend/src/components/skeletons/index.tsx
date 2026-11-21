@@ -3,7 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SkeletonBox, SkeletonCircle, SkeletonGroup, SkeletonText } from '@/components/ui/Skeleton';
 import { GRID_GAP, IMAGE_RATIO, useCardWidth } from '@/components/product/ProductGrid';
-import { colors, control, GUTTER, radius, spacing } from '@/constants/theme';
+import { colors, control, GUTTER, radius, spacing, themed } from '@/constants/theme';
 
 /** Mirrors ProductCard: 4:5 photo, then price, title and meta lines. */
 export function ProductCardSkeleton({ width }: { width: number }) {
@@ -170,7 +170,8 @@ export function FormSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   gutter: { paddingHorizontal: GUTTER },
   row: { flexDirection: 'row', alignItems: 'center' },
@@ -178,4 +179,5 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: GRID_GAP, rowGap: spacing.xl },
   cardText: { paddingTop: spacing.sm + 2, gap: 6 },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.separator, marginVertical: spacing.sm },
-});
+  }),
+);

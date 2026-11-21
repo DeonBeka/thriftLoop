@@ -1,10 +1,11 @@
 import { Image } from 'expo-image';
 import { type StyleProp, type ImageStyle } from 'react-native';
 
-import { isDark } from '@/constants/theme';
+import { themeState } from '@/constants/theme';
 
 // Dark mode uses a cream version of the lettering so it stays readable.
-const WORDMARK = isDark ? require('../../../assets/brand/wordmark-light.png') : require('../../../assets/brand/wordmark.png');
+const WORDMARK_DARK_TEXT = require('../../../assets/brand/wordmark.png');
+const WORDMARK_LIGHT_TEXT = require('../../../assets/brand/wordmark-light.png');
 const MARK = require('../../../assets/brand/mark.png');
 
 // Intrinsic aspect ratios of the exported artwork (width / height).
@@ -25,7 +26,7 @@ export function Logo({ size = 24, variant = 'full', style }: LogoProps) {
   const width = Math.round(height * (full ? WORDMARK_RATIO : MARK_RATIO));
   return (
     <Image
-      source={full ? WORDMARK : MARK}
+      source={full ? (themeState.isDark ? WORDMARK_LIGHT_TEXT : WORDMARK_DARK_TEXT) : MARK}
       style={[{ width, height }, style]}
       contentFit="contain"
       accessibilityRole="image"

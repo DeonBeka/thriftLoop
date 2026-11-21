@@ -6,13 +6,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { Logo } from '@/components/ui/Logo';
-import { colors, font, fs, radius, shadow, spacing } from '@/constants/theme';
+import { colors, font, fs, radius, shadow, spacing, themed } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { productsApi } from '@/services/api';
 import { imageUrl } from '@/services/config';
 
 // Tiles show the newest listings' photos (public endpoint); soft colour blocks if offline.
-const TILES = [colors.secondary, colors.fill, colors.placeholder, colors.warmSoft];
+const tiles = () => [colors.secondary, colors.fill, colors.placeholder, colors.warmSoft];
 
 export default function Welcome() {
   const router = useRouter();
@@ -29,7 +29,7 @@ export default function Welcome() {
       </Animated.View>
 
       <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.collage}>
-        {TILES.map((bg, i) => (
+        {tiles().map((bg, i) => (
           <View
             key={bg}
             style={[
@@ -59,7 +59,8 @@ export default function Welcome() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, paddingHorizontal: spacing.xxl },
   collage: {
     flex: 1,
@@ -75,4 +76,5 @@ const styles = StyleSheet.create({
   headline: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(36), lineHeight: fs(42), color: colors.text, letterSpacing: -0.8 },
   body: { fontSize: font.size.md, lineHeight: fs(22), color: colors.textSecondary },
   actions: { gap: spacing.sm },
-});
+  }),
+);

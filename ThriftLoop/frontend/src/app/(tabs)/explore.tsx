@@ -13,7 +13,7 @@ import { PressableScale } from '@/components/ui/PressableScale';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { EmptyState, ErrorState, LoadingView } from '@/components/ui/States';
 import { CATEGORIES, PRICE_RANGES, SORT_OPTIONS } from '@/constants/catalog';
-import { colors, control, fs, radius, spacing, type } from '@/constants/theme';
+import { colors, control, fs, radius, spacing, themed, type } from '@/constants/theme';
 import { productsApi } from '@/services/api';
 import type { Category, Product, SortOption } from '@/types';
 import { formatPrice } from '@/utils/format';
@@ -247,7 +247,8 @@ export default function Explore() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   top: { paddingHorizontal: GRID_PADDING, gap: spacing.md, paddingBottom: spacing.md },
@@ -280,4 +281,5 @@ const styles = StyleSheet.create({
   chips: { gap: spacing.sm, paddingHorizontal: GRID_PADDING },
   resultsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   clear: { fontSize: fs(13), color: colors.primary, fontWeight: '600' },
-});
+  }),
+);

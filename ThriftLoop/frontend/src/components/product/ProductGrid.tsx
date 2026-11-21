@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { RefreshControl, StyleSheet, useWindowDimensions } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import { colors, GUTTER, spacing } from '@/constants/theme';
+import { colors, GUTTER, spacing, themed } from '@/constants/theme';
 import type { Product } from '@/types';
 
 import { IMAGE_RATIO, ProductCard } from './ProductCard';
@@ -77,7 +77,9 @@ export function ProductGrid({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   content: { paddingHorizontal: GRID_PADDING, flexGrow: 1 },
   row: { gap: GRID_GAP, marginBottom: spacing.xl },
-});
+  }),
+);

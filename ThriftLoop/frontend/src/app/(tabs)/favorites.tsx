@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GRID_PADDING, ProductGrid } from '@/components/product/ProductGrid';
 import { ProductGridSkeleton } from '@/components/skeletons';
 import { EmptyState, ErrorState } from '@/components/ui/States';
-import { colors, spacing, type } from '@/constants/theme';
+import { colors, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useFavorites } from '@/hooks/useFavorites';
 import { favoritesApi } from '@/services/api';
@@ -68,7 +68,9 @@ export default function Favorites() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { paddingHorizontal: GRID_PADDING, marginBottom: spacing.lg, gap: 2 },
-});
+  }),
+);

@@ -6,7 +6,7 @@ import { ProductGrid } from '@/components/product/ProductGrid';
 import { ProfileHeader, type ListingTab } from '@/components/profile/ProfileHeader';
 import { ProfileSkeleton } from '@/components/skeletons';
 import { EmptyState, ErrorState } from '@/components/ui/States';
-import { colors, spacing } from '@/constants/theme';
+import { colors, spacing, themed } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { usersApi } from '@/services/api';
 
@@ -50,6 +50,8 @@ export default function SellerProfile() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, paddingTop: spacing.sm },
-});
+  }),
+);

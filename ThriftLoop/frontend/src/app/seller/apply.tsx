@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/Button';
 import { Checkbox, linkStyle } from '@/components/ui/Checkbox';
 import { TextField } from '@/components/ui/TextField';
-import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, themed, type } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { sellerApi } from '@/services/api';
 import type { LocalImage } from '@/types';
@@ -177,7 +177,8 @@ export default function ApplyToSell() {
 
 const SELFIE = 168;
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   lead: { marginTop: spacing.xs },
@@ -219,4 +220,5 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.separator,
   },
-});
+  }),
+);

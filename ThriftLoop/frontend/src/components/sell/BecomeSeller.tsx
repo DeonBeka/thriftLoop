@@ -5,7 +5,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
-import { colors, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, GUTTER, radius, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { sellerApi } from '@/services/api';
@@ -102,7 +102,8 @@ export function BecomeSeller() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1, gap: 2 },
   lead: { marginTop: spacing.sm, marginBottom: spacing.xl },
@@ -119,4 +120,5 @@ const styles = StyleSheet.create({
   },
   terms: { textAlign: 'center', marginTop: spacing.lg },
   link: { color: colors.primary, textDecorationLine: 'underline' },
-});
+  }),
+);

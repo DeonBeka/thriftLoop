@@ -12,7 +12,7 @@ import { Checkbox, linkStyle } from '@/components/ui/Checkbox';
 import { Chip } from '@/components/ui/Chip';
 import { ErrorState } from '@/components/ui/States';
 import { TextField } from '@/components/ui/TextField';
-import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { ordersApi, productsApi } from '@/services/api';
@@ -195,7 +195,8 @@ function Row({ label, value, strong, muted }: { label: string; value: string; st
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1, gap: 2 },
   summary: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, borderRadius: radius.lg, backgroundColor: colors.card },
@@ -222,4 +223,5 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.separator,
   },
-});
+  }),
+);

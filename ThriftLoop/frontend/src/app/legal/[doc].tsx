@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ErrorState } from '@/components/ui/States';
 import { LAST_UPDATED, LEGAL, type LegalDocId } from '@/constants/legal';
-import { colors, GUTTER, spacing, type } from '@/constants/theme';
+import { colors, GUTTER, spacing, themed, type } from '@/constants/theme';
 
 export default function LegalScreen() {
   const { doc } = useLocalSearchParams<{ doc: LegalDocId }>();
@@ -29,10 +29,12 @@ export default function LegalScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   updated: { marginTop: spacing.xs },
   summary: { marginTop: spacing.lg, color: colors.textSecondary },
   section: { marginTop: spacing.xl, gap: spacing.xs },
   body: { color: colors.text },
-});
+  }),
+);

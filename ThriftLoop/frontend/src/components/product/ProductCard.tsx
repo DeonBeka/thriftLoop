@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/ui/PressableScale';
-import { colors, fs, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, radius, spacing, themed, type } from '@/constants/theme';
 import type { Product } from '@/types';
 import { formatPrice } from '@/utils/format';
 
@@ -53,7 +53,8 @@ export const ProductCard = memo(function ProductCard({ product, width }: Product
   );
 });
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   image: { width: '100%', borderRadius: radius.md },
   favorite: { position: 'absolute', right: spacing.sm, bottom: spacing.sm },
   soldScrim: {
@@ -82,4 +83,5 @@ const styles = StyleSheet.create({
   price: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(17), lineHeight: fs(22), color: colors.text },
   soldPrice: { color: colors.textSecondary, textDecorationLine: 'line-through' },
   title: { fontSize: fs(14), lineHeight: fs(19), color: colors.text },
-});
+  }),
+);

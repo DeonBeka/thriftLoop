@@ -7,7 +7,7 @@ import { ProductImage } from '@/components/product/ProductImage';
 import { ConversationSkeleton } from '@/components/skeletons';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState, ErrorState } from '@/components/ui/States';
-import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { ordersApi } from '@/services/api';
@@ -69,7 +69,8 @@ export default function Orders() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   tabs: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: GUTTER, paddingVertical: spacing.sm },
   content: { paddingHorizontal: GUTTER, paddingBottom: spacing.huge, flexGrow: 1 },
@@ -77,4 +78,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md, borderRadius: radius.md },
   thumb: { width: 58, height: 72, borderRadius: radius.sm },
   price: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(17), color: colors.text },
-});
+  }),
+);

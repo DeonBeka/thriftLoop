@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ListingForm } from '@/components/sell/ListingForm';
 import { FormSkeleton } from '@/components/skeletons';
 import { ErrorState } from '@/components/ui/States';
-import { colors } from '@/constants/theme';
+import { colors, themed } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { productsApi } from '@/services/api';
@@ -28,6 +28,8 @@ export default function EditListing() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-});
+  }),
+);

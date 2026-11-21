@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { ALL_FILTER_SIZES, CONDITIONS, PRICE_RANGES, SORT_OPTIONS } from '@/constants/catalog';
-import { colors, font, radius, spacing } from '@/constants/theme';
+import { colors, font, radius, spacing, themed } from '@/constants/theme';
 import type { Condition, SortOption } from '@/types';
 
 export interface ExploreFilters {
@@ -167,7 +167,8 @@ export function FilterSheet({ visible, initial, onClose, onApply }: FilterSheetP
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
@@ -210,4 +211,5 @@ const styles = StyleSheet.create({
     borderTopColor: colors.borderStrong,
     backgroundColor: colors.card,
   },
-});
+  }),
+);

@@ -5,17 +5,17 @@ import { ConversationSkeleton } from '@/components/skeletons';
 import { Avatar } from '@/components/ui/Avatar';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { EmptyState, ErrorState } from '@/components/ui/States';
-import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { adminApi } from '@/services/api';
 import type { AdminUser } from '@/types';
 import { haptic } from '@/utils/haptics';
 
-const ROLE_STYLE: Record<AdminUser['role'], { bg: string; fg: string; label: string }> = {
+const ROLE_STYLE: Record<AdminUser['role'], { bg: string; fg: string; label: string }> = themed(() => ({
   admin: { bg: colors.primary, fg: colors.white, label: 'Admin' },
   seller: { bg: colors.secondary, fg: colors.primary, label: 'Seller' },
   viewer: { bg: colors.fill, fg: colors.textSecondary, label: 'Viewer' },
-};
+}));
 
 export default function AdminUsers() {
   const [query, setQuery] = useState('');
@@ -95,7 +95,8 @@ export default function AdminUsers() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   search: { paddingHorizontal: GUTTER, paddingVertical: spacing.sm },
   content: { paddingHorizontal: GUTTER, paddingBottom: spacing.huge, flexGrow: 1 },
@@ -103,4 +104,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md, borderRadius: radius.md },
   badge: { paddingHorizontal: spacing.sm + 2, paddingVertical: 4, borderRadius: radius.pill },
   badgeText: { fontSize: fs(12), fontWeight: '600' },
-});
+  }),
+);

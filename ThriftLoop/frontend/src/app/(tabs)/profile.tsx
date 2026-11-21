@@ -9,7 +9,7 @@ import { ProfileSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
 import { EmptyState, ErrorState } from '@/components/ui/States';
-import { colors, spacing, type } from '@/constants/theme';
+import { colors, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -95,7 +95,8 @@ export default function Profile() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   topBar: {
@@ -106,4 +107,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   topActions: { flexDirection: 'row', gap: spacing.xs, marginRight: -spacing.sm },
-});
+  }),
+);

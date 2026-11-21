@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius, spacing, type } from '@/constants/theme';
+import { colors, radius, spacing, themed, type } from '@/constants/theme';
 
 export interface PickedLocation {
   latitude: number;
@@ -17,6 +17,8 @@ export function MapPicker(_props: { value: PickedLocation | null; onChange: (loc
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   box: { padding: spacing.lg, borderRadius: radius.lg, backgroundColor: colors.fill },
-});
+  }),
+);

@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { type Region } from 'react-native-maps';
 
-import { colors, fs, radius, shadow, spacing } from '@/constants/theme';
+import { colors, fs, radius, shadow, spacing, themed } from '@/constants/theme';
 import { haptic } from '@/utils/haptics';
 
 export interface PickedLocation {
@@ -107,7 +107,8 @@ export function MapPicker({ value, onChange }: { value: PickedLocation | null; o
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   wrapper: { height: 240, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.placeholder },
   pinWrap: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', paddingBottom: 36 },
   locate: {
@@ -133,4 +134,5 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   hintText: { fontSize: fs(13), color: colors.text },
-});
+  }),
+);

@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { PressableScale } from '@/components/ui/PressableScale';
 import { HERO_PHOTO } from '@/constants/catalog';
-import { colors, fs, radius, spacing } from '@/constants/theme';
+import { colors, fs, radius, spacing, themed } from '@/constants/theme';
 
 /** Warm editorial banner inviting people to list something. */
 export function SellBanner({ onPress }: { onPress: () => void }) {
@@ -23,7 +23,8 @@ export function SellBanner({ onPress }: { onPress: () => void }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   card: {
     flexDirection: 'row',
     backgroundColor: colors.primary,
@@ -46,4 +47,5 @@ const styles = StyleSheet.create({
   },
   ctaText: { fontSize: fs(14), fontWeight: '600', color: colors.primary },
   photo: { width: '38%', backgroundColor: colors.primaryPressed },
-});
+  }),
+);

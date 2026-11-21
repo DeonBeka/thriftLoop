@@ -8,7 +8,7 @@ import { FormSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/States';
 import { TextField } from '@/components/ui/TextField';
-import { colors, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, GUTTER, radius, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { adminApi } from '@/services/api';
 import { getToken } from '@/services/storage';
@@ -121,7 +121,8 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   flex2: { flex: 1.6 },
@@ -147,4 +148,5 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.separator,
   },
-});
+  }),
+);

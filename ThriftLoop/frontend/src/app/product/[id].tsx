@@ -12,7 +12,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
 import { ErrorState } from '@/components/ui/States';
-import { colors, fs, GUTTER, radius, shadow, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, shadow, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { messagesApi, productsApi } from '@/services/api';
@@ -278,7 +278,8 @@ function Pill({ label }: { label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   topBar: { position: 'absolute', left: GUTTER - 4, right: GUTTER - 4, flexDirection: 'row', justifyContent: 'space-between' },
@@ -316,4 +317,5 @@ const styles = StyleSheet.create({
     borderTopColor: colors.separator,
     ...shadow.card,
   },
-});
+  }),
+);

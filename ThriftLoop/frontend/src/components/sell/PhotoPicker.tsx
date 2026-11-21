@@ -5,7 +5,7 @@ import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanim
 
 import { ProductImage } from '@/components/product/ProductImage';
 import { PressableScale } from '@/components/ui/PressableScale';
-import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, themed, type } from '@/constants/theme';
 import { haptic } from '@/utils/haptics';
 
 export const MAX_PHOTOS = 8;
@@ -143,7 +143,8 @@ export function PhotoPicker({ photos, onChange, error }: PhotoPickerProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   wrapper: { gap: spacing.md },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
   thumb: { borderRadius: radius.md },
@@ -181,4 +182,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   error: { color: colors.danger },
-});
+  }),
+);

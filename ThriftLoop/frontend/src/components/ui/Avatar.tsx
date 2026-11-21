@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, font } from '@/constants/theme';
+import { colors, font, themed } from '@/constants/theme';
 import { imageUrl } from '@/services/config';
 
 interface AvatarProps {
@@ -23,8 +23,10 @@ export function Avatar({ uri, name, size = 40 }: AvatarProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   image: { backgroundColor: colors.placeholder },
   fallback: { backgroundColor: colors.warmSoft, alignItems: 'center', justifyContent: 'center' },
   initial: { color: colors.warm, fontFamily: 'Fraunces_600SemiBold' },
-});
+  }),
+);

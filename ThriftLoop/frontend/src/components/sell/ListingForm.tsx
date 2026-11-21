@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { TextField } from '@/components/ui/TextField';
 import { CATEGORIES, CONDITIONS, sizesForCategory } from '@/constants/catalog';
-import { colors, fs, GUTTER, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, spacing, themed, type } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { productsApi } from '@/services/api';
 import type { Category, Condition, LocalImage, Product } from '@/types';
@@ -294,7 +294,8 @@ function Section({ title, error, hint, children }: { title: string; error?: stri
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: GUTTER },
   section: {
@@ -319,4 +320,5 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.separator,
   },
-});
+  }),
+);

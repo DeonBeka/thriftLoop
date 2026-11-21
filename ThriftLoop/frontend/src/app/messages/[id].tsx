@@ -8,7 +8,7 @@ import { ProductImage } from '@/components/product/ProductImage';
 import { Avatar } from '@/components/ui/Avatar';
 import { ChatSkeleton } from '@/components/skeletons';
 import { ErrorState } from '@/components/ui/States';
-import { colors, font, fs, radius, spacing } from '@/constants/theme';
+import { colors, font, fs, radius, spacing, themed } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { messagesApi } from '@/services/api';
 import type { Conversation, Message } from '@/types';
@@ -208,7 +208,8 @@ export default function Chat() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   headerTitle: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   headerName: { fontSize: font.size.md, fontWeight: font.weight.semibold, color: colors.text },
@@ -269,4 +270,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sendDisabled: { backgroundColor: colors.accent },
-});
+  }),
+);

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/components/ui/Avatar';
-import { colors, fs, spacing, type } from '@/constants/theme';
+import { colors, fs, spacing, themed, type } from '@/constants/theme';
 import type { UserProfile } from '@/types';
 import { joinedDate } from '@/utils/format';
 import { haptic } from '@/utils/haptics';
@@ -91,7 +91,8 @@ function Stat({ value, label }: { value: number; label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   wrapper: { marginBottom: spacing.lg },
   flex: { flex: 1, gap: 2 },
   identity: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
@@ -114,4 +115,5 @@ const styles = StyleSheet.create({
   tabTextActive: { color: colors.text },
   tabLine: { height: 2, alignSelf: 'stretch', backgroundColor: 'transparent', marginHorizontal: spacing.xxxl },
   tabLineActive: { backgroundColor: colors.primary },
-});
+  }),
+);

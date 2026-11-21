@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/Button';
 import { Checkbox, linkStyle } from '@/components/ui/Checkbox';
 import { Logo } from '@/components/ui/Logo';
-import { colors, fs, GUTTER, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, spacing, themed, type } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { authApi } from '@/services/api';
 import { haptic } from '@/utils/haptics';
@@ -60,7 +60,8 @@ export function TermsGate() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, paddingHorizontal: GUTTER },
   body: { flex: 1, justifyContent: 'center', gap: spacing.md },
   icon: {
@@ -76,4 +77,5 @@ const styles = StyleSheet.create({
   links: { gap: spacing.md, marginTop: spacing.sm },
   link: { fontSize: fs(16) },
   footer: { gap: spacing.md },
-});
+  }),
+);

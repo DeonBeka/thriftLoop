@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 import { CATEGORIES } from '@/constants/catalog';
-import { colors, fs, GUTTER, spacing } from '@/constants/theme';
+import { colors, fs, GUTTER, spacing, themed } from '@/constants/theme';
 import type { Category } from '@/types';
 import { haptic } from '@/utils/haptics';
 
@@ -64,7 +64,8 @@ function Tile({ label, photo, active, onPress }: { label: string; photo?: string
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   scroller: { marginHorizontal: -GUTTER },
   row: { paddingHorizontal: GUTTER, gap: spacing.md },
   tile: { alignItems: 'center', width: SIZE + 10, gap: 6 },
@@ -74,4 +75,5 @@ const styles = StyleSheet.create({
   allText: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(17), color: colors.white },
   label: { fontSize: fs(12), fontWeight: '500', color: colors.textSecondary },
   labelActive: { color: colors.text, fontWeight: '600' },
-});
+  }),
+);

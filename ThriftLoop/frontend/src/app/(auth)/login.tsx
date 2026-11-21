@@ -6,7 +6,7 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { AuthScreen } from '@/components/auth/AuthScreen';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
-import { colors, font, radius, spacing } from '@/constants/theme';
+import { colors, font, radius, spacing, themed } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { ApiError } from '@/services/api';
 
@@ -86,9 +86,11 @@ export default function Login() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   footer: { alignItems: 'center', gap: 2 },
   footerText: { color: colors.textSecondary, fontSize: font.size.md },
   errorBox: { backgroundColor: colors.dangerSoft, padding: spacing.md, borderRadius: radius.md },
   errorText: { color: colors.danger, fontSize: font.size.sm, fontWeight: font.weight.medium },
-});
+  }),
+);

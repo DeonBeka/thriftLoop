@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, control, fs, radius, spacing, type } from '@/constants/theme';
+import { colors, control, fs, radius, spacing, themed, type } from '@/constants/theme';
 
 import { PressableScale } from './PressableScale';
 
@@ -20,13 +20,13 @@ interface ButtonProps {
   accessibilityLabel?: string;
 }
 
-const palette: Record<Variant, { bg: string; fg: string; border: string }> = {
+const palette: Record<Variant, { bg: string; fg: string; border: string }> = themed(() => ({
   primary: { bg: colors.primary, fg: colors.white, border: colors.primary },
   secondary: { bg: colors.secondary, fg: colors.primary, border: colors.secondary },
   outline: { bg: 'transparent', fg: colors.text, border: colors.borderStrong },
   ghost: { bg: 'transparent', fg: colors.primary, border: 'transparent' },
   danger: { bg: colors.dangerSoft, fg: colors.danger, border: colors.dangerSoft },
-};
+}));
 
 export function Button({
   title,
@@ -71,7 +71,8 @@ export function Button({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   base: {
     borderRadius: radius.md,
     alignItems: 'center',
@@ -82,4 +83,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   smallLabel: { fontSize: fs(14) },
   disabled: { opacity: 0.45 },
-});
+  }),
+);

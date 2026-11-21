@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { colors, control, fs, radius, spacing } from '@/constants/theme';
+import { colors, control, fs, radius, spacing, themed } from '@/constants/theme';
 import { haptic } from '@/utils/haptics';
 
 interface ChipProps {
@@ -49,7 +49,8 @@ export function Chip({ label, selected = false, onPress, removable, haptics = tr
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -60,4 +61,5 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.75 },
   label: { fontSize: fs(14), fontWeight: '500', letterSpacing: -0.1 },
-});
+  }),
+);

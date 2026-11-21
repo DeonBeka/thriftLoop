@@ -1,13 +1,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Appearance, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
-import { ACCENTS, colors, fs, GUTTER, isDark, radius, spacing, TEXT_SCALE, type } from '@/constants/theme';
-import { launchPreferences, savePreferences, type AccentName, type Preferences, type TextSize, type ThemeMode } from '@/services/preferences';
+import { ACCENTS, applyTheme, colors, fs, GUTTER, radius, spacing, TEXT_SCALE, themed, themeNav, type } from '@/constants/theme';
+import { getPreferences, savePreferences, type AccentName, type Preferences, type TextSize, type ThemeMode } from '@/services/preferences';
 import { haptic } from '@/utils/haptics';
-import { reloadApp } from '@/utils/reload';
 import { speak, stopSpeaking } from '@/utils/speech';
 
 const THEMES: { value: ThemeMode; label: string; icon: 'phone-portrait-outline' | 'sunny-outline' | 'moon-outline' }[] = [
@@ -30,29 +29,31 @@ const RATES: { value: number; label: string }[] = [
 
 export default function AppearanceScreen() {
   const insets = useSafeAreaInsets();
-  const [prefs, setPrefs] = useState<Preferences>({ ...launchPreferences });
+  const [prefs, setPrefs] = useState<Preferences>({ ...getPreferences() });
   const [applying, setApplying] = useState(false);
+  const applied = getPreferences();
 
-  // Theme, colour and size are baked into styles at launch, so they apply after a quick reload.
-  const needsReload =
-    prefs.theme !== launchPreferences.theme || prefs.accent !== launchPreferences.accent || prefs.textSize !== launchPreferences.textSize;
+  // Look changes (theme, colour, size) are batched behind "Apply changes"; they switch live.
+  const needsReload = prefs.theme !== applied.theme || prefs.accent !== applied.accent || prefs.textSize !== applied.textSize;
 
   /** Haptics and speech take effect immediately. */
   const update = (patch: Partial<Preferences>, instant = false) => {
     const next = { ...prefs, ...patch };
     setPrefs(next);
     void haptic.selection();
-    if (instant) void savePreferences({ ...launchPreferences, ...pickInstant(next) });
+    if (instant) void savePreferences({ ...getPreferences(), ...pickInstant(next) });
   };
 
   const apply = async () => {
     setApplying(true);
     await savePreferences(prefs);
     void haptic.success();
-    await reloadApp();
+    // Re-style the whole app in place (no restart) and come back to this screen.
+    themeNav.returnTo = '/appearance';
+    applyTheme(prefs);
   };
 
-  const previewDark = prefs.theme === 'dark' || (prefs.theme === 'system' && isDark);
+  const previewDark = prefs.theme === 'dark' || (prefs.theme === 'system' && Appearance.getColorScheme() === 'dark');
   const accent = ACCENTS[prefs.accent][previewDark ? 'dark' : 'light'];
   const previewScale = TEXT_SCALE[prefs.textSize];
 
@@ -192,7 +193,7 @@ export default function AppearanceScreen() {
 
       {needsReload && (
         <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
-          <Text style={[type.footnote, styles.barText]}>The screen refreshes for a moment to apply your new look.</Text>
+          <Text style={[type.footnote, styles.barText]}>Your new look applies instantly across the app.</Text>
           <Button title="Apply changes" icon="color-palette-outline" onPress={apply} loading={applying} />
         </View>
       )}
@@ -245,7 +246,8 @@ function ToggleRow({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1, gap: 2 },
   preview: { borderRadius: radius.lg, padding: spacing.lg, gap: 4, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border },
@@ -316,4 +318,5 @@ const styles = StyleSheet.create({
     borderTopColor: colors.separator,
   },
   barText: { textAlign: 'center' },
-});
+  }),
+);

@@ -7,7 +7,7 @@ import { ConversationSkeleton } from '@/components/skeletons';
 import { Avatar } from '@/components/ui/Avatar';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState, ErrorState } from '@/components/ui/States';
-import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { adminApi } from '@/services/api';
 import type { SellerApplication } from '@/types';
@@ -102,7 +102,8 @@ function ApplicationRow({ app, onPress }: { app: SellerApplication; onPress: () 
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { paddingHorizontal: GUTTER, paddingBottom: spacing.huge, flexGrow: 1 },
   flex: { flex: 1, gap: 2 },
@@ -121,4 +122,5 @@ const styles = StyleSheet.create({
   sectionTitle: { marginTop: spacing.xxl, marginBottom: spacing.md },
   chips: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md, borderRadius: radius.md },
-});
+  }),
+);

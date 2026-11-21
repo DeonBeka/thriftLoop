@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
-import { colors, shadow } from '@/constants/theme';
+import { colors, shadow, themed } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavorites } from '@/hooks/useFavorites';
 import type { Product } from '@/types';
@@ -51,7 +51,8 @@ export function FavoriteButton({ product, variant = 'overlay' }: FavoriteButtonP
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   overlay: {
     width: 30,
     height: 30,
@@ -70,4 +71,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+  }),
+);

@@ -5,7 +5,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/ui/Avatar';
-import { colors, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, GUTTER, radius, spacing, themed, type } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { haptic } from '@/utils/haptics';
 
@@ -106,7 +106,8 @@ function Row({ icon, label, onPress, destructive, last }: { icon: IconName; labe
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1, gap: 2 },
   pressed: { backgroundColor: colors.fill },
@@ -127,4 +128,5 @@ const styles = StyleSheet.create({
   rowContent: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, paddingRight: spacing.lg },
   rowDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.separator },
   version: { ...type.caption, textAlign: 'center', marginTop: spacing.xxl, color: colors.textTertiary },
-});
+  }),
+);

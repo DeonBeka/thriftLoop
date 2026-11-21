@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import { useState } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors } from '@/constants/theme';
+import { colors, themed } from '@/constants/theme';
 import { imageUrl } from '@/services/config';
 
 /** Product photo with a soft placeholder when the image is missing or fails to load. */
@@ -28,11 +28,13 @@ export function ProductImage({ uri, style }: { uri?: string | null; style?: Styl
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: {
     backgroundColor: colors.placeholder,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
-});
+  }),
+);

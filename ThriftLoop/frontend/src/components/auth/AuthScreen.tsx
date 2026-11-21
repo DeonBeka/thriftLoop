@@ -5,7 +5,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Logo } from '@/components/ui/Logo';
-import { colors, font, fs, spacing } from '@/constants/theme';
+import { colors, font, fs, spacing, themed } from '@/constants/theme';
 
 /** Shared, keyboard-aware shell for login / register / verify. */
 export function AuthScreen({
@@ -45,7 +45,8 @@ export function AuthScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   content: { flexGrow: 1, paddingHorizontal: spacing.xxl },
   back: { width: 40, height: 40, justifyContent: 'center', marginLeft: -8, marginBottom: spacing.lg },
@@ -54,4 +55,5 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: font.size.md, color: colors.textSecondary, marginTop: spacing.sm, lineHeight: fs(22) },
   body: { marginTop: spacing.xxxl, gap: spacing.lg },
   spacer: { flex: 1, minHeight: spacing.xxl },
-});
+  }),
+);

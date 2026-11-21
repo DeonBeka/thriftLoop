@@ -7,7 +7,7 @@ import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import { AuthScreen } from '@/components/auth/AuthScreen';
 import { OtpInput } from '@/components/auth/OtpInput';
 import { Button } from '@/components/ui/Button';
-import { colors, font, radius, spacing } from '@/constants/theme';
+import { colors, font, radius, spacing, themed } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { ApiError, authApi } from '@/services/api';
 import { haptic } from '@/utils/haptics';
@@ -144,7 +144,8 @@ export default function Verify() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   email: { color: colors.text, fontWeight: font.weight.semibold },
   feedback: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, borderRadius: radius.md },
   feedbackError: { backgroundColor: colors.dangerSoft },
@@ -164,4 +165,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   successText: { fontSize: font.size.lg, fontWeight: font.weight.semibold, color: colors.text },
-});
+  }),
+);

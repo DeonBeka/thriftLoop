@@ -3,7 +3,7 @@ import type { ComponentProps } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
-import { colors, fs, spacing, type } from '@/constants/theme';
+import { colors, fs, spacing, themed, type } from '@/constants/theme';
 
 import { Button } from './Button';
 
@@ -62,10 +62,12 @@ export function ErrorState({ message, onRetry, title = "Couldn't load this" }: {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   inline: { paddingVertical: spacing.xl, alignItems: 'center' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xxxl, paddingVertical: spacing.huge, gap: spacing.sm, minHeight: 320 },
   title: { ...type.headline, textAlign: 'center', marginTop: spacing.sm },
   body: { ...type.callout, textAlign: 'center', maxWidth: 290, lineHeight: fs(20) },
   actions: { marginTop: spacing.lg, alignItems: 'center', gap: spacing.xs, minWidth: 180 },
-});
+  }),
+);

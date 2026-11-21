@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
-import { colors, font, spacing } from '@/constants/theme';
+import { colors, font, spacing, themed } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { usersApi } from '@/services/api';
 import type { LocalImage } from '@/types';
@@ -103,7 +103,8 @@ export default function EditProfile() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.xl, gap: spacing.lg },
   avatarWrap: { alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md },
@@ -112,4 +113,5 @@ const styles = StyleSheet.create({
   readonlyLabel: { fontSize: font.size.sm, fontWeight: font.weight.semibold, color: colors.text },
   readonlyValue: { fontSize: font.size.md, color: colors.textSecondary },
   error: { color: colors.danger, fontSize: font.size.sm },
-});
+  }),
+);

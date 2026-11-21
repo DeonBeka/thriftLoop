@@ -14,7 +14,7 @@ import { Logo } from '@/components/ui/Logo';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { EmptyState, ErrorState, LoadingView } from '@/components/ui/States';
-import { colors, spacing, type } from '@/constants/theme';
+import { colors, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -186,7 +186,8 @@ export default function Home() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   topBar: {
     flexDirection: 'row',
@@ -202,4 +203,5 @@ const styles = StyleSheet.create({
   section: { marginTop: spacing.xxl },
   bleed: { marginHorizontal: -GRID_PADDING },
   picks: { paddingHorizontal: GRID_PADDING, gap: spacing.md },
-});
+  }),
+);

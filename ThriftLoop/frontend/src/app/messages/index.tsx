@@ -5,7 +5,7 @@ import { ProductImage } from '@/components/product/ProductImage';
 import { ConversationSkeleton } from '@/components/skeletons';
 import { Avatar } from '@/components/ui/Avatar';
 import { EmptyState, ErrorState } from '@/components/ui/States';
-import { colors, fs, GUTTER, radius, spacing, type } from '@/constants/theme';
+import { colors, fs, GUTTER, radius, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { messagesApi } from '@/services/api';
@@ -71,7 +71,8 @@ function Row({ convo, meId, onPress }: { convo: Conversation; meId?: number; onP
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   list: { flex: 1, backgroundColor: colors.background },
   content: { flexGrow: 1, paddingVertical: spacing.xs },
   row: {
@@ -96,4 +97,5 @@ const styles = StyleSheet.create({
   product: { fontSize: fs(13), color: colors.primary, fontWeight: '500' },
   previewUnread: { color: colors.text, fontWeight: '500' },
   thumb: { width: 42, height: 52, borderRadius: radius.sm },
-});
+  }),
+);

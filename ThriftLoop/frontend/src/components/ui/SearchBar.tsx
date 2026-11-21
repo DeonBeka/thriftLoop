@@ -4,7 +4,7 @@ import { forwardRef, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import Animated, { FadeIn, FadeOut, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { colors, control, fs, radius, spacing } from '@/constants/theme';
+import { colors, control, fs, radius, spacing, themed } from '@/constants/theme';
 
 interface SearchBarProps extends Omit<TextInputProps, 'style'> {
   onClear?: () => void;
@@ -60,7 +60,8 @@ export const SearchBar = forwardRef<TextInputInstance, SearchBarProps>(function 
   );
 });
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   bar: {
     height: control.md,
     borderRadius: radius.md,
@@ -71,4 +72,5 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   input: { flex: 1, fontSize: fs(16), color: colors.text, height: '100%' },
-});
+  }),
+);

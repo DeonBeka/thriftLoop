@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BecomeSeller } from '@/components/sell/BecomeSeller';
 import { ListingForm } from '@/components/sell/ListingForm';
-import { colors, spacing, type } from '@/constants/theme';
+import { colors, spacing, themed, type } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function Sell() {
@@ -30,7 +30,9 @@ export default function Sell() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themed(() =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { gap: spacing.xs, paddingBottom: spacing.xs },
-});
+  }),
+);
