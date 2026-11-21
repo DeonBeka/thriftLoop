@@ -42,7 +42,7 @@ py -m venv .venv
 pip install -r requirements.txt
 copy .env.example .env            # macOS/Linux: cp .env.example .env
 python -m app.seed --reset        # demo users and listings
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --timeout-keep-alive 120
 ```
 
 Interactive API docs are at http://localhost:8000/docs.

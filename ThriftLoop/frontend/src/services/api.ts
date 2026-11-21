@@ -66,8 +66,18 @@ async function request<T>(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 20000);
   let response: Response;
+  const send = () => fetch(buildUrl(path, options.query), { method, headers, body, signal: controller.signal });
   try {
-    response = await fetch(buildUrl(path, options.query), { method, headers, body, signal: controller.signal });
+    try {
+      response = await send();
+    } catch (first) {
+      // iOS reuses idle keep-alive connections; if the server already closed one, a POST fails with
+      // "The network connection was lost" before anything is sent. iOS retries GETs itself but not
+      // POST/PUT, so retry once here. (Aborts/timeouts are not retried.)
+      if (first instanceof Error && first.name === 'AbortError') throw first;
+      await new Promise((r) => setTimeout(r, 350));
+      response = await send();
+    }
   } catch (err) {
     const aborted = err instanceof Error && err.name === 'AbortError';
     const reason = err instanceof Error ? err.message : String(err);
