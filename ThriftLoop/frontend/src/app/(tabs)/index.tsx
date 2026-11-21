@@ -105,7 +105,7 @@ export default function Home() {
   const header = (
     <View>
       <View style={styles.topBar}>
-        <Logo size={21} />
+        <Logo size={24} />
         <IconButton icon="chatbubble-outline" label="Messages" badge={unread} onPress={() => router.push('/messages')} />
       </View>
 

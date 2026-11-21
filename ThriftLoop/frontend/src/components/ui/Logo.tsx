@@ -1,35 +1,32 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { type StyleProp, type ImageStyle } from 'react-native';
 
-import { colors, font } from '@/constants/theme';
+const WORDMARK = require('../../../assets/brand/wordmark.png');
+const MARK = require('../../../assets/brand/mark.png');
 
-/** Wordmark: two interlocking rings + "thriftloop". */
-export function Logo({ size = 22, color = colors.primary }: { size?: number; color?: string }) {
-  const ring = size * 0.78;
-  return (
-    <View style={styles.row}>
-      <View style={{ width: ring * 1.55, height: ring }}>
-        <View style={[styles.ring, { width: ring, height: ring, borderRadius: ring / 2, borderColor: color, borderWidth: size * 0.13 }]} />
-        <View
-          style={[
-            styles.ring,
-            {
-              left: ring * 0.55,
-              width: ring,
-              height: ring,
-              borderRadius: ring / 2,
-              borderColor: colors.accent,
-              borderWidth: size * 0.13,
-            },
-          ]}
-        />
-      </View>
-      <Text style={[styles.word, { fontSize: size, color }]}>thriftloop</Text>
-    </View>
-  );
+// Intrinsic aspect ratios of the exported artwork (width / height).
+const WORDMARK_RATIO = 883 / 164;
+const MARK_RATIO = 660 / 401;
+
+interface LogoProps {
+  /** Visual height in points. */
+  size?: number;
+  /** `full` = "Thrift Loop" wordmark (headers, welcome); `mark` = the two-ring icon only. */
+  variant?: 'full' | 'mark';
+  style?: StyleProp<ImageStyle>;
 }
 
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  ring: { position: 'absolute', top: 0 },
-  word: { fontWeight: font.weight.heavy, letterSpacing: -0.8 },
-});
+export function Logo({ size = 24, variant = 'full', style }: LogoProps) {
+  const full = variant === 'full';
+  const height = size;
+  const width = Math.round(height * (full ? WORDMARK_RATIO : MARK_RATIO));
+  return (
+    <Image
+      source={full ? WORDMARK : MARK}
+      style={[{ width, height }, style]}
+      contentFit="contain"
+      accessibilityRole="image"
+      accessibilityLabel="ThriftLoop"
+    />
+  );
+}

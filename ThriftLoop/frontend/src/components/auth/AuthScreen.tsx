@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Logo } from '@/components/ui/Logo';
 import { colors, font, spacing } from '@/constants/theme';
 
 /** Shared, keyboard-aware shell for login / register / verify. */
@@ -32,6 +33,7 @@ export function AuthScreen({
             <Ionicons name="chevron-back" size={26} color={colors.text} />
           </Pressable>
         )}
+        <Logo size={22} style={styles.logo} />
         <Text style={styles.title}>{title}</Text>
         {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
         <View style={styles.body}>{children}</View>
@@ -46,6 +48,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   content: { flexGrow: 1, paddingHorizontal: spacing.xxl },
   back: { width: 40, height: 40, justifyContent: 'center', marginLeft: -8, marginBottom: spacing.lg },
+  logo: { marginBottom: spacing.xl },
   title: { fontSize: font.size.display, fontWeight: font.weight.heavy, color: colors.text, letterSpacing: -0.8 },
   subtitle: { fontSize: font.size.md, color: colors.textSecondary, marginTop: spacing.sm, lineHeight: 22 },
   body: { marginTop: spacing.xxxl, gap: spacing.lg },

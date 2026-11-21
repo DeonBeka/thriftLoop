@@ -25,7 +25,7 @@ export default function Welcome() {
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg }]}>
       <Animated.View entering={FadeInDown.duration(500)}>
-        <Logo size={24} />
+        <Logo size={28} />
       </Animated.View>
 
       <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.collage}>

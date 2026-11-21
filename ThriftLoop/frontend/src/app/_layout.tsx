@@ -16,7 +16,7 @@ function RootNavigator() {
     // Same look as the native splash, so launch doesn't flash a spinner.
     return (
       <View style={styles.splash}>
-        <Logo size={30} />
+        <Logo variant="mark" size={64} />
       </View>
     );
   }
