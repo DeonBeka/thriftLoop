@@ -89,12 +89,15 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> Registe
     if username_owner is not None and username_owner is not existing:
         raise HTTPException(status.HTTP_409_CONFLICT, "That username is taken.")
 
+    role = "admin" if payload.email in settings.admin_email_set else "viewer"
     if existing is None:
         user = User(
             username=payload.username,
             email=payload.email,
             hashed_password=hash_password(payload.password),
             is_verified=False,
+            role=role,
+            terms_accepted_at=_now(),
         )
         db.add(user)
         db.flush()
@@ -103,6 +106,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> Registe
         user = existing
         user.username = payload.username
         user.hashed_password = hash_password(payload.password)
+        user.terms_accepted_at = _now()
 
     if not settings.require_email_verification:
         # Verification turned off: activate right away and sign the user in.
@@ -201,6 +205,14 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
         user.is_verified = True
         db.commit()
     return TokenResponse(access_token=create_access_token(user.id), user=current_user_out(db, user))
+
+
+@router.post("/accept-terms", response_model=CurrentUserOut)
+def accept_terms(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> CurrentUserOut:
+    """For accounts created before Terms existed (or after the Terms change)."""
+    user.terms_accepted_at = _now()
+    db.commit()
+    return current_user_out(db, user)
 
 
 @router.get("/me", response_model=CurrentUserOut)

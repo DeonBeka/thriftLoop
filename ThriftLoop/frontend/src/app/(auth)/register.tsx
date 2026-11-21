@@ -5,6 +5,7 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AuthScreen } from '@/components/auth/AuthScreen';
 import { Button } from '@/components/ui/Button';
+import { Checkbox, linkStyle } from '@/components/ui/Checkbox';
 import { TextField } from '@/components/ui/TextField';
 import { colors, font, radius, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
@@ -22,6 +23,8 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [termsError, setTermsError] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,7 +37,8 @@ export default function Register() {
     if (password.length < 8) next.password = 'Use at least 8 characters.';
     if (confirm !== password) next.confirm = "Passwords don't match.";
     setErrors(next);
-    return Object.keys(next).length === 0;
+    setTermsError(!acceptTerms);
+    return Object.keys(next).length === 0 && acceptTerms;
   };
 
   const submit = async () => {
@@ -47,6 +51,7 @@ export default function Register() {
         email: email.trim().toLowerCase(),
         password,
         confirm_password: confirm,
+        accept_terms: acceptTerms,
       });
       if (!res.verification_required && res.access_token && res.user) {
         // Verification is off on the server: signed in, the (auth) layout redirects to Home.
@@ -140,6 +145,28 @@ export default function Register() {
         returnKeyType="go"
         onSubmitEditing={submit}
       />
+      <Checkbox
+        checked={acceptTerms}
+        onChange={(v) => {
+          setAcceptTerms(v);
+          if (v) setTermsError(false);
+        }}
+        error={termsError}
+        label={
+          <>
+            I agree to the{' '}
+            <Text style={linkStyle} onPress={() => router.push('/legal/terms')}>
+              Terms of Service
+            </Text>{' '}
+            and{' '}
+            <Text style={linkStyle} onPress={() => router.push('/legal/privacy')}>
+              Privacy Policy
+            </Text>
+            .
+          </>
+        }
+      />
+      {termsError && <Text style={styles.termsError}>Please accept the Terms to create your account.</Text>}
       {serverError && (
         <View style={styles.errorBox}>
           <Text style={styles.errorText}>{serverError}</Text>
@@ -153,6 +180,7 @@ export default function Register() {
 const styles = StyleSheet.create({
   footer: { alignItems: 'center', gap: 2 },
   footerText: { color: colors.textSecondary, fontSize: font.size.md },
+  termsError: { color: colors.danger, fontSize: 13, marginTop: -spacing.sm },
   errorBox: { backgroundColor: colors.dangerSoft, padding: spacing.md, borderRadius: radius.md },
   errorText: { color: colors.danger, fontSize: font.size.sm, fontWeight: font.weight.medium },
 });

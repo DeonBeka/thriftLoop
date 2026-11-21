@@ -9,6 +9,9 @@ os.environ["DATABASE_URL"] = f"sqlite:///{(_tmp / 'test.db').as_posix()}"
 os.environ["UPLOAD_DIR"] = str(_tmp / "uploads")
 os.environ["EMAIL_DEV_MODE"] = "true"
 os.environ["REQUIRE_EMAIL_VERIFICATION"] = "true"  # most tests exercise the OTP flow
+os.environ["PRIVATE_UPLOAD_DIR"] = str(_tmp / "private")
+os.environ["ADMIN_EMAILS"] = "boss@gmail.com"
+os.environ["RATE_LIMIT_ENABLED"] = "false"
 os.environ["JWT_SECRET_KEY"] = "test-secret-that-is-long-enough-for-hs256-signing"
 
 import pytest  # noqa: E402
@@ -44,24 +47,42 @@ def _png() -> bytes:
 
 def _register_and_verify(client, username: str, email: str) -> str:
     r = client.post("/auth/register", json={
-        "username": username, "email": email, "password": "password123", "confirm_password": "password123"})
+        "username": username, "email": email, "password": "password123", "confirm_password": "password123", "accept_terms": True})
     assert r.status_code == 201, r.text
     r = client.post("/auth/verify-email", json={"email": email, "code": sent_codes[email]})
     assert r.status_code == 200, r.text
     return r.json()["access_token"]
 
 
+def make_seller(client, headers):
+    """Apply with a selfie and get approved by the admin account."""
+    r = client.post("/seller-applications", headers=headers, data={"full_name": "Test Seller", "phone": "+38344111222", "city": "Prishtina", "accept_seller_terms": "true"}, files={"selfie": ("me.png", _png(), "image/png")})
+    assert r.status_code == 201, r.text
+    admin = {"Authorization": f"Bearer {admin_token(client)}"}
+    r = client.post(f"/admin/applications/{r.json()['id']}/approve", json={}, headers=admin)
+    assert r.status_code == 200, r.text
+
+
+_admin: dict[str, str] = {}
+
+
+def admin_token(client):
+    if "t" not in _admin:
+        _admin["t"] = _register_and_verify(client, "boss", "boss@gmail.com")
+    return _admin["t"]
+
+
 def test_registration_and_otp_rules(client, monkeypatch):
     r = client.post("/auth/register", json={
-        "username": "bob", "email": "bob@yahoo.com", "password": "password123", "confirm_password": "password123"})
+        "username": "bob", "email": "bob@yahoo.com", "password": "password123", "confirm_password": "password123", "accept_terms": True})
     assert r.status_code == 400  # Gmail only
 
     r = client.post("/auth/register", json={
-        "username": "bob", "email": "bob@gmail.com", "password": "password123", "confirm_password": "nope12345"})
+        "username": "bob", "email": "bob@gmail.com", "password": "password123", "confirm_password": "nope12345", "accept_terms": True})
     assert r.status_code == 422 and "match" in r.json()["detail"]
 
     r = client.post("/auth/register", json={
-        "username": "bob", "email": "bob@gmail.com", "password": "password123", "confirm_password": "password123"})
+        "username": "bob", "email": "bob@gmail.com", "password": "password123", "confirm_password": "password123", "accept_terms": True})
     assert r.status_code == 201
     code = sent_codes["bob@gmail.com"]
     assert re.fullmatch(r"\d{6}", code)
@@ -93,7 +114,7 @@ def test_verification_disabled_signs_in_immediately(client, monkeypatch):
     monkeypatch.setattr(settings, "require_email_verification", False)
     sent_codes.pop("quick@gmail.com", None)
     r = client.post("/auth/register", json={
-        "username": "quick", "email": "quick@gmail.com", "password": "password123", "confirm_password": "password123"})
+        "username": "quick", "email": "quick@gmail.com", "password": "password123", "confirm_password": "password123", "accept_terms": True})
     assert r.status_code == 201, r.text
     body = r.json()
     assert body["verification_required"] is False and body["access_token"] and body["user"]["is_verified"]
@@ -105,7 +126,7 @@ def test_verification_disabled_signs_in_immediately(client, monkeypatch):
 
 def test_attempt_limit(client):
     client.post("/auth/register", json={
-        "username": "eve", "email": "eve@gmail.com", "password": "password123", "confirm_password": "password123"})
+        "username": "eve", "email": "eve@gmail.com", "password": "password123", "confirm_password": "password123", "accept_terms": True})
     code = sent_codes["eve@gmail.com"]
     wrong = "000000" if code != "000000" else "111111"
     statuses = [client.post("/auth/verify-email", json={"email": "eve@gmail.com", "code": wrong}).status_code
@@ -118,6 +139,7 @@ def test_attempt_limit(client):
 def test_marketplace_flow(client):
     seller = {"Authorization": f"Bearer {_register_and_verify(client, 'seller1', 'seller1@gmail.com')}"}
     buyer = {"Authorization": f"Bearer {_register_and_verify(client, 'buyer1', 'buyer1@gmail.com')}"}
+    make_seller(client, seller)
 
     form = {"title": "Green Hoodie", "description": "A lovely green hoodie.", "price": "30",
             "category": "Hoodies", "size": "M", "condition": "Good"}

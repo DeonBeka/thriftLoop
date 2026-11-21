@@ -42,3 +42,18 @@ def get_optional_user(
 ) -> User | None:
     user = _user_from_credentials(credentials, db)
     return user if user and user.is_verified else None
+
+
+def require_seller(user: User = Depends(get_current_user)) -> User:
+    if not user.can_sell:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "Only verified sellers can list items. Apply to become a seller from the Sell tab.",
+        )
+    return user
+
+
+def require_admin(user: User = Depends(get_current_user)) -> User:
+    if user.role != "admin":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Admins only.")
+    return user

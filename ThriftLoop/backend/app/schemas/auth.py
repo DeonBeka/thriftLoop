@@ -12,6 +12,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=72)  # bcrypt's input limit
     confirm_password: str
+    accept_terms: bool = False
 
     @field_validator("username")
     @classmethod
@@ -30,6 +31,8 @@ class RegisterRequest(BaseModel):
     def passwords_match(self) -> "RegisterRequest":
         if self.password != self.confirm_password:
             raise ValueError("Passwords don't match.")
+        if not self.accept_terms:
+            raise ValueError("Please accept the Terms of Service and Privacy Policy to create an account.")
         return self
 
 

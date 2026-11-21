@@ -1,6 +1,9 @@
 export type Category = 'Hoodies' | 'T-shirts' | 'Jackets' | 'Jeans' | 'Trousers' | 'Shoes' | 'Accessories';
 export type Condition = 'New with tags' | 'Like new' | 'Good' | 'Fair';
-export type ProductStatus = 'active' | 'sold';
+export type ProductStatus = 'active' | 'reserved' | 'sold';
+export type Role = 'viewer' | 'seller' | 'admin';
+export type SellerStatus = 'none' | 'pending' | 'approved' | 'rejected';
+export type OrderStatus = 'pending' | 'confirmed' | 'delivered' | 'cancelled';
 export type SortOption = 'newest' | 'price_asc' | 'price_desc' | 'popular';
 
 export interface UserSummary {
@@ -14,11 +17,65 @@ export interface UserProfile extends UserSummary {
   created_at: string;
   active_listings_count: number;
   sold_count: number;
+  role: Role;
 }
 
 export interface CurrentUser extends UserProfile {
   email: string;
   is_verified: boolean;
+  terms_accepted_at: string | null;
+  seller_status: SellerStatus;
+}
+
+export interface AdminUser extends UserSummary {
+  email: string;
+  role: Role;
+  created_at: string;
+  active_listings_count: number;
+  seller_status: SellerStatus;
+}
+
+export interface SellerApplication {
+  id: number;
+  status: Exclude<SellerStatus, 'none'>;
+  full_name: string;
+  phone: string;
+  city: string;
+  note: string | null;
+  admin_note: string | null;
+  has_id_document: boolean;
+  created_at: string;
+  reviewed_at: string | null;
+  user: UserSummary;
+  user_email: string | null;
+}
+
+export interface Order {
+  id: number;
+  product_id: number | null;
+  product_title: string;
+  product_image: string | null;
+  price: number;
+  payment_method: 'cash_on_delivery';
+  delivery_name: string;
+  phone: string;
+  address_text: string;
+  latitude: number | null;
+  longitude: number | null;
+  note: string | null;
+  status: OrderStatus;
+  created_at: string;
+  updated_at: string;
+  buyer: UserSummary;
+  seller: UserSummary;
+}
+
+export interface AdminStats {
+  users: number;
+  sellers: number;
+  pending_applications: number;
+  active_listings: number;
+  open_orders: number;
 }
 
 export interface ProductImage {

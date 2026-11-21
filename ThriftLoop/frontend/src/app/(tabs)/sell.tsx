@@ -2,12 +2,19 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BecomeSeller } from '@/components/sell/BecomeSeller';
 import { ListingForm } from '@/components/sell/ListingForm';
 import { colors, spacing, type } from '@/constants/theme';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Sell() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+
+  // Viewers must be verified and approved by an admin before they can list.
+  if (user && user.role === 'viewer') return <BecomeSeller />;
+
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.sm }]}>
       <ListingForm

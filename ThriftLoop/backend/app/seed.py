@@ -71,6 +71,8 @@ def seed(reset: bool = False, refresh_demo: bool = False) -> None:
                 email=email,
                 hashed_password=hash_password(DEMO_PASSWORD),
                 bio=bio,
+                role="seller",
+                terms_accepted_at=now,
                 is_verified=True,
                 created_at=now - timedelta(days=200 - i * 35),
             )

@@ -48,6 +48,12 @@ function RootNavigator() {
       <Stack.Screen name="messages/index" options={{ title: 'Messages' }} />
       <Stack.Screen name="messages/[id]" options={{ title: '' }} />
       <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+      <Stack.Screen name="legal/[doc]" options={{ title: '' }} />
+      <Stack.Screen name="orders/index" options={{ title: 'Orders' }} />
+      <Stack.Screen name="orders/[id]" options={{ title: 'Order' }} />
+      <Stack.Screen name="checkout/[id]" options={{ title: 'Checkout' }} />
+      <Stack.Screen name="seller/apply" options={{ title: 'Become a seller', presentation: 'modal' }} />
+      <Stack.Screen name="admin" options={{ headerShown: false }} />
       {/* Editing flows are sheets: swipe down to dismiss, like iOS Mail/Notes. */}
       <Stack.Screen name="product/edit/[id]" options={{ title: 'Edit listing', presentation: 'modal' }} />
       <Stack.Screen name="profile/edit" options={{ title: 'Edit profile', presentation: 'modal' }} />

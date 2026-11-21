@@ -44,7 +44,13 @@
           "microphonePermission": false
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "ThriftLoop uses your location to fill in your delivery address when you order."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false

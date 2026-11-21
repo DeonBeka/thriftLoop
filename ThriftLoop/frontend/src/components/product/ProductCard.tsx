@@ -20,7 +20,7 @@ interface ProductCardProps {
 /** Photo-first card: no box around it, just the image and three tight lines of text. */
 export const ProductCard = memo(function ProductCard({ product, width }: ProductCardProps) {
   const router = useRouter();
-  const sold = product.status === 'sold';
+  const sold = product.status !== 'active';
   return (
     <PressableScale
       onPress={() => router.push(`/product/${product.id}`)}
@@ -33,7 +33,7 @@ export const ProductCard = memo(function ProductCard({ product, width }: Product
         <ProductImage uri={product.images[0]?.url} style={[styles.image, { height: width * IMAGE_RATIO }]} />
         {sold && (
           <View style={styles.soldScrim}>
-            <Text style={styles.soldText}>Sold</Text>
+            <Text style={styles.soldText}>{product.status === 'reserved' ? 'Reserved' : 'Sold'}</Text>
           </View>
         )}
         <View style={styles.favorite}>

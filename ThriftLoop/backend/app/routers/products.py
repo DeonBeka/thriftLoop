@@ -4,10 +4,10 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Upload
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.core.deps import get_current_user, get_optional_user
+from app.core.deps import get_current_user, get_optional_user, require_seller
 from app.database import get_db
 from app.models import Favorite, Product, ProductImage, User
-from app.models.product import CATEGORIES, CONDITIONS, SIZES, STATUSES
+from app.models.product import CATEGORIES, CONDITIONS, SELLER_SETTABLE_STATUSES, SIZES
 from app.schemas import ProductListResponse, ProductOut
 from app.schemas.product import ProductOptions
 from app.services.images import delete_upload, save_upload
@@ -68,7 +68,7 @@ def list_products(
     min_price: Annotated[float | None, Query(ge=0)] = None,
     max_price: Annotated[float | None, Query(ge=0)] = None,
     seller_id: int | None = None,
-    status_filter: Annotated[Literal["active", "sold", "all"], Query(alias="status")] = "active",
+    status_filter: Annotated[Literal["active", "reserved", "sold", "all"], Query(alias="status")] = "active",
     exclude_own: bool = False,
     sort: SortOption = "newest",
     limit: Annotated[int, Query(ge=1, le=100)] = 40,
@@ -131,7 +131,7 @@ def create_product(
     condition: Annotated[str, Form()],
     images: Annotated[list[UploadFile], File()],
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_seller),
 ) -> ProductOut:
     _validate_fields(title, description, price, category, size, condition)
     images = [f for f in images if f.filename or f.size]
@@ -193,8 +193,11 @@ def update_product(
     new_size = size or product.size
     new_condition = condition or product.condition
     _validate_fields(new_title, new_description, new_price, new_category, new_size, new_condition)
-    if status_value is not None and status_value not in STATUSES:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Status must be 'active' or 'sold'.")
+    if status_value is not None:
+        if status_value not in SELLER_SETTABLE_STATUSES:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Status must be 'active' or 'sold'.")
+        if product.status == "reserved":
+            raise HTTPException(status.HTTP_409_CONFLICT, "This item has an open order. Finish or cancel the order first.")
 
     new_uploads = [f for f in (images or []) if f.filename or f.size]
 
@@ -244,7 +247,7 @@ def update_product(
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_product(product_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> None:
     product = _load_product(db, product_id)
-    if product.seller_id != user.id:
+    if product.seller_id != user.id and user.role != "admin":  # admins can remove any listing (moderation)
         raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only delete your own listings.")
     paths = [img.image_path for img in product.images]
     db.delete(product)

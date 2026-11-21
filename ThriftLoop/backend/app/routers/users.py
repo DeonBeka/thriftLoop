@@ -64,7 +64,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)) -> UserProfileOut:
 @router.get("/{user_id}/products", response_model=list[ProductOut])
 def get_user_products(
     user_id: int,
-    status_filter: Annotated[Literal["active", "sold", "all"], Query(alias="status")] = "active",
+    status_filter: Annotated[Literal["active", "reserved", "sold", "all"], Query(alias="status")] = "active",
     db: Session = Depends(get_db),
     viewer: User | None = Depends(get_optional_user),
 ) -> list[ProductOut]:

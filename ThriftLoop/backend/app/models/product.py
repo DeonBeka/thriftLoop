@@ -11,7 +11,8 @@ CONDITIONS = ["New with tags", "Like new", "Good", "Fair"]
 SIZES = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "One size",
          "EU 36", "EU 37", "EU 38", "EU 39", "EU 40", "EU 41", "EU 42", "EU 43", "EU 44", "EU 45", "EU 46",
          "W26", "W28", "W30", "W32", "W34", "W36", "W38"]
-STATUSES = ["active", "sold"]
+STATUSES = ["active", "reserved", "sold"]  # reserved = a cash-on-delivery order is in progress
+SELLER_SETTABLE_STATUSES = ["active", "sold"]
 
 
 class Product(Base):

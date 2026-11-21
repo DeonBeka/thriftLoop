@@ -14,6 +14,17 @@ class Settings(BaseSettings):
     app_name: str = "ThriftLoop API"
     database_url: str = f"sqlite:///{(BACKEND_DIR / 'thriftloop.db').as_posix()}"
     upload_dir: Path = BACKEND_DIR / "uploads"
+    # Verification selfies / ID photos. Never served publicly; only admins can fetch them.
+    private_upload_dir: Path = BACKEND_DIR / "private_uploads"
+
+    # Comma separated emails that are always admins. Set this in backend/.env, never in code.
+    admin_emails: str = ""
+
+    # Rate limiting (requests per minute)
+    rate_limit_enabled: bool = True
+    rate_limit_per_minute: int = 120
+    rate_limit_auth_per_minute: int = 10
+    rate_limit_upload_per_minute: int = 20
 
     # JWT
     jwt_secret_key: str = "change-me-in-backend-env"
@@ -42,6 +53,10 @@ class Settings(BaseSettings):
     @property
     def allowed_domains(self) -> list[str]:
         return [d.strip().lower() for d in self.allowed_email_domains.split(",") if d.strip()]
+
+    @property
+    def admin_email_set(self) -> set[str]:
+        return {e.strip().lower() for e in self.admin_emails.split(",") if e.strip()}
 
     @property
     def smtp_configured(self) -> bool:

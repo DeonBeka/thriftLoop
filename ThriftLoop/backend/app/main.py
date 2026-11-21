@@ -8,18 +8,21 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.database import init_db
-from app.routers import auth, conversations, favorites, products, users
+from app.core.rate_limit import RateLimitMiddleware
+from app.routers import admin, auth, conversations, favorites, orders, products, sellers, users
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
+    settings.private_upload_dir.mkdir(parents=True, exist_ok=True)
     init_db()
     yield
 
 
 app = FastAPI(title=settings.app_name, version="1.0.0", lifespan=lifespan)
 
+app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in settings.cors_origins.split(",")],
@@ -46,6 +49,9 @@ app.include_router(users.router)
 app.include_router(products.router)
 app.include_router(favorites.router)
 app.include_router(conversations.router)
+app.include_router(sellers.router)
+app.include_router(orders.router)
+app.include_router(admin.router)
 
 settings.upload_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")

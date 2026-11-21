@@ -3,6 +3,7 @@ import { Redirect, Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { StyleSheet, type ColorValue } from 'react-native';
 
+import { TermsGate } from '@/components/legal/TermsGate';
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { haptic } from '@/utils/haptics';
@@ -19,6 +20,7 @@ export default function TabsLayout() {
   const { user } = useAuth();
   // Protected area: only signed-in users get past here.
   if (!user) return <Redirect href="/welcome" />;
+  if (!user.terms_accepted_at) return <TermsGate />;
 
   return (
     <Tabs

@@ -65,7 +65,13 @@ export default function Profile() {
               actions={
                 <>
                   <Button title="Edit profile" variant="outline" size="md" style={styles.flex} onPress={() => router.push('/profile/edit')} />
-                  <Button title="Sell an item" variant="secondary" size="md" style={styles.flex} onPress={() => router.push('/sell')} />
+                  <Button
+                    title={user.role === 'viewer' ? 'Become a seller' : 'Sell an item'}
+                    variant="secondary"
+                    size="md"
+                    style={styles.flex}
+                    onPress={() => router.push('/sell')}
+                  />
                 </>
               }
             />

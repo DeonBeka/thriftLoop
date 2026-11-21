@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -31,6 +32,12 @@ export function ProfileHeader({ profile, savedCount, onPressSaved, tab, onTabCha
             {profile.username}
           </Text>
           <Text style={type.footnote}>Joined {joinedDate(profile.created_at)}</Text>
+          {profile.role !== 'viewer' && (
+            <View style={styles.verified}>
+              <Ionicons name="shield-checkmark" size={13} color={colors.primary} />
+              <Text style={styles.verifiedText}>{profile.role === 'admin' ? 'ThriftLoop admin' : 'Verified seller'}</Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -89,6 +96,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1, gap: 2 },
   identity: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   bio: { marginTop: spacing.lg },
+  verified: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  verifiedText: { fontSize: 12, fontWeight: '600', color: colors.primary },
   stats: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md },
   stat: { fontSize: 15, color: colors.textSecondary },
   statValue: { fontWeight: '700', color: colors.text },

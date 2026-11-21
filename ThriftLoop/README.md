@@ -100,6 +100,28 @@ cd ..\backend
 .\.venv\Scripts\python -m pytest -q
 ```
 
+## Roles, verification and orders
+
+| Role | Who | Can do |
+| --- | --- | --- |
+| **Viewer** | Every new account | Browse, save favorites, message sellers, buy with cash on delivery, apply to become a seller |
+| **Seller** | Viewers approved by an admin | Everything a viewer can, plus list, edit and sell items and manage incoming orders |
+| **Admin** | Only the emails in `ADMIN_EMAILS` (backend `.env`) | Review seller applications (selfie and ID), approve or reject them, manage users, remove listings |
+
+- **Becoming a seller:** on the Sell tab a viewer submits their full name, phone, city and a **live selfie from the front camera**, plus an optional ID photo. An admin compares them and approves or rejects the application (rejecting requires a reason).
+  - Verification photos are stored in `backend/private_uploads/`. They're never served publicly; only admins can load them through `/admin/applications/{id}/selfie`.
+  - The face check is done by a person, not by automatic face recognition (which would need a paid identity service).
+- **Admin access** can't be granted through the app or the API, only through `ADMIN_EMAILS`.
+- **Buying:** "Buy now" → choose the delivery address on a map ("Use my location" works too) or type it → **cash on delivery** → place the order.
+  - The item becomes *Reserved* and disappears from browsing.
+  - The seller confirms the order, then marks it delivered (the item becomes *Sold*). Either side can cancel, which puts the item back on sale.
+  - Order updates are also posted into the buyer–seller chat.
+- **Legal:** Terms of Service, Privacy Policy, Seller Terms and Cash-on-Delivery Terms are in the app (Settings → Legal).
+  - Accepting the Terms is required to register.
+  - Existing accounts are asked to accept them once.
+  - Have a lawyer review them before a real launch.
+- **Rate limiting:** each user or IP may make 120 requests per minute. Login and sign-up are limited to 10 per minute (against password guessing) and photo uploads to 20 per minute. Going over returns HTTP 429. Sign-in sessions expire after 7 days. All of this is configurable in `.env`.
+
 ## Features
 
 | Area | What works |

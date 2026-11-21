@@ -37,3 +37,4 @@ __pycache__/
 .DS_Store
 *.pem
 .claude/settings.local.json
+backend/private_uploads/

@@ -1,4 +1,8 @@
 import type {
+  AdminStats,
+  AdminUser,
+  Order,
+  SellerApplication,
   Conversation,
   CurrentUser,
   LocalImage,
@@ -64,9 +68,15 @@ async function request<T>(
   let response: Response;
   try {
     response = await fetch(buildUrl(path, options.query), { method, headers, body, signal: controller.signal });
-  } catch {
+  } catch (err) {
+    const aborted = err instanceof Error && err.name === 'AbortError';
+    const reason = err instanceof Error ? err.message : String(err);
+    // Shows up in the Expo terminal, so failed uploads are never silent.
+    console.warn(`[api] ${method} ${path} failed before reaching the server: ${reason}`);
     throw new ApiError(
-      `Can't reach ThriftLoop right now. Check your connection and that the server is running at ${API_URL}.`,
+      aborted
+        ? 'The request took too long. Check your connection and try again.'
+        : `Can't reach ThriftLoop right now (${reason}). Check your connection and that the server is running at ${API_URL}.`,
       0,
     );
   } finally {
@@ -87,6 +97,7 @@ async function request<T>(
 
   if (!response.ok) {
     const detail = typeof data?.detail === 'string' ? data.detail : 'Something went wrong. Please try again.';
+    if (response.status >= 500 || response.status === 413) console.warn(`[api] ${method} ${path} → ${response.status}: ${detail}`);
     if (response.status === 401 && token && options.auth !== false) onUnauthorized?.();
     throw new ApiError(detail, response.status);
   }
@@ -94,16 +105,20 @@ async function request<T>(
 }
 
 function appendImage(form: FormData, field: string, image: LocalImage, index: number) {
-  const name = image.fileName || `photo-${index}.jpg`;
-  const type = image.mimeType || 'image/jpeg';
+  // Always send a sane filename + type: iOS can return HEIC names or no name at all, which some
+  // networking stacks reject. The server re-encodes everything to JPEG anyway.
+  const type = image.mimeType && image.mimeType.startsWith('image/') ? image.mimeType : 'image/jpeg';
+  const ext = type.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
+  const name = `photo-${index}.${ext}`;
   // React Native's FormData accepts { uri, name, type } file descriptors and streams the file.
   form.append(field, { uri: image.uri, name, type } as unknown as Blob);
 }
 
 // ---------- Auth ----------
 export const authApi = {
-  register: (body: { username: string; email: string; password: string; confirm_password: string }) =>
+  register: (body: { username: string; email: string; password: string; confirm_password: string; accept_terms: boolean }) =>
     request<RegisterResponse>('POST', '/auth/register', { body, auth: false }),
+  acceptTerms: () => request<CurrentUser>('POST', '/auth/accept-terms'),
   verifyEmail: (email: string, code: string) =>
     request<TokenResponse>('POST', '/auth/verify-email', { body: { email, code }, auth: false }),
   resendCode: (email: string) => request<RegisterResponse>('POST', '/auth/resend-code', { body: { email }, auth: false }),
@@ -181,6 +196,67 @@ export const usersApi = {
     if (input.image) appendImage(form, 'profile_image', input.image, 0);
     return request<CurrentUser>('PUT', '/users/me', { form, timeoutMs: 60000 });
   },
+};
+
+// ---------- Selling (verification) ----------
+export interface SellerApplicationInput {
+  full_name: string;
+  phone: string;
+  city: string;
+  note?: string;
+  selfie: LocalImage;
+  idDocument?: LocalImage | null;
+}
+
+export const sellerApi = {
+  mine: () => request<SellerApplication | null>('GET', '/seller-applications/me'),
+  apply: (input: SellerApplicationInput) => {
+    const form = new FormData();
+    form.append('full_name', input.full_name);
+    form.append('phone', input.phone);
+    form.append('city', input.city);
+    form.append('accept_seller_terms', 'true');
+    if (input.note) form.append('note', input.note);
+    appendImage(form, 'selfie', input.selfie, 0);
+    if (input.idDocument) appendImage(form, 'id_document', input.idDocument, 1);
+    return request<SellerApplication>('POST', '/seller-applications', { form, timeoutMs: 60000 });
+  },
+};
+
+// ---------- Orders (cash on delivery) ----------
+export interface OrderInput {
+  product_id: number;
+  delivery_name: string;
+  phone: string;
+  address_text: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  note?: string;
+  accept_terms: boolean;
+}
+
+export const ordersApi = {
+  place: (body: OrderInput) => request<Order>('POST', '/orders', { body }),
+  list: (role: 'buyer' | 'seller' | 'all' = 'all') => request<Order[]>('GET', '/orders', { query: { role } }),
+  get: (id: number) => request<Order>('GET', `/orders/${id}`),
+  setStatus: (id: number, status: 'confirmed' | 'delivered' | 'cancelled') =>
+    request<Order>('POST', `/orders/${id}/status`, { body: { status } }),
+};
+
+// ---------- Admin ----------
+export const adminApi = {
+  stats: () => request<AdminStats>('GET', '/admin/stats'),
+  applications: (status: 'pending' | 'approved' | 'rejected' | 'all' = 'pending') =>
+    request<SellerApplication[]>('GET', '/admin/applications', { query: { status } }),
+  application: (id: number) => request<SellerApplication>('GET', `/admin/applications/${id}`),
+  approve: (id: number, note?: string) => request<SellerApplication>('POST', `/admin/applications/${id}/approve`, { body: { note } }),
+  reject: (id: number, note: string) => request<SellerApplication>('POST', `/admin/applications/${id}/reject`, { body: { note } }),
+  users: (q?: string) => request<AdminUser[]>('GET', '/admin/users', { query: { q } }),
+  setRole: (id: number, role: 'viewer' | 'seller') => request<AdminUser>('PATCH', `/admin/users/${id}/role`, { body: { role } }),
+  removeProduct: (id: number) => request<void>('DELETE', `/products/${id}`),
+  /** Private verification photos need the admin's token, so they're loaded with headers. */
+  selfieUrl: (id: number) => `${API_URL}/admin/applications/${id}/selfie`,
+  idDocumentUrl: (id: number) => `${API_URL}/admin/applications/${id}/id-document`,
 };
 
 // ---------- Messaging ----------

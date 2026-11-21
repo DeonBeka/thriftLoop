@@ -61,6 +61,7 @@ export default function ProductDetails() {
 
   const isOwner = user?.id === product.seller.id;
   const sold = product.status === 'sold';
+  const reserved = product.status === 'reserved';
 
   const messageSeller = async () => {
     setBusy('message');
@@ -142,10 +143,18 @@ export default function ProductDetails() {
         <ImageGallery urls={product.images.map((i) => i.url)} />
 
         <Animated.View entering={FadeIn.duration(220)} style={styles.content}>
-          {sold && (
+          {(sold || reserved) && (
             <View style={styles.soldBanner}>
-              <Ionicons name="bag-check-outline" size={17} color={colors.text} />
-              <Text style={styles.soldText}>{isOwner ? 'You marked this item as sold' : 'This item has been sold'}</Text>
+              <Ionicons name={reserved ? 'time-outline' : 'bag-check-outline'} size={17} color={colors.text} />
+              <Text style={styles.soldText}>
+                {reserved
+                  ? isOwner
+                    ? 'Someone ordered this item. Confirm it in Orders.'
+                    : 'Reserved: someone has ordered this item'
+                  : isOwner
+                    ? 'You marked this item as sold'
+                    : 'This item has been sold'}
+              </Text>
             </View>
           )}
 
@@ -184,29 +193,43 @@ export default function ProductDetails() {
 
       <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
         {isOwner ? (
-          <>
-            <Button
-              title={sold ? 'Mark available' : 'Mark as sold'}
-              icon={sold ? 'refresh-outline' : 'checkmark-done-outline'}
-              variant="secondary"
-              style={styles.flex}
-              loading={busy === 'status'}
-              onPress={toggleSold}
-            />
-            <Button title="Edit" variant="outline" onPress={() => router.push(`/product/edit/${product.id}`)} />
-            <Button title="" icon="ellipsis-horizontal" variant="outline" accessibilityLabel="More options" loading={busy === 'delete'} onPress={ownerMenu} />
-          </>
+          reserved ? (
+            <Button title="Manage order" icon="receipt-outline" variant="secondary" style={styles.flex} onPress={() => router.push('/orders')} />
+          ) : (
+            <>
+              <Button
+                title={sold ? 'Mark available' : 'Mark as sold'}
+                icon={sold ? 'refresh-outline' : 'checkmark-done-outline'}
+                variant="secondary"
+                style={styles.flex}
+                loading={busy === 'status'}
+                onPress={toggleSold}
+              />
+              <Button title="Edit" variant="outline" onPress={() => router.push(`/product/edit/${product.id}`)} />
+              <Button title="" icon="ellipsis-horizontal" variant="outline" accessibilityLabel="More options" loading={busy === 'delete'} onPress={ownerMenu} />
+            </>
+          )
         ) : (
           <>
             <FavoriteButton product={product} variant="bar" />
             <Button
-              title={sold ? 'Sold' : 'Message seller'}
-              icon={sold ? undefined : 'chatbubble-outline'}
-              style={styles.flex}
+              title=""
+              icon="chatbubble-outline"
+              variant="outline"
+              accessibilityLabel="Message seller"
               onPress={messageSeller}
               loading={busy === 'message'}
-              disabled={sold}
             />
+            <Button
+              title={sold ? 'Sold' : reserved ? 'Reserved' : 'Buy now'}
+              icon={sold || reserved ? undefined : 'bag-handle-outline'}
+              style={styles.flex}
+              onPress={() => router.push(`/checkout/${product.id}`)}
+              disabled={sold || reserved}
+            />
+            {user?.role === 'admin' && (
+              <Button title="" icon="trash-outline" variant="danger" accessibilityLabel="Remove listing (admin)" loading={busy === 'delete'} onPress={deleteListing} />
+            )}
           </>
         )}
       </View>

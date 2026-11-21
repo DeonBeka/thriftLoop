@@ -31,20 +31,47 @@ export default function Settings() {
         <Avatar uri={user.profile_image} name={user.username} size={54} />
         <View style={styles.flex}>
           <Text style={type.headline}>{user.username}</Text>
-          <Text style={type.footnote}>{user.email}</Text>
+          <Text style={type.footnote}>
+            {user.email} · {user.role === 'admin' ? 'Admin' : user.role === 'seller' ? 'Verified seller' : 'Buyer'}
+          </Text>
         </View>
         <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
       </Pressable>
 
+      {user.role === 'admin' && (
+        <Group title="Administration">
+          <Row icon="shield-checkmark-outline" label="Admin dashboard" onPress={() => router.push('/admin')} last />
+        </Group>
+      )}
+
       <Group title="Account">
         <Row icon="person-outline" label="Edit profile" onPress={() => router.push('/profile/edit')} />
+        <Row icon="receipt-outline" label="Orders" onPress={() => router.push('/orders')} />
         <Row icon="heart-outline" label="Favorites" onPress={() => router.push('/favorites')} />
         <Row icon="chatbubble-outline" label="Messages" onPress={() => router.push('/messages')} last />
       </Group>
 
       <Group title="Selling">
-        <Row icon="add-circle-outline" label="Sell an item" onPress={() => router.push('/sell')} />
-        <Row icon="pricetags-outline" label="My listings" onPress={() => router.push('/profile')} last />
+        {user.role === 'viewer' ? (
+          <Row
+            icon="storefront-outline"
+            label={user.seller_status === 'pending' ? 'Seller application (in review)' : 'Become a seller'}
+            onPress={() => router.push('/sell')}
+            last
+          />
+        ) : (
+          <>
+            <Row icon="add-circle-outline" label="Sell an item" onPress={() => router.push('/sell')} />
+            <Row icon="pricetags-outline" label="My listings" onPress={() => router.push('/profile')} last />
+          </>
+        )}
+      </Group>
+
+      <Group title="Legal">
+        <Row icon="document-text-outline" label="Terms of Service" onPress={() => router.push('/legal/terms')} />
+        <Row icon="lock-closed-outline" label="Privacy Policy" onPress={() => router.push('/legal/privacy')} />
+        <Row icon="storefront-outline" label="Seller Terms" onPress={() => router.push('/legal/seller')} />
+        <Row icon="cash-outline" label="Cash-on-Delivery Terms" onPress={() => router.push('/legal/delivery')} last />
       </Group>
 
       <Group>
