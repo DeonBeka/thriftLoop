@@ -10,7 +10,7 @@ const MARK = require('../../../assets/brand/mark.png');
 
 // Intrinsic aspect ratios of the exported artwork (width / height).
 const WORDMARK_RATIO = 883 / 164;
-const MARK_RATIO = 660 / 401;
+const MARK_RATIO = 664 / 405;
 
 interface LogoProps {
   /** Visual height in points. */
