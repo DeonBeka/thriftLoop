@@ -13,15 +13,32 @@ import { applyTheme, colors, subscribeTheme, themed, themeNav, themeState, type 
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { FavoritesProvider } from '@/hooks/useFavorites';
 import { getPreferences } from '@/services/preferences';
+import { installWebAlert } from '@/utils/webAlert';
+
+installWebAlert();
 
 const getVersion = () => themeState.version;
 
 function RootNavigator() {
-  const { initializing } = useAuth();
+  const { initializing, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [fontsLoaded, fontError] = useFonts({ Fraunces_600SemiBold, Fraunces_700Bold });
   const ready = !initializing && (fontsLoaded || !!fontError);
+
+  // Signing out (or an expired session) from any screen, e.g. Settings on top of the tabs, must land on
+  // Welcome. The tabs' own redirect only runs while the tabs are the visible screen.
+  const wasSignedIn = useRef(false);
+  useEffect(() => {
+    if (user) {
+      wasSignedIn.current = true;
+      return;
+    }
+    if (initializing || !wasSignedIn.current) return;
+    wasSignedIn.current = false;
+    if (router.canDismiss()) router.dismissAll();
+    router.replace('/welcome');
+  }, [user, initializing, router]);
 
   const pathRef = useRef(pathname);
   pathRef.current = pathname;

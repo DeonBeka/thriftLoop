@@ -16,6 +16,7 @@ export function Checkbox({ checked, onChange, label, error }: { checked: boolean
       style={styles.row}
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
+      aria-checked={checked}
       hitSlop={6}
     >
       <View style={[styles.box, checked && styles.boxOn, error && !checked && styles.boxError]}>

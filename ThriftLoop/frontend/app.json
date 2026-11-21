@@ -7,11 +7,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#F6F1EA"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.thriftloop.marketplace",
@@ -51,6 +46,19 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "ThriftLoop uses your location to fill in your delivery address when you order."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#F6F1EA",
+          "dark": {
+            "image": "./assets/splash-icon.png",
+            "backgroundColor": "#171412"
+          }
         }
       ]
     ],

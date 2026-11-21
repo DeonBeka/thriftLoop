@@ -447,7 +447,8 @@ def answer(db: Session, message: str, previous: SearchFilters | None, viewer: Us
     found = search(db, f)
     relaxed = None
     if found:
-        reply = f"Here {'is' if len(found) == 1 else 'are'} {len(found)} {summary} I found:"
+        reply = (f"I found 1 match for {summary}:" if len(found) == 1
+                 else f"Here are {len(found)} {summary} I found:")
     else:
         reply = f"I couldn’t find any {summary} right now."
         if f.min_price is not None or f.max_price is not None:

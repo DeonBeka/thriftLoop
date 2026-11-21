@@ -31,7 +31,7 @@ export default function Welcome() {
       <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.collage}>
         {tiles().map((bg, i) => (
           <View
-            key={bg}
+            key={`tile-${i}`}
             style={[
               styles.tile,
               { width: tile, height: tile * (i % 3 === 0 ? 1.3 : 1.05), backgroundColor: bg },

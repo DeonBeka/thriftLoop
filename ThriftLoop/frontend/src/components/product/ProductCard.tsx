@@ -22,6 +22,8 @@ export const ProductCard = memo(function ProductCard({ product, width }: Product
   const router = useRouter();
   const sold = product.status !== 'active';
   return (
+    // The heart sits beside the card's pressable (not inside it), so the two buttons never nest.
+    <View style={{ width }}>
     <PressableScale
       onPress={() => router.push(`/product/${product.id}`)}
       accessibilityRole="button"
@@ -36,9 +38,6 @@ export const ProductCard = memo(function ProductCard({ product, width }: Product
             <Text style={styles.soldText}>{product.status === 'reserved' ? 'Reserved' : 'Sold'}</Text>
           </View>
         )}
-        <View style={styles.favorite}>
-          <FavoriteButton product={product} />
-        </View>
       </View>
       <View style={styles.body}>
         <Text style={[styles.price, sold && styles.soldPrice]}>{formatPrice(product.price)}</Text>
@@ -50,13 +49,18 @@ export const ProductCard = memo(function ProductCard({ product, width }: Product
         </Text>
       </View>
     </PressableScale>
+      {/* Same spot as before: bottom-right corner of the photo (button is 30pt). */}
+      <View style={[styles.favorite, { top: width * IMAGE_RATIO - 30 - spacing.sm }]}>
+        <FavoriteButton product={product} />
+      </View>
+    </View>
   );
 });
 
 const styles = themed(() =>
   StyleSheet.create({
   image: { width: '100%', borderRadius: radius.md },
-  favorite: { position: 'absolute', right: spacing.sm, bottom: spacing.sm },
+  favorite: { position: 'absolute', right: spacing.sm },
   soldScrim: {
     position: 'absolute',
     top: 0,
