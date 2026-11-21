@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   },
   tile: { borderRadius: radius.xl, overflow: 'hidden', ...shadow.card },
   copy: { gap: spacing.md, marginBottom: spacing.xxl },
-  headline: { fontSize: 34, lineHeight: 40, fontWeight: font.weight.heavy, color: colors.text, letterSpacing: -1 },
+  headline: { fontFamily: 'Fraunces_600SemiBold', fontSize: 36, lineHeight: 42, color: colors.text, letterSpacing: -0.8 },
   body: { fontSize: font.size.md, lineHeight: 22, color: colors.textSecondary },
   actions: { gap: spacing.sm },
 });

@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   headerAction: { fontSize: 16, color: colors.primary },
   headerSpacer: { width: 90 },
   content: { paddingHorizontal: GUTTER, paddingTop: spacing.xl, gap: spacing.sm },
-  title: { fontSize: 21, lineHeight: 27, fontWeight: '600', letterSpacing: -0.3, color: colors.text },
+  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 24, lineHeight: 30, letterSpacing: -0.3, color: colors.text },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.xs },
   pill: { backgroundColor: colors.secondary, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 5 },
   pillText: { fontSize: 13, fontWeight: '600', color: colors.primary },

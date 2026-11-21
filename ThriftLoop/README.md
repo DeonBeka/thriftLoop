@@ -47,6 +47,10 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 Interactive API docs are at http://localhost:8000/docs.
 
+To refresh only the demo sellers and listings while keeping real accounts, run `python -m app.seed --refresh-demo`.
+
+**Demo photos:** the seeded listings use real clothing photos from [Unsplash](https://unsplash.com), used under the Unsplash License (free for apps). The photo IDs and photographers are listed in `backend/app/seed_photos.py`. The images load from Unsplash's servers, so the demo needs an internet connection.
+
 **Demo account (from the seed data):** `maya.vintage@gmail.com` / `thriftloop123`. Three more sellers, `leo.threads@gmail.com`, `sofia.loops@gmail.com` and `noah.archive@gmail.com`, use the same password.
 
 ### Email verification (off by default)

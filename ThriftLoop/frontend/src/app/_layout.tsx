@@ -1,3 +1,4 @@
+import { Fraunces_600SemiBold, Fraunces_700Bold, useFonts } from '@expo-google-fonts/fraunces';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
@@ -11,8 +12,10 @@ import { FavoritesProvider } from '@/hooks/useFavorites';
 
 function RootNavigator() {
   const { initializing } = useAuth();
+  const [fontsLoaded, fontError] = useFonts({ Fraunces_600SemiBold, Fraunces_700Bold });
 
-  if (initializing) {
+  // Wait for the serif headings so titles don't flash in the system font. If fonts fail, carry on.
+  if (initializing || (!fontsLoaded && !fontError)) {
     // Same look as the native splash, so launch doesn't flash a spinner.
     return (
       <View style={styles.splash}>

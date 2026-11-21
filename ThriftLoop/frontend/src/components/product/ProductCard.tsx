@@ -41,7 +41,7 @@ export const ProductCard = memo(function ProductCard({ product, width }: Product
         </View>
       </View>
       <View style={styles.body}>
-        <Text style={[type.price, sold && styles.soldPrice]}>{formatPrice(product.price)}</Text>
+        <Text style={[styles.price, sold && styles.soldPrice]}>{formatPrice(product.price)}</Text>
         <Text style={styles.title} numberOfLines={1}>
           {product.title}
         </Text>
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderRadius: radius.md,
-    backgroundColor: 'rgba(248,248,246,0.55)',
+    backgroundColor: 'rgba(246,241,234,0.55)',
     alignItems: 'flex-start',
     padding: spacing.sm,
   },
@@ -79,6 +79,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   body: { paddingTop: spacing.sm + 2, gap: 1 },
+  price: { fontFamily: 'Fraunces_600SemiBold', fontSize: 17, lineHeight: 22, color: colors.text },
   soldPrice: { color: colors.textSecondary, textDecorationLine: 'line-through' },
   title: { fontSize: 14, lineHeight: 19, color: colors.text },
 });

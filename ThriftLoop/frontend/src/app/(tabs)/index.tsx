@@ -1,19 +1,19 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { FlatList, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProductCard } from '@/components/product/ProductCard';
 import { GRID_PADDING, ProductGrid } from '@/components/product/ProductGrid';
+import { CategoryTiles } from '@/components/home/CategoryTiles';
+import { SellBanner } from '@/components/home/SellBanner';
 import { HomeSkeleton, ProductGridSkeleton } from '@/components/skeletons';
-import { Chip } from '@/components/ui/Chip';
 import { IconButton } from '@/components/ui/IconButton';
 import { Logo } from '@/components/ui/Logo';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { EmptyState, ErrorState, LoadingView } from '@/components/ui/States';
-import { CATEGORIES } from '@/constants/catalog';
 import { colors, spacing, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
@@ -112,20 +112,19 @@ export default function Home() {
       <Text style={styles.greeting}>
         {greeting()}, {user?.username}
       </Text>
+      <Text style={styles.headline}>What are you looking for today?</Text>
 
       <SearchBar value={query} onChangeText={setQuery} onClear={() => setQuery('')} onSubmitEditing={search} />
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoriesScroller}
-        contentContainerStyle={styles.categories}
-      >
-        <Chip label="All" selected={!category} onPress={() => setCategory(null)} />
-        {CATEGORIES.map((c) => (
-          <Chip key={c.name} label={c.name} selected={category === c.name} onPress={() => setCategory(category === c.name ? null : c.name)} />
-        ))}
-      </ScrollView>
+      <View style={styles.categories}>
+        <CategoryTiles selected={category} onSelect={setCategory} />
+      </View>
+
+      {!category && (
+        <View style={styles.banner}>
+          <SellBanner onPress={() => router.push('/sell')} />
+        </View>
+      )}
 
       {!category && picks.length > 0 && (
         <Animated.View entering={FadeIn.duration(250)} style={styles.section}>
@@ -196,9 +195,10 @@ const styles = StyleSheet.create({
     height: 48,
     marginRight: -spacing.sm,
   },
-  greeting: { ...type.footnote, marginTop: spacing.xs, marginBottom: spacing.md },
-  categoriesScroller: { marginHorizontal: -GRID_PADDING, marginTop: spacing.md },
-  categories: { paddingHorizontal: GRID_PADDING, gap: spacing.sm },
+  greeting: { ...type.footnote, marginTop: spacing.xs },
+  headline: { ...type.display, marginTop: 2, marginBottom: spacing.lg },
+  categories: { marginTop: spacing.lg },
+  banner: { marginTop: spacing.xl },
   section: { marginTop: spacing.xxl },
   bleed: { marginHorizontal: -GRID_PADDING },
   picks: { paddingHorizontal: GRID_PADDING, gap: spacing.md },

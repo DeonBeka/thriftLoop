@@ -25,6 +25,6 @@ export function Avatar({ uri, name, size = 40 }: AvatarProps) {
 
 const styles = StyleSheet.create({
   image: { backgroundColor: colors.placeholder },
-  fallback: { backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' },
-  initial: { color: colors.primary, fontWeight: font.weight.bold },
+  fallback: { backgroundColor: colors.warmSoft, alignItems: 'center', justifyContent: 'center' },
+  initial: { color: colors.warm, fontFamily: 'Fraunces_600SemiBold' },
 });

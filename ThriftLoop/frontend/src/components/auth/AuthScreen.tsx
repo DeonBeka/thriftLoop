@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingHorizontal: spacing.xxl },
   back: { width: 40, height: 40, justifyContent: 'center', marginLeft: -8, marginBottom: spacing.lg },
   logo: { marginBottom: spacing.xl },
-  title: { fontSize: font.size.display, fontWeight: font.weight.heavy, color: colors.text, letterSpacing: -0.8 },
+  title: { fontFamily: 'Fraunces_600SemiBold', fontSize: 32, lineHeight: 38, color: colors.text, letterSpacing: -0.6 },
   subtitle: { fontSize: font.size.md, color: colors.textSecondary, marginTop: spacing.sm, lineHeight: 22 },
   body: { marginTop: spacing.xxxl, gap: spacing.lg },
   spacer: { flex: 1, minHeight: spacing.xxl },

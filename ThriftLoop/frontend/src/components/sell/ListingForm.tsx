@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     paddingHorizontal: GUTTER,
     paddingTop: spacing.md,
-    backgroundColor: 'rgba(248,248,246,0.97)',
+    backgroundColor: 'rgba(246,241,234,0.97)',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.separator,
   },
