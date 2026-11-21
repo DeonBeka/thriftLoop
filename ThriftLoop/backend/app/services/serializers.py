@@ -4,7 +4,6 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import Conversation, Favorite, Message, Order, Product, SellerApplication, User
-from app.schemas.marketplace import OrderOut, SellerApplicationOut
 from app.schemas import (
     ConversationOut,
     CurrentUserOut,
@@ -15,6 +14,7 @@ from app.schemas import (
     UserSummary,
 )
 from app.schemas.conversation import ConversationProduct
+from app.schemas.marketplace import OrderOut, SellerApplicationOut
 from app.services.images import public_url
 
 

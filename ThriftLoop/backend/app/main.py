@@ -7,8 +7,8 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
-from app.database import init_db
 from app.core.rate_limit import RateLimitMiddleware
+from app.database import init_db
 from app.routers import admin, auth, conversations, favorites, orders, products, sellers, users
 
 

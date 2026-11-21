@@ -61,7 +61,7 @@ def _issue_code(db: Session, user: User) -> None:
         send_verification_email(user.email, user.username, code)
     except EmailDeliveryError as exc:
         db.rollback()
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(exc))
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(exc)) from exc
     db.commit()
 
 

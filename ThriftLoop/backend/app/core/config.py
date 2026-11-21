@@ -65,7 +65,8 @@ class Settings(BaseSettings):
         return bool(self.smtp_username and self.smtp_password)
 
 
-PLACEHOLDER_SECRET = "change-me-in-backend-env"
+# Sentinel meaning "not configured" - never used as a signing key.
+PLACEHOLDER_SECRET = "change-me-in-backend-env"  # nosec B105
 
 
 def _persistent_secret() -> str:

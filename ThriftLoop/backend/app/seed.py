@@ -22,7 +22,8 @@ from app.database import Base, SessionLocal, engine, init_db
 from app.models import Conversation, Favorite, Message, Product, ProductImage, User
 from app.seed_photos import LISTINGS, unsplash_url
 
-DEMO_PASSWORD = "thriftloop123"
+# Public demo-account password (documented in the README).
+DEMO_PASSWORD = "thriftloop123"  # nosec B105
 
 USERS = [
     ("maya.vintage", "maya.vintage@gmail.com", "Curating 90s denim and cosy knits. Ships within 2 days."),
@@ -55,7 +56,7 @@ def seed(reset: bool = False, refresh_demo: bool = False) -> None:
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
     init_db()
 
-    rng = random.Random(42)
+    rng = random.Random(42)  # nosec B311
     with SessionLocal() as db:
         if refresh_demo:
             print(f"Removed {_remove_demo_users(db)} demo users; real accounts were kept.")

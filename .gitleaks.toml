@@ -1,0 +1,13 @@
+# Gitleaks: use the default rules, but don't flag test-only secrets or the public demo password.
+title = "ThriftLoop gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test fixtures, public demo seed data and lockfile integrity hashes"
+paths = [
+  '''ThriftLoop/backend/tests/.*''',
+  '''ThriftLoop/backend/app/seed\.py''',
+  '''ThriftLoop/frontend/package-lock\.json''',
+]

@@ -1,4 +1,4 @@
-from tests.test_api import _png, _register_and_verify, admin_token, client, capture_emails, make_seller  # noqa: F401
+from tests.test_api import _png, _register_and_verify, admin_token, capture_emails, client, make_seller  # noqa: F401
 
 
 def auth(token: str) -> dict:

@@ -30,7 +30,7 @@ def save_upload(file: UploadFile, subdir: str, max_dimension: int = MAX_DIMENSIO
         image = Image.open(BytesIO(data))
         image = ImageOps.exif_transpose(image)
     except (UnidentifiedImageError, OSError):
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "One of the files isn't a valid image.")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "One of the files isn't a valid image.") from None
 
     image = image.convert("RGB")
     image.thumbnail((max_dimension, max_dimension))

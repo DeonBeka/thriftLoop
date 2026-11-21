@@ -206,7 +206,7 @@ def update_product(
         try:
             keep_order = [int(v) for v in _csv(keep_image_ids)]
         except ValueError:
-            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "keep_image_ids must be numbers.")
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "keep_image_ids must be numbers.") from None
         by_id = {img.id: img for img in product.images}
         kept = [by_id[i] for i in keep_order if i in by_id]
     else:

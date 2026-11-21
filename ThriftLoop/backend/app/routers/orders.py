@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user
 from app.database import get_db
-from app.models import Message, Conversation, Order, Product, User
+from app.models import Conversation, Message, Order, Product, User
 from app.schemas.marketplace import OrderCreate, OrderOut, OrderStatusUpdate
 from app.services.serializers import order_out
 from app.utils_format import price_text
