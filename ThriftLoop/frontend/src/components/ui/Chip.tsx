@@ -22,11 +22,16 @@ export function Chip({ label, selected = false, onPress, removable, haptics = tr
     progress.value = withTiming(selected ? 1 : 0, { duration: 180 });
   }, [selected, progress]);
 
+  // Plain strings only inside worklets (Reanimated freezes captured objects; `colors` must stay live).
+  const bgFrom = colors.fill;
+  const bgTo = colors.primary;
+  const textFrom = colors.text;
+  const textTo = colors.white;
   const container = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(progress.value, [0, 1], [colors.fill, colors.primary]),
+    backgroundColor: interpolateColor(progress.value, [0, 1], [bgFrom, bgTo]),
   }));
   const text = useAnimatedStyle(() => ({
-    color: interpolateColor(progress.value, [0, 1], [colors.text, colors.white]),
+    color: interpolateColor(progress.value, [0, 1], [textFrom, textTo]),
   }));
 
   return (

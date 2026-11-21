@@ -33,8 +33,11 @@ export function CategoryTiles({ selected, onSelect }: CategoryTilesProps) {
 }
 
 function Tile({ label, photo, active, onPress }: { label: string; photo?: string; active: boolean; onPress: () => void }) {
+  // Copy the colour into a plain string: anything a worklet reads gets frozen by Reanimated, and the
+  // shared `colors` palette must stay mutable so the theme can change live.
+  const ringColor = active ? colors.primary : 'rgba(0,0,0,0)';
   const ring = useAnimatedStyle(() => ({
-    borderColor: withTiming(active ? colors.primary : 'rgba(0,0,0,0)', { duration: 180 }),
+    borderColor: withTiming(ringColor, { duration: 180 }),
     transform: [{ scale: withTiming(active ? 1 : 0.96, { duration: 180 }) }],
   }));
   return (

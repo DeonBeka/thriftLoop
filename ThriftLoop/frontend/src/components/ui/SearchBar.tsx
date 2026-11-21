@@ -18,9 +18,13 @@ export const SearchBar = forwardRef<TextInputInstance, SearchBarProps>(function 
 ) {
   const focus = useSharedValue(0);
   const [focused, setFocused] = useState(false);
+  // Plain strings only inside worklets (Reanimated freezes captured objects; `colors` must stay live).
+  const focusBorder = colors.primary;
+  const idleBg = colors.fill;
+  const focusBg = colors.card;
   const animated = useAnimatedStyle(() => ({
-    borderColor: interpolateColor(focus.value, [0, 1], ['rgba(0,0,0,0)', colors.primary]),
-    backgroundColor: interpolateColor(focus.value, [0, 1], [colors.fill, colors.card]),
+    borderColor: interpolateColor(focus.value, [0, 1], ['rgba(0,0,0,0)', focusBorder]),
+    backgroundColor: interpolateColor(focus.value, [0, 1], [idleBg, focusBg]),
   }));
 
   return (

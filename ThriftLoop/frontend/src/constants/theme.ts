@@ -153,6 +153,11 @@ function resolveDark(theme: Preferences['theme']): boolean {
   return Appearance.getColorScheme() === 'dark';
 }
 
+/**
+ * NOTE: never read `colors` / `type` directly inside a Reanimated worklet (useAnimatedStyle etc.).
+ * Reanimated freezes objects that worklets capture, which would stop the theme from changing.
+ * Copy the values you need into local constants first.
+ */
 function compute(prefs: Preferences) {
   const dark = resolveDark(prefs.theme);
   const accent = (ACCENTS[prefs.accent] ?? ACCENTS.forest)[dark ? 'dark' : 'light'];
