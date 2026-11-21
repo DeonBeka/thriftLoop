@@ -19,6 +19,7 @@ import colorsys
 import json
 import logging
 import threading
+import time
 import urllib.request
 from collections import Counter
 from io import BytesIO
@@ -170,7 +171,8 @@ def colors_from_ai(image: Image.Image, title: str, category: str) -> list[str] |
     if not settings.anthropic_api_key:
         if not gemini.enabled():
             return None
-        result = gemini.generate_json(prompt, VISION_SCHEMA, image_jpeg=buffer.getvalue())
+        # Photo analysis runs in the background, so it can afford to wait out a rate limit (chat can't).
+        result = gemini.generate_json(prompt, VISION_SCHEMA, image_jpeg=buffer.getvalue(), retries=2)
         return _only_known(result.get("colors")) if isinstance(result, dict) else None
     data = base64.standard_b64encode(buffer.getvalue()).decode()
     try:
@@ -236,6 +238,8 @@ def backfill() -> None:
             analyze_product(product_id)
         except Exception:  # keep going; one bad photo shouldn't stop the rest
             logger.exception("Photo colour analysis failed for listing %s", product_id)
+        if gemini.enabled() and not settings.anthropic_api_key:
+            time.sleep(5)  # stay under the free Gemini tier's per-minute limit
 
 
 def start_backfill() -> None:

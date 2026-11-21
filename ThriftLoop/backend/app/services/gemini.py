@@ -9,6 +9,7 @@ from __future__ import annotations
 import base64
 import json
 import logging
+import time
 import urllib.error
 import urllib.request
 
@@ -24,7 +25,7 @@ def enabled() -> bool:
 
 
 def generate_json(prompt: str, schema: dict, *, system: str | None = None, image_jpeg: bytes | None = None,
-                  timeout: float = 25.0) -> dict | None:
+                  timeout: float = 25.0, retries: int = 0, retry_wait: float = 20.0) -> dict | None:
     if not settings.gemini_api_key:
         return None
     parts: list[dict] = [{"text": prompt}]
@@ -44,16 +45,24 @@ def generate_json(prompt: str, schema: dict, *, system: str | None = None, image
         headers={"Content-Type": "application/json", "x-goog-api-key": settings.gemini_api_key},
         method="POST",
     )
-    try:
-        # Fixed https Google endpoint.
-        with urllib.request.urlopen(request, timeout=timeout) as resp:  # nosec B310
-            data = json.loads(resp.read())
-    except urllib.error.HTTPError as exc:
-        detail = exc.read()[:300].decode(errors="replace")
-        logger.warning("Gemini error %s: %s", exc.code, detail)
-        return None
-    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
-        logger.warning("Gemini unreachable: %s", type(exc).__name__)
+    data = None
+    for attempt in range(1 + retries):
+        try:
+            # Fixed https Google endpoint.
+            with urllib.request.urlopen(request, timeout=timeout) as resp:  # nosec B310
+                data = json.loads(resp.read())
+            break
+        except urllib.error.HTTPError as exc:
+            # Free keys allow only a few requests a minute; busy models return 503. Wait and retry.
+            if exc.code in (429, 503) and attempt < retries:
+                time.sleep(retry_wait)
+                continue
+            logger.warning("Gemini error %s: %s", exc.code, exc.read()[:200].decode(errors="replace"))
+            return None
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+            logger.warning("Gemini unreachable: %s", type(exc).__name__)
+            return None
+    if data is None:
         return None
 
     try:

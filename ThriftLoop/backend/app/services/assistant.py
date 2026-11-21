@@ -89,6 +89,9 @@ class SearchFilters(BaseModel):
         """Drop anything outside the known vocabulary (defends against odd AI output)."""
         self.colors = [c for c in dict.fromkeys(c.lower() for c in self.colors) if c in COLORS]
         self.categories = [c for c in dict.fromkeys(self.categories) if c in CATEGORIES]
+        # A specific category beats its broad group ("hoodies" shouldn't widen to all tops).
+        self.groups = [g for g in dict.fromkeys(self.groups)
+                       if not any(c in CATEGORY_GROUPS[g] for c in self.categories)]  # type: ignore[misc]
         self.sizes = [s for s in dict.fromkeys(self.sizes) if s in SIZES]
         self.conditions = [c for c in dict.fromkeys(self.conditions) if c in CONDITIONS]
         self.keywords = [k.lower().strip() for k in self.keywords if 2 <= len(k.strip()) <= 30][:6]
@@ -252,6 +255,8 @@ Return only the filters the shopper actually asked for; leave the rest empty or 
 - colors must be from: {", ".join(COLORS)}. Map shades to these (navy -> blue, olive -> green, cream -> beige).
 - sizes must be from: {", ".join(SIZES)}. Map "small/medium/large" to S/M/L.
 - conditions must be from: {", ".join(CONDITIONS)}.
+- Turn needs and occasions into item types: "warm", "cosy", "for winter" -> categories Hoodies and Jackets;
+  "for summer" -> T-shirts; "for running" or "to walk in" -> shoes. Vague budgets: "not too pricey"/"cheap" -> max_price 30.
 - keywords: 0-4 short style or material words that help rank results (e.g. "vintage", "leather", "warm"). Never repeat colours or categories.
 - sort: "price_asc" for cheapest, "price_desc" for most expensive, "newest" for latest, "popular" for trending, otherwise "relevance".
 If PREVIOUS FILTERS are given and the new message is a follow-up (e.g. "what about under 20?"), return the full updated filters."""
