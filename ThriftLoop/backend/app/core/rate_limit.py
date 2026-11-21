@@ -67,6 +67,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             checks.append((f"auth:{ip}", settings.rate_limit_auth_per_minute))
         elif request.method in ("POST", "PUT") and path in UPLOAD_PATHS:
             checks.append((f"upload:{_identity(request)}", settings.rate_limit_upload_per_minute))
+        elif path == "/assistant/chat":
+            # Each assistant message may call the AI model, so it gets its own, tighter budget.
+            checks.append((f"assistant:{_identity(request)}", settings.rate_limit_assistant_per_minute))
 
         for key, limit in checks:
             wait = limiter.hit(key, limit)

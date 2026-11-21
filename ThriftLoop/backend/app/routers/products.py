@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.core.deps import get_current_user, get_optional_user, require_seller
 from app.database import get_db
 from app.models import Favorite, Product, ProductImage, User
-from app.models.product import CATEGORIES, CONDITIONS, SELLER_SETTABLE_STATUSES, SIZES
+from app.models.product import CATEGORIES, CATEGORY_GROUPS, CONDITIONS, SELLER_SETTABLE_STATUSES, SIZES
 from app.schemas import ProductListResponse, ProductOut
 from app.schemas.product import ProductOptions
 from app.services.images import delete_upload, save_upload
@@ -54,7 +54,7 @@ def _load_product(db: Session, product_id: int) -> Product:
 
 @router.get("/options", response_model=ProductOptions)
 def product_options() -> ProductOptions:
-    return ProductOptions(categories=CATEGORIES, conditions=CONDITIONS, sizes=SIZES)
+    return ProductOptions(categories=CATEGORIES, conditions=CONDITIONS, sizes=SIZES, groups=CATEGORY_GROUPS)
 
 
 @router.get("", response_model=ProductListResponse)
@@ -63,6 +63,7 @@ def list_products(
     viewer: User | None = Depends(get_optional_user),
     q: str | None = None,
     category: str | None = None,
+    group: Annotated[Literal["tops", "bottoms", "shoes", "accessories"] | None, Query(description="Super-category")] = None,
     size: Annotated[str | None, Query(description="Comma separated sizes")] = None,
     condition: Annotated[str | None, Query(description="Comma separated conditions")] = None,
     min_price: Annotated[float | None, Query(ge=0)] = None,
@@ -82,6 +83,8 @@ def list_products(
         stmt = stmt.where(or_(Product.title.ilike(like), Product.description.ilike(like), Product.category.ilike(like)))
     if category:
         stmt = stmt.where(Product.category == category)
+    if group:
+        stmt = stmt.where(Product.category.in_(CATEGORY_GROUPS[group]))
     if sizes := _csv(size):
         stmt = stmt.where(Product.size.in_(sizes))
     if conditions := _csv(condition):

@@ -38,3 +38,4 @@ class ProductOptions(BaseModel):
     categories: list[str]
     conditions: list[str]
     sizes: list[str]
+    groups: dict[str, list[str]] = {}

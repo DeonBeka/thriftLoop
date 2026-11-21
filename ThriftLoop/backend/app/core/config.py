@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     # Comma separated emails that are always admins. Set this in backend/.env, never in code.
     admin_emails: str = ""
 
+    # AI shopping assistant. Without a key, a built-in rule-based parser understands requests instead.
+    anthropic_api_key: str = ""
+    assistant_model: str = "claude-opus-5-5"
+    rate_limit_assistant_per_minute: int = 20
+
     # Rate limiting (requests per minute)
     rate_limit_enabled: bool = True
     rate_limit_per_minute: int = 120

@@ -7,6 +7,14 @@ from app.database import Base
 from app.models.user import utcnow
 
 CATEGORIES = ["Hoodies", "T-shirts", "Jackets", "Jeans", "Trousers", "Shoes", "Accessories"]
+
+# Super-categories: broad groups shoppers think in ("tops", "bottoms") mapped to the real categories.
+CATEGORY_GROUPS: dict[str, list[str]] = {
+    "tops": ["Hoodies", "T-shirts", "Jackets"],
+    "bottoms": ["Jeans", "Trousers"],
+    "shoes": ["Shoes"],
+    "accessories": ["Accessories"],
+}
 CONDITIONS = ["New with tags", "Like new", "Good", "Fair"]
 SIZES = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "One size",
          "EU 36", "EU 37", "EU 38", "EU 39", "EU 40", "EU 41", "EU 42", "EU 43", "EU 44", "EU 45", "EU 46",

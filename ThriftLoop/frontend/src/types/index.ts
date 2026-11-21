@@ -107,8 +107,33 @@ export interface ProductList {
   offset: number;
 }
 
+export type Group = 'tops' | 'bottoms' | 'shoes' | 'accessories';
+
+export interface AssistantFilters {
+  colors: string[];
+  groups: Group[];
+  categories: Category[];
+  sizes: string[];
+  conditions: Condition[];
+  min_price: number | null;
+  max_price: number | null;
+  keywords: string[];
+  sort: 'relevance' | 'newest' | 'price_asc' | 'price_desc' | 'popular';
+}
+
+export interface AssistantReply {
+  reply: string;
+  summary: string;
+  filters: AssistantFilters;
+  relaxed: 'price' | 'color' | null;
+  engine: 'ai' | 'rules';
+  products: Product[];
+  suggestions: string[];
+}
+
 export interface ProductFilters {
   q?: string;
+  group?: Group | null;
   category?: Category | null;
   sizes?: string[];
   conditions?: Condition[];

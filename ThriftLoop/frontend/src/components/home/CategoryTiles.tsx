@@ -2,9 +2,9 @@ import { Image } from 'expo-image';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
-import { CATEGORIES } from '@/constants/catalog';
+import { categoriesInGroup, GROUPS } from '@/constants/catalog';
 import { colors, fs, GUTTER, spacing, themed } from '@/constants/theme';
-import type { Category } from '@/types';
+import type { Category, Group } from '@/types';
 import { haptic } from '@/utils/haptics';
 
 const SIZE = 64;
@@ -12,14 +12,17 @@ const SIZE = 64;
 interface CategoryTilesProps {
   selected: Category | null;
   onSelect: (category: Category | null) => void;
+  /** Only show the categories inside this super-category (Tops, Bottoms, …). */
+  group?: Group | null;
 }
 
 /** Round photo tiles (like story bubbles). The active one gets a green ring. */
-export function CategoryTiles({ selected, onSelect }: CategoryTilesProps) {
+export function CategoryTiles({ selected, onSelect, group = null }: CategoryTilesProps) {
+  const label = group ? `All ${GROUPS.find((g) => g.id === group)?.label.toLowerCase()}` : 'All';
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scroller} contentContainerStyle={styles.row}>
-      <Tile label="All" active={!selected} onPress={() => onSelect(null)} />
-      {CATEGORIES.map((c) => (
+      <Tile label={label} active={!selected} onPress={() => onSelect(null)} />
+      {categoriesInGroup(group).map((c) => (
         <Tile
           key={c.name}
           label={c.name}

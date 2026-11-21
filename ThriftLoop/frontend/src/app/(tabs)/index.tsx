@@ -6,7 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProductCard } from '@/components/product/ProductCard';
 import { GRID_PADDING, ProductGrid } from '@/components/product/ProductGrid';
+import { AskAiButton } from '@/components/assistant/AskAiButton';
 import { CategoryTiles } from '@/components/home/CategoryTiles';
+import { GroupTabs } from '@/components/home/GroupTabs';
 import { SellBanner } from '@/components/home/SellBanner';
 import { HomeSkeleton, ProductGridSkeleton } from '@/components/skeletons';
 import { IconButton } from '@/components/ui/IconButton';
@@ -14,13 +16,16 @@ import { Logo } from '@/components/ui/Logo';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { EmptyState, ErrorState, LoadingView } from '@/components/ui/States';
+import { GROUPS } from '@/constants/catalog';
 import { colors, spacing, themed, type } from '@/constants/theme';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useUnreadCount } from '@/hooks/useUnreadCount';
 import { productsApi } from '@/services/api';
-import type { Category, Product } from '@/types';
+import type { Category, Group, Product } from '@/types';
+
+const groupLabel = (g: Group) => GROUPS.find((x) => x.id === g)?.label ?? g;
 
 const PAGE = 20;
 
@@ -38,6 +43,7 @@ export default function Home() {
   const { ids: favoriteIds } = useFavorites();
 
   const [query, setQuery] = useState('');
+  const [group, setGroup] = useState<Group | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
   const [extra, setExtra] = useState<Product[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -50,9 +56,9 @@ export default function Home() {
   const feed = useApi(
     async () => {
       setExtra([]);
-      return productsApi.list({ sort: 'newest', category, limit: PAGE, excludeOwn: true });
+      return productsApi.list({ sort: 'newest', group, category, limit: PAGE, excludeOwn: true });
     },
-    [category],
+    [group, category],
     { refetchOnFocus: true },
   );
 
@@ -77,14 +83,14 @@ export default function Home() {
     if (loadingMore || feed.loading || items.length >= total) return;
     setLoadingMore(true);
     try {
-      const res = await productsApi.list({ sort: 'newest', category, limit: PAGE, offset: items.length, excludeOwn: true });
+      const res = await productsApi.list({ sort: 'newest', group, category, limit: PAGE, offset: items.length, excludeOwn: true });
       setExtra((prev) => [...prev, ...res.items]);
     } catch {
       // keep what we have; the next scroll retries
     } finally {
       setLoadingMore(false);
     }
-  }, [loadingMore, feed.loading, items.length, total, category]);
+  }, [loadingMore, feed.loading, items.length, total, group, category]);
 
   const refresh = async () => {
     await Promise.all([feed.refresh(), popular.reload()]);
@@ -106,7 +112,10 @@ export default function Home() {
     <View>
       <View style={styles.topBar}>
         <Logo size={24} />
-        <IconButton icon="chatbubble-outline" label="Messages" badge={unread} onPress={() => router.push('/messages')} />
+        <View style={styles.topActions}>
+          <IconButton icon="sparkles-outline" label="Ask the AI shopping assistant" onPress={() => router.push('/assistant')} />
+          <IconButton icon="chatbubble-outline" label="Messages" badge={unread} onPress={() => router.push('/messages')} />
+        </View>
       </View>
 
       <Text style={styles.greeting}>
@@ -116,17 +125,29 @@ export default function Home() {
 
       <SearchBar value={query} onChangeText={setQuery} onClear={() => setQuery('')} onSubmitEditing={search} />
 
-      <View style={styles.categories}>
-        <CategoryTiles selected={category} onSelect={setCategory} />
+      <AskAiButton onPress={() => router.push('/assistant')} />
+
+      <View style={styles.groups}>
+        <GroupTabs
+          value={group}
+          onChange={(g) => {
+            setGroup(g);
+            setCategory(null);
+          }}
+        />
       </View>
 
-      {!category && (
+      <View style={styles.categories}>
+        <CategoryTiles group={group} selected={category} onSelect={setCategory} />
+      </View>
+
+      {!category && !group && (
         <View style={styles.banner}>
           <SellBanner onPress={() => router.push('/sell')} />
         </View>
       )}
 
-      {!category && picks.length > 0 && (
+      {!category && !group && picks.length > 0 && (
         <Animated.View entering={FadeIn.duration(250)} style={styles.section}>
           <SectionHeader
             title={favoriteIds.size ? 'Picked for you' : 'Popular right now'}
@@ -147,9 +168,9 @@ export default function Home() {
 
       <View style={styles.section}>
         <SectionHeader
-          title={category ?? 'Just in'}
-          action={category ? `${total} ${total === 1 ? 'item' : 'items'}` : 'View all'}
-          onAction={category ? undefined : () => router.push({ pathname: '/explore', params: { sort: 'newest' } })}
+          title={category ?? (group ? groupLabel(group) : 'Just in')}
+          action={category || group ? `${total} ${total === 1 ? 'item' : 'items'}` : 'View all'}
+          onAction={category || group ? undefined : () => router.push({ pathname: '/explore', params: { sort: 'newest' } })}
         />
       </View>
     </View>
@@ -172,12 +193,19 @@ export default function Home() {
           ) : (
             <EmptyState
               icon="shirt-outline"
-              title={category ? `No ${category.toLowerCase()} yet` : 'Nothing listed yet'}
+              title={category ? `No ${category.toLowerCase()} yet` : group ? `No ${groupLabel(group).toLowerCase()} yet` : 'Nothing listed yet'}
               message={category ? 'Check back soon, or be the first to list one.' : 'Be the first to list something.'}
               actionLabel="Sell an item"
               onAction={() => router.push('/sell')}
-              secondaryLabel={category ? 'Show everything' : undefined}
-              onSecondary={category ? () => setCategory(null) : undefined}
+              secondaryLabel={category || group ? 'Show everything' : undefined}
+              onSecondary={
+                category || group
+                  ? () => {
+                      setCategory(null);
+                      setGroup(null);
+                    }
+                  : undefined
+              }
             />
           )
         }
@@ -198,7 +226,9 @@ const styles = themed(() =>
   },
   greeting: { ...type.footnote, marginTop: spacing.xs },
   headline: { ...type.display, marginTop: 2, marginBottom: spacing.lg },
-  categories: { marginTop: spacing.lg },
+  groups: { marginTop: spacing.lg },
+  categories: { marginTop: spacing.md },
+  topActions: { flexDirection: 'row', gap: spacing.xs },
   banner: { marginTop: spacing.xl },
   section: { marginTop: spacing.xxl },
   bleed: { marginHorizontal: -GRID_PADDING },

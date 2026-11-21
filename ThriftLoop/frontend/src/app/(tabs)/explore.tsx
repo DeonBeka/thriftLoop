@@ -12,21 +12,23 @@ import { Chip } from '@/components/ui/Chip';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { EmptyState, ErrorState, LoadingView } from '@/components/ui/States';
-import { CATEGORIES, PRICE_RANGES, SORT_OPTIONS } from '@/constants/catalog';
+import { GroupTabs } from '@/components/home/GroupTabs';
+import { categoriesInGroup, PRICE_RANGES, SORT_OPTIONS } from '@/constants/catalog';
 import { colors, control, fs, radius, spacing, themed, type } from '@/constants/theme';
 import { productsApi } from '@/services/api';
-import type { Category, Product, SortOption } from '@/types';
+import type { Category, Group, Product, SortOption } from '@/types';
 import { formatPrice } from '@/utils/format';
 
 const PAGE = 20;
 
 export default function Explore() {
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ category?: string; sort?: string; q?: string; focus?: string }>();
+  const params = useLocalSearchParams<{ category?: string; group?: string; sort?: string; q?: string; focus?: string }>();
   const searchRef = useRef<TextInputInstance>(null);
 
   const [query, setQuery] = useState('');
   const [debounced, setDebounced] = useState('');
+  const [group, setGroup] = useState<Group | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
   const [filters, setFilters] = useState<ExploreFilters>(DEFAULT_FILTERS);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -41,6 +43,7 @@ export default function Explore() {
 
   // Deep links from Home: search text, "See all" sorts, category.
   useEffect(() => {
+    if (params.group) setGroup(params.group as Group);
     if (params.category) setCategory(params.category as Category);
     if (params.sort) setFilters((f) => ({ ...f, sort: params.sort as SortOption }));
     if (params.q !== undefined) {
@@ -48,7 +51,7 @@ export default function Explore() {
       setDebounced(params.q);
     }
     if (params.focus) setTimeout(() => searchRef.current?.focus(), 350);
-  }, [params.category, params.sort, params.q, params.focus]);
+  }, [params.group, params.category, params.sort, params.q, params.focus]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(query), 300);
@@ -59,6 +62,7 @@ export default function Explore() {
     (offset: number) =>
       productsApi.list({
         q: debounced,
+        group,
         category,
         sizes: filters.sizes,
         conditions: filters.conditions,
@@ -68,7 +72,7 @@ export default function Explore() {
         limit: PAGE,
         offset,
       }),
-    [debounced, category, filters],
+    [debounced, group, category, filters],
   );
 
   const load = useCallback(
@@ -113,11 +117,12 @@ export default function Explore() {
   };
 
   const activeCount = countActiveFilters(filters);
-  const hasAnything = activeCount > 0 || !!category || !!query;
+  const hasAnything = activeCount > 0 || !!category || !!group || !!query;
   const clearAll = () => {
     setQuery('');
     setDebounced('');
     setCategory(null);
+    setGroup(null);
     setFilters(DEFAULT_FILTERS);
   };
 
@@ -150,12 +155,25 @@ export default function Explore() {
 
   const header = (
     <View style={styles.headerBlock}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.chips}>
-        <Chip label="All" selected={!category} onPress={() => setCategory(null)} />
-        {CATEGORIES.map((c) => (
-          <Chip key={c.name} label={c.name} selected={category === c.name} onPress={() => setCategory(category === c.name ? null : c.name)} />
-        ))}
-      </ScrollView>
+      <GroupTabs
+        value={group}
+        onChange={(g) => {
+          setGroup(g);
+          setCategory(null);
+        }}
+      />
+      {categoriesInGroup(group).length > 1 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.chips}>
+          {categoriesInGroup(group).map((c) => (
+            <Chip
+              key={c.name}
+              label={c.name}
+              selected={category === c.name}
+              onPress={() => setCategory(category === c.name ? null : c.name)}
+            />
+          ))}
+        </ScrollView>
+      )}
       {activeLabels.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.chips}>
           {activeLabels.map((a) => (

@@ -1,4 +1,6 @@
 import type {
+  AssistantFilters,
+  AssistantReply,
   AdminStats,
   AdminUser,
   Order,
@@ -184,6 +186,7 @@ export const productsApi = {
     request<ProductList>('GET', '/products', {
       query: {
         q: f.q?.trim(),
+        group: f.category ? undefined : f.group ?? undefined,
         category: f.category ?? undefined,
         size: f.sizes?.length ? f.sizes.join(',') : undefined,
         condition: f.conditions?.length ? f.conditions.join(',') : undefined,
@@ -299,6 +302,13 @@ export const adminApi = {
   /** Private verification photos need the admin's token, so they're loaded with headers. */
   selfieUrl: (id: number) => `${API_URL}/admin/applications/${id}/selfie`,
   idDocumentUrl: (id: number) => `${API_URL}/admin/applications/${id}/id-document`,
+};
+
+// ---------- AI shopping assistant ----------
+export const assistantApi = {
+  info: () => request<{ ai_enabled: boolean; model: string | null }>('GET', '/assistant/info'),
+  chat: (message: string, previous?: AssistantFilters | null) =>
+    request<AssistantReply>('POST', '/assistant/chat', { body: { message, previous: previous ?? null }, timeoutMs: 30000 }),
 };
 
 // ---------- Messaging ----------

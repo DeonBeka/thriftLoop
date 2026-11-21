@@ -1,4 +1,4 @@
-import type { Category, Condition, SortOption } from '@/types';
+import type { Category, Condition, Group, SortOption } from '@/types';
 
 /** Unsplash CDN photo (Unsplash License, free to use). Square crop for small tiles. */
 export function unsplash(id: string, w = 300, h = w): string {
@@ -15,6 +15,20 @@ export const CATEGORIES: { name: Category; photo: string }[] = [
   { name: 'Shoes', photo: unsplash('1608231387042-66d1773070a5') },
   { name: 'Accessories', photo: unsplash('1780480999314-bab9df2c4f1f') },
 ];
+
+/** Super-categories: broad groups that bundle the real categories. */
+export const GROUPS: { id: Group; label: string; categories: Category[] }[] = [
+  { id: 'tops', label: 'Tops', categories: ['Hoodies', 'T-shirts', 'Jackets'] },
+  { id: 'bottoms', label: 'Bottoms', categories: ['Jeans', 'Trousers'] },
+  { id: 'shoes', label: 'Shoes', categories: ['Shoes'] },
+  { id: 'accessories', label: 'Accessories', categories: ['Accessories'] },
+];
+
+export function categoriesInGroup(group: Group | null) {
+  if (!group) return CATEGORIES;
+  const allowed = GROUPS.find((g) => g.id === group)?.categories ?? [];
+  return CATEGORIES.filter((c) => allowed.includes(c.name));
+}
 
 /** Photo for the "sell" banner on Home. */
 export const HERO_PHOTO = unsplash('1543076447-215ad9ba6923', 500, 640);
