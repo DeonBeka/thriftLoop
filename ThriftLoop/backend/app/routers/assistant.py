@@ -29,13 +29,17 @@ class ChatResponse(BaseModel):
 
 class AssistantInfo(BaseModel):
     ai_enabled: bool
+    provider: str | None  # "Claude" / "Gemini"
     model: str | None
 
 
 @router.get("/info", response_model=AssistantInfo)
 def info() -> AssistantInfo:
-    enabled = bool(settings.anthropic_api_key)
-    return AssistantInfo(ai_enabled=enabled, model=settings.assistant_model if enabled else None)
+    if settings.anthropic_api_key:
+        return AssistantInfo(ai_enabled=True, provider="Claude", model=settings.assistant_model)
+    if settings.gemini_api_key:
+        return AssistantInfo(ai_enabled=True, provider="Gemini", model=settings.gemini_model)
+    return AssistantInfo(ai_enabled=False, provider=None, model=None)
 
 
 @router.post("/chat", response_model=ChatResponse)

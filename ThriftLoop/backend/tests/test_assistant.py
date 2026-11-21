@@ -83,3 +83,41 @@ def test_assistant_endpoint_filters_and_relaxes(client):  # noqa: F811
     bottoms = client.get("/products", params={"group": "bottoms", "q": "Blue Straight"}).json()["items"]
     assert [p["title"] for p in bottoms] == ["Blue Straight Jeans"]
     assert client.get("/assistant/info").json()["ai_enabled"] is False
+
+
+def test_pixel_analyser_reads_garment_colour():
+    from PIL import Image, ImageDraw
+
+    from app.services.vision import colors_from_pixels, name_color
+
+    assert name_color(15, 15, 18) == "black"
+    assert name_color(250, 250, 248) == "white"
+    assert name_color(30, 60, 140) == "blue"
+    assert name_color(200, 30, 40) == "red"
+
+    # A black T-shirt shape on a white studio background.
+    photo = Image.new("RGB", (400, 400), (245, 245, 245))
+    ImageDraw.Draw(photo).rectangle((110, 80, 290, 360), fill=(20, 20, 22))
+    assert colors_from_pixels(photo) == ["black"]
+
+    # A navy hoodie on a beige wall.
+    photo = Image.new("RGB", (400, 400), (225, 210, 185))
+    ImageDraw.Draw(photo).rectangle((100, 70, 300, 370), fill=(25, 40, 95))
+    assert colors_from_pixels(photo) == ["blue"]
+
+
+def test_colour_seen_in_photo_counts_even_if_seller_did_not_write_it(client):  # noqa: F811
+    with SessionLocal() as db:
+        seller = User(username="photo_seller", email="photo_seller@gmail.com", hashed_password="x",
+                      is_verified=True, role="seller")
+        db.add(seller)
+        db.flush()
+        tee = _add(db, seller.id, "Classic Crew Tee", "T-shirts", 7)  # no colour in title/description
+        tee.photo_colors = "black"
+        other = _add(db, seller.id, "Plain Crew Tee", "T-shirts", 6)
+        other.photo_colors = "white"
+        db.commit()
+
+    titles = [p["title"] for p in client.post("/assistant/chat", json={"message": "black t-shirts under 10"}).json()["products"]]
+    assert "Classic Crew Tee" in titles
+    assert "Plain Crew Tee" not in titles

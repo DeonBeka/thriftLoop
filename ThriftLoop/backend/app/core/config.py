@@ -23,7 +23,12 @@ class Settings(BaseSettings):
     # AI shopping assistant. Without a key, a built-in rule-based parser understands requests instead.
     anthropic_api_key: str = ""
     assistant_model: str = "claude-opus-5-5"
+    # Free alternative: Google Gemini, used when no Anthropic key is set.
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-3.5-flash-lite"
     rate_limit_assistant_per_minute: int = 20
+    # Read each listing's colour from its main photo (Claude vision if a key is set, else built-in).
+    photo_colors_enabled: bool = True
 
     # Rate limiting (requests per minute)
     rate_limit_enabled: bool = True

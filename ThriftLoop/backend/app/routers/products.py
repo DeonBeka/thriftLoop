@@ -1,6 +1,6 @@
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
@@ -12,6 +12,7 @@ from app.schemas import ProductListResponse, ProductOut
 from app.schemas.product import ProductOptions
 from app.services.images import delete_upload, save_upload
 from app.services.serializers import product_out, products_out
+from app.services.vision import analyze_product
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -133,6 +134,7 @@ def create_product(
     size: Annotated[str, Form()],
     condition: Annotated[str, Form()],
     images: Annotated[list[UploadFile], File()],
+    background: BackgroundTasks,
     db: Session = Depends(get_db),
     user: User = Depends(require_seller),
 ) -> ProductOut:
@@ -165,12 +167,14 @@ def create_product(
     product.images = [ProductImage(image_path=path, display_order=i) for i, path in enumerate(saved)]
     db.add(product)
     db.commit()
+    background.add_task(analyze_product, product.id)  # read the colour from the photo after responding
     return product_out(db, _load_product(db, product.id), user)
 
 
 @router.put("/{product_id}", response_model=ProductOut)
 def update_product(
     product_id: int,
+    background: BackgroundTasks,
     title: Annotated[str | None, Form()] = None,
     description: Annotated[str | None, Form()] = None,
     price: Annotated[float | None, Form()] = None,
@@ -186,6 +190,7 @@ def update_product(
     user: User = Depends(get_current_user),
 ) -> ProductOut:
     product = _load_product(db, product_id)
+    main_photo_before = product.images[0].image_path if product.images else None
     if product.seller_id != user.id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only edit your own listings.")
 
@@ -239,6 +244,10 @@ def update_product(
         img.display_order = i
     for j, path in enumerate(saved):
         product.images.append(ProductImage(image_path=path, display_order=len(kept) + j))
+    main_photo_after = kept[0].image_path if kept else saved[0]
+    if main_photo_after != main_photo_before:
+        product.photo_colors = None
+        background.add_task(analyze_product, product.id)
     db.commit()
 
     for path in removed_paths:

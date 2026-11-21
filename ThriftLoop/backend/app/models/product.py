@@ -40,6 +40,8 @@ class Product(Base):
     size: Mapped[str] = mapped_column(String(20))
     condition: Mapped[str] = mapped_column(String(30))
     status: Mapped[str] = mapped_column(String(20), default="active")
+    # Colours seen in the main photo, e.g. "black,white". "" = analysed but unclear; NULL = not analysed yet.
+    photo_colors: Mapped[str | None] = mapped_column(String(60), nullable=True, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
 
     seller = relationship("User", back_populates="products")

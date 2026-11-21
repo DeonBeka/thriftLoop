@@ -306,7 +306,7 @@ export const adminApi = {
 
 // ---------- AI shopping assistant ----------
 export const assistantApi = {
-  info: () => request<{ ai_enabled: boolean; model: string | null }>('GET', '/assistant/info'),
+  info: () => request<{ ai_enabled: boolean; provider: string | null; model: string | null }>('GET', '/assistant/info'),
   chat: (message: string, previous?: AssistantFilters | null) =>
     request<AssistantReply>('POST', '/assistant/chat', { body: { message, previous: previous ?? null }, timeoutMs: 30000 }),
 };

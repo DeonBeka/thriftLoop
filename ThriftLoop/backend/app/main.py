@@ -21,6 +21,9 @@ async def lifespan(_app: FastAPI):
         from app.seed import seed
 
         seed()  # no-op when the database already has users
+    from app.services.vision import start_backfill
+
+    start_backfill()  # reads colours from photos of older listings, in the background
     yield
 
 

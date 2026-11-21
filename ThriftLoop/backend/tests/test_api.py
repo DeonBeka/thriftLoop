@@ -12,6 +12,9 @@ os.environ["REQUIRE_EMAIL_VERIFICATION"] = "true"  # most tests exercise the OTP
 os.environ["PRIVATE_UPLOAD_DIR"] = str(_tmp / "private")
 os.environ["ADMIN_EMAILS"] = "boss@gmail.com"
 os.environ["RATE_LIMIT_ENABLED"] = "false"
+os.environ["PHOTO_COLORS_ENABLED"] = "false"  # no background photo analysis during tests
+os.environ["ANTHROPIC_API_KEY"] = ""  # tests never call real AI, whatever is in .env
+os.environ["GEMINI_API_KEY"] = ""
 os.environ["JWT_SECRET_KEY"] = "test-secret-that-is-long-enough-for-hs256-signing"
 
 import pytest  # noqa: E402

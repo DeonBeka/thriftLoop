@@ -41,6 +41,9 @@ _ADDED_COLUMNS = {
         "role": "VARCHAR(20) NOT NULL DEFAULT 'viewer'",
         "terms_accepted_at": "DATETIME",
     },
+    "products": {
+        "photo_colors": "VARCHAR(60)",
+    },
 }
 
 

@@ -25,6 +25,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.core.config import settings
 from app.models import Product, User
 from app.models.product import CATEGORIES, CATEGORY_GROUPS, CONDITIONS, SIZES
+from app.services import gemini
 from app.services.serializers import products_out
 from app.utils_format import price_text
 
@@ -273,13 +274,20 @@ FILTER_SCHEMA = {
 }
 
 
-def parse_with_claude(message: str, previous: SearchFilters | None) -> SearchFilters | None:
-    """Ask Claude for filters. Returns None (caller falls back to rules) on any problem."""
-    if not settings.anthropic_api_key:
-        return None
+def parse_with_ai(message: str, previous: SearchFilters | None) -> SearchFilters | None:
+    """Ask the configured AI (Claude first, then Gemini) for filters. None = use the built-in parser."""
     content = message if previous is None else (
         f"PREVIOUS FILTERS: {previous.model_dump_json()}\n\nNEW MESSAGE: {message}"
     )
+    if not settings.anthropic_api_key:
+        if not gemini.enabled():
+            return None
+        result = gemini.generate_json(content, FILTER_SCHEMA, system=SYSTEM_PROMPT)
+        try:
+            return SearchFilters.model_validate(result).clean() if result is not None else None
+        except ValidationError:
+            logger.warning("Gemini returned unexpected filters; using rule-based parser")
+            return None
     try:
         client = anthropic.Anthropic(api_key=settings.anthropic_api_key, timeout=20.0, max_retries=1)
         response = client.beta.messages.create(
@@ -317,11 +325,22 @@ def parse_with_claude(message: str, previous: SearchFilters | None) -> SearchFil
 # Search + reply
 # ---------------------------------------------------------------------------------------------
 
+def _photo_colors(product: Product) -> set[str]:
+    return {c for c in (product.photo_colors or "").split(",") if c}
+
+
+def _written_colors(product: Product) -> set[str]:
+    text = f" {product.title} {product.description} ".lower()
+    return {c for c, words in COLORS.items() if any(_has_word(text, w) for w in words)}
+
+
 def _matches_color(product: Product, colors: list[str]) -> bool:
+    """The seller's own words win; if they didn't name a colour, use the colour seen in the main photo."""
     if not colors:
         return True
-    text = f" {product.title} {product.description} ".lower()
-    return any(_has_word(text, word) for c in colors for word in COLORS[c])
+    written = _written_colors(product)
+    known = written if written else _photo_colors(product)
+    return bool(known & set(colors))
 
 
 def _keyword_score(product: Product, keywords: list[str]) -> int:
@@ -403,7 +422,7 @@ def suggestions_for(f: SearchFilters) -> list[str]:
 
 
 def answer(db: Session, message: str, previous: SearchFilters | None, viewer: User | None) -> dict:
-    ai = parse_with_claude(message, previous)
+    ai = parse_with_ai(message, previous)
     if ai is not None:
         f, engine = ai, "ai"
     else:

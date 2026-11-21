@@ -31,12 +31,12 @@ export default function AssistantScreen() {
   const [items, setItems] = useState<ChatItem[]>([WELCOME]);
   const [draft, setDraft] = useState('');
   const [thinking, setThinking] = useState(false);
-  const [aiEnabled, setAiEnabled] = useState<boolean | null>(null);
+  const [provider, setProvider] = useState<string | null | undefined>(undefined); // undefined = loading
   const lastFilters = useRef<AssistantFilters | null>(null);
   const listRef = useRef<FlatList<ChatItem>>(null);
 
   useEffect(() => {
-    assistantApi.info().then((i) => setAiEnabled(i.ai_enabled)).catch(() => setAiEnabled(false));
+    assistantApi.info().then((i) => setProvider(i.ai_enabled ? i.provider : null)).catch(() => setProvider(null));
     return () => stopSpeaking();
   }, []);
 
@@ -79,7 +79,7 @@ export default function AssistantScreen() {
             <View style={styles.badge}>
               <Ionicons name="sparkles" size={12} color={colors.primary} />
               <Text style={styles.badgeText}>
-                {aiEnabled === null ? 'AI stylist' : aiEnabled ? 'Powered by Claude' : 'Smart search'}
+                {provider === undefined ? 'AI stylist' : provider ? `Powered by ${provider}` : 'Smart search'}
               </Text>
             </View>
           </View>
