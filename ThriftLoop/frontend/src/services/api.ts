@@ -46,6 +46,33 @@ function buildUrl(path: string, query?: Query): string {
   return `${API_URL}${path}${params ? `?${params}` : ''}`;
 }
 
+interface SimpleResponse {
+  status: number;
+  ok: boolean;
+  text: () => Promise<string>;
+}
+
+/** Multipart upload via React Native's native networking (supports local file URIs). */
+function xhrUpload(method: string, url: string, headers: Record<string, string>, form: FormData, timeoutMs: number): Promise<SimpleResponse> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    Object.entries(headers).forEach(([k, v]) => xhr.setRequestHeader(k, v)); // no Content-Type: XHR adds the boundary
+    xhr.timeout = timeoutMs;
+    xhr.onload = () => {
+      const text = xhr.responseText ?? '';
+      resolve({ status: xhr.status, ok: xhr.status >= 200 && xhr.status < 300, text: async () => text });
+    };
+    xhr.onerror = () => reject(new Error('Upload failed: the connection dropped'));
+    xhr.ontimeout = () => {
+      const err = new Error('Upload timed out');
+      err.name = 'AbortError';
+      reject(err);
+    };
+    xhr.send(form);
+  });
+}
+
 async function request<T>(
   method: string,
   path: string,
@@ -56,17 +83,22 @@ async function request<T>(
   if (token) headers.Authorization = `Bearer ${token}`;
 
   let body: BodyInit | undefined;
-  if (options.form) {
-    body = options.form; // fetch sets the multipart boundary itself
-  } else if (options.body !== undefined) {
+  if (options.body !== undefined && !options.form) {
     headers['Content-Type'] = 'application/json';
     body = JSON.stringify(options.body);
   }
 
+  const url = buildUrl(path, options.query);
+  const timeoutMs = options.timeoutMs ?? 20000;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 20000);
-  let response: Response;
-  const send = () => fetch(buildUrl(path, options.query), { method, headers, body, signal: controller.signal });
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let response: SimpleResponse;
+  // Photo uploads go through XMLHttpRequest: Expo's fetch doesn't understand React Native's
+  // { uri, name, type } file parts, so multipart uploads with fetch never reach the server.
+  const send = (): Promise<SimpleResponse> =>
+    options.form
+      ? xhrUpload(method, url, headers, options.form, timeoutMs)
+      : fetch(url, { method, headers, body, signal: controller.signal });
   try {
     try {
       response = await send();
