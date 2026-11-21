@@ -1,0 +1,56 @@
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+
+from app.core.config import settings
+from app.database import init_db
+from app.routers import auth, conversations, favorites, products, users
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    settings.upload_dir.mkdir(parents=True, exist_ok=True)
+    init_db()
+    yield
+
+
+app = FastAPI(title=settings.app_name, version="1.0.0", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[o.strip() for o in settings.cors_origins.split(",")],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error_handler(_request: Request, exc: RequestValidationError) -> JSONResponse:
+    """Flatten Pydantic errors into one readable sentence the app can show as-is."""
+    messages = []
+    for err in exc.errors():
+        msg = str(err.get("msg", "Invalid value")).removeprefix("Value error, ")
+        field = err.get("loc", [])[-1] if err.get("loc") else None
+        if msg.startswith(("String should", "Input should", "Field required", "value is not")) and field:
+            msg = f"{str(field).replace('_', ' ').capitalize()}: {msg.lower()}"
+        messages.append(msg)
+    return JSONResponse(status_code=422, content={"detail": " ".join(dict.fromkeys(messages))})
+
+
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(products.router)
+app.include_router(favorites.router)
+app.include_router(conversations.router)
+
+settings.upload_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
+
+
+@app.get("/health", tags=["meta"])
+def health() -> dict:
+    return {"status": "ok"}

@@ -1,0 +1,39 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# ---------- Frontend (Expo) ----------
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.metro-health-check*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.tsbuildinfo
+# generated native folders
+frontend/ios/
+frontend/android/
+frontend/.env
+.env*.local
+
+# ---------- Backend (FastAPI) ----------
+backend/.venv/
+backend/.env
+backend/*.db
+backend/uploads/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# ---------- OS / editors ----------
+.DS_Store
+*.pem
+.claude/settings.local.json
