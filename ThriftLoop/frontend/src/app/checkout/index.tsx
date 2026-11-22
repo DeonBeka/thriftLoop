@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CityPicker } from '@/components/checkout/CityPicker';
 import { MapPicker, type PickedLocation } from '@/components/checkout/MapPicker';
 import { ProductImage } from '@/components/product/ProductImage';
 import { CheckoutSkeleton } from '@/components/skeletons';
@@ -25,7 +26,7 @@ import { haptic } from '@/utils/haptics';
 
 type Mode = 'map' | 'text';
 type PayWith = 'cash' | 'card';
-type Field = 'name' | 'phone' | 'address' | 'terms';
+type Field = 'name' | 'phone' | 'address' | 'city' | 'terms';
 
 /** Checkout for everything in the basket: one set of delivery details, cash on delivery. */
 export default function Checkout() {
@@ -50,6 +51,8 @@ export default function Checkout() {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [note, setNote] = useState('');
+  const [city, setCity] = useState<string | null>(null);
+  const pricing = useApi(() => ordersApi.pricing(), []);
   const [accepted, setAccepted] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [placing, setPlacing] = useState(false);
@@ -84,14 +87,22 @@ export default function Checkout() {
 
   const buyable: Product[] = (data ?? []).filter((p) => p.status === 'active' && p.seller.id !== user?.id);
   const unavailable = basket.items.filter((i) => !buyable.some((p) => p.id === i.id));
-  const total = buyable.reduce((sum, p) => sum + p.price, 0);
+  const itemsTotal = buyable.reduce((sum, p) => sum + p.price, 0);
   const sellers = new Set(buyable.map((p) => p.seller.id)).size;
+  // Delivery: free in Prishtina, otherwise one fee per seller (each seller delivers their own items).
+  // The server recalculates this; it's shown here so the buyer sees the total before paying.
+  const freeCity = pricing.data?.free_delivery_city ?? 'Prishtina';
+  const feePerSeller = pricing.data?.delivery_fee ?? 2;
+  const deliveryTotal = city && city !== freeCity ? feePerSeller * sellers : 0;
+  const total = itemsTotal + deliveryTotal;
 
   const onPick = (loc: PickedLocation) => {
     setLocation(loc);
     // Fill the text address from the map, but never overwrite something the buyer typed by hand.
     if (loc.address && (!address || address === location?.address)) setAddress(loc.address);
-    setErrors((e) => ({ ...e, address: undefined }));
+    const fromMap = loc.address ? pricing.data?.cities.find((c) => loc.address!.toLowerCase().includes(c.toLowerCase())) : undefined;
+    if (fromMap && !city) setCity(fromMap);
+    setErrors((e) => ({ ...e, address: undefined, ...(fromMap ? { city: undefined } : {}) }));
   };
 
   const validate = () => {
@@ -99,6 +110,7 @@ export default function Checkout() {
     if (name.trim().length < 2) next.name = 'Who should the courier ask for?';
     if (phone.replace(/\D/g, '').length < 8) next.phone = 'Enter a phone number the seller can call.';
     if (address.trim().length < 5) next.address = mode === 'map' ? 'Move the map to your address or type it.' : 'Enter your full address.';
+    if (!city) next.city = 'Choose your city so we can work out delivery.';
     if (!accepted) next.terms = 'Please accept the cash-on-delivery terms.';
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -109,6 +121,7 @@ export default function Checkout() {
     delivery_name: name.trim(),
     phone: phone.trim(),
     address_text: address.trim(),
+    city: city ?? '',
     latitude: mode === 'map' ? location?.latitude ?? null : null,
     longitude: mode === 'map' ? location?.longitude ?? null : null,
     note: note.trim() || undefined,
@@ -202,7 +215,7 @@ export default function Checkout() {
         )}
         {sellers > 1 && (
           <Text style={[type.footnote, styles.note]}>
-            Each seller gets their own order and delivers separately. You pay each one in cash when their item arrives.
+            Each seller gets their own order and delivers separately{payWith === 'cash' ? ', and you pay each one in cash when their items arrive' : ''}.
           </Text>
         )}
 
@@ -228,6 +241,17 @@ export default function Checkout() {
             multiline
             error={errors.address}
             textContentType="fullStreetAddress"
+          />
+          <CityPicker
+            value={city}
+            cities={pricing.data?.cities ?? [freeCity]}
+            freeCity={freeCity}
+            fee={feePerSeller}
+            error={errors.city}
+            onChange={(c) => {
+              setCity(c);
+              setErrors((e) => ({ ...e, city: undefined }));
+            }}
           />
           <TextField label="Name for delivery" placeholder="Full name" value={name} onChangeText={setName} error={errors.name} textContentType="name" autoComplete="name" />
           <TextField label="Phone" placeholder="+383 44 123 456" value={phone} onChangeText={setPhone} keyboardType="phone-pad" error={errors.phone} textContentType="telephoneNumber" autoComplete="tel" />
@@ -261,8 +285,12 @@ export default function Checkout() {
         </View>
 
         <View style={styles.totals}>
-          <Row label={`Items (${buyable.length})`} value={formatPrice(total)} />
-          <Row label="Delivery" value="Agree with the seller" muted />
+          <Row label={`Items (${buyable.length})`} value={formatPrice(itemsTotal)} />
+          <Row
+            label={city && city !== freeCity && sellers > 1 ? `Delivery (${sellers} sellers × ${formatPrice(feePerSeller)})` : 'Delivery'}
+            value={!city ? 'Choose a city' : deliveryTotal ? formatPrice(deliveryTotal) : `Free in ${freeCity}`}
+            muted={!deliveryTotal}
+          />
           <View style={styles.divider} />
           <Row label={payWith === 'card' ? 'Pay now by card' : 'Pay on delivery'} value={formatPrice(total)} strong />
         </View>

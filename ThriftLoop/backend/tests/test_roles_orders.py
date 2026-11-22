@@ -75,7 +75,7 @@ def test_cash_on_delivery_order_flow(client):
                           headers=seller).json()
 
     order_body = {"product_id": product["id"], "delivery_name": "Buyer Two", "phone": "+38344999888",
-                  "address_text": "Rr. Nena Tereze 12, Prishtina", "latitude": 42.66, "longitude": 21.16}
+                  "address_text": "Rr. Nena Tereze 12, Prishtina", "city": "Prishtina", "latitude": 42.66, "longitude": 21.16}
     assert client.post("/orders", json=order_body, headers=buyer).status_code == 422  # terms not accepted
     assert client.post("/orders", json={**order_body, "accept_terms": True}, headers=seller).status_code == 400  # own item
     r = client.post("/orders", json={**order_body, "accept_terms": True}, headers=buyer)
@@ -111,7 +111,7 @@ def test_basket_checkout_is_all_or_nothing(client):
     other = auth(_register_and_verify(client, "buyer4", "buyer4@gmail.com"))
     files = [("images", ("a.png", _png(), "image/png"))]
     a, b, c = (client.post("/products", data=LISTING, files=files, headers=seller).json() for _ in range(3))
-    details = {"delivery_name": "Buyer Three", "phone": "+38344777666", "address_text": "Rr. Agim Ramadani 5, Prishtina"}
+    details = {"delivery_name": "Buyer Three", "phone": "+38344777666", "address_text": "Rr. Agim Ramadani 5, Prishtina", "city": "Prishtina"}
 
     assert client.post("/orders/checkout", json={**details, "product_ids": [a["id"]]}, headers=buyer).status_code == 422
     assert client.post("/orders/checkout", json={**details, "product_ids": [], "accept_terms": True},

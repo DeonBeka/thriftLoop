@@ -53,6 +53,11 @@ _ADDED_COLUMNS = {
     "orders": {
         "payment_status": "VARCHAR(20) NOT NULL DEFAULT 'due'",
         "stripe_payment_intent": "VARCHAR(100)",
+        "city": "VARCHAR(60)",
+        "delivery_fee": "FLOAT NOT NULL DEFAULT 0",
+        "commission": "FLOAT NOT NULL DEFAULT 0",
+        "delivery_commission": "FLOAT NOT NULL DEFAULT 0",
+        "seller_payout": "FLOAT NOT NULL DEFAULT 0",
     },
 }
 

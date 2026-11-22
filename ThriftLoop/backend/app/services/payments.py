@@ -107,10 +107,10 @@ def refund(payment_intent: str, amount_cents: int | None = None) -> None:
 
 
 def refund_order(order: Order) -> None:
-    """Refund one card-paid order (one basket payment can cover several orders, so refund just this part)."""
+    """Refund one card-paid order: its item and delivery (a basket payment can cover several orders)."""
     if not order.stripe_payment_intent:
         raise PaymentError("This order has no card payment to refund.")
-    refund(order.stripe_payment_intent, to_cents(order.price))
+    refund(order.stripe_payment_intent, to_cents(order.price + (order.delivery_fee or 0)))
 
 
 def load_ids(raw: str | None) -> list[int]:

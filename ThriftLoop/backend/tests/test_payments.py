@@ -35,7 +35,7 @@ class FakeStripe:
         self.v1 = SimpleNamespace(checkout=SimpleNamespace(sessions=Sessions()), refunds=Refunds())
 
 
-DETAILS = {"delivery_name": "Card Buyer", "phone": "+38344555444", "address_text": "Rr. Garibaldi 3, Prishtina",
+DETAILS = {"delivery_name": "Card Buyer", "phone": "+38344555444", "address_text": "Rr. Garibaldi 3, Prishtina", "city": "Prishtina",
            "accept_terms": True, "return_url": "exp://192.168.0.30:8081/--/checkout/complete"}
 
 

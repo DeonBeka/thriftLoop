@@ -27,6 +27,12 @@ class Order(Base):
     payment_method: Mapped[str] = mapped_column(String(30), default="cash_on_delivery")
     payment_status: Mapped[str] = mapped_column(String(20), default="due")
     stripe_payment_intent: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    # Money breakdown, fixed when the order is placed (see app/services/pricing.py).
+    city: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    delivery_fee: Mapped[float] = mapped_column(Float, default=0.0)  # paid by the buyer
+    commission: Mapped[float] = mapped_column(Float, default=0.0)  # ThriftLoop's 10% of the price (from the seller)
+    delivery_commission: Mapped[float] = mapped_column(Float, default=0.0)  # ThriftLoop's 5% of the delivery fee
+    seller_payout: Mapped[float] = mapped_column(Float, default=0.0)  # what the seller keeps
 
     delivery_name: Mapped[str] = mapped_column(String(100))
     phone: Mapped[str] = mapped_column(String(30))

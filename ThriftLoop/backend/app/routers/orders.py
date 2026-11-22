@@ -7,8 +7,18 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user
 from app.database import get_db
 from app.models import Conversation, Message, Order, Product, User
-from app.schemas.marketplace import BasketCheckout, OrderCreate, OrderOut, OrderStatusUpdate
+from app.schemas.marketplace import BasketCheckout, OrderCreate, OrderOut, OrderStatusUpdate, PricingOut
 from app.services.payments import PaymentError, refund_order
+from app.services.pricing import (
+    COMMISSION_RATE,
+    DELIVERY_COMMISSION_RATE,
+    DELIVERY_FEE,
+    FREE_DELIVERY_CITY,
+    KOSOVO_CITIES,
+    delivery_fee,
+    fees_per_item,
+    order_money,
+)
 from app.services.serializers import order_out
 from app.utils_format import price_text
 
@@ -43,9 +53,14 @@ def _notify(db: Session, order: Order, sender_id: int, text: str) -> None:
 
 
 def create_order(db: Session, product: Product, user: User, payload: OrderCreate | BasketCheckout,
-                 *, payment_intent: str | None = None) -> Order:
-    """Create one order and reserve the item. With `payment_intent` it's a card order already paid on Stripe."""
+                 *, delivery: float, payment_intent: str | None = None) -> Order:
+    """Create one order and reserve the item. With `payment_intent` it's a card order already paid on Stripe.
+
+    `delivery` is this order's delivery fee (see pricing.fees_per_item). ThriftLoop's commission comes out
+    of the seller's share, never on top of what the buyer pays.
+    """
     card = payment_intent is not None
+    money = order_money(product.price, delivery)
     order = Order(
         product_id=product.id,
         buyer_id=user.id,
@@ -56,6 +71,11 @@ def create_order(db: Session, product: Product, user: User, payload: OrderCreate
         payment_method="card" if card else "cash_on_delivery",
         payment_status="paid" if card else "due",
         stripe_payment_intent=payment_intent,
+        city=payload.city,
+        delivery_fee=money.delivery_fee,
+        commission=money.commission,
+        delivery_commission=money.delivery_commission,
+        seller_payout=money.seller_payout,
         delivery_name=payload.delivery_name,
         phone=payload.phone,
         address_text=payload.address_text,
@@ -68,7 +88,9 @@ def create_order(db: Session, product: Product, user: User, payload: OrderCreate
     db.add(order)
     db.flush()
     how = "paid by card" if card else "cash on delivery"
-    _notify(db, order, user.id, f"🛍️ I ordered this for {price_text(order.price)}, {how}. Order #{order.id}.")
+    shipping = f" + {price_text(money.delivery_fee)} delivery" if money.delivery_fee else ""
+    _notify(db, order, user.id,
+            f"🛍️ I ordered this for {price_text(order.price)}{shipping} to {payload.city}, {how}. Order #{order.id}.")
     return order
 
 
@@ -87,7 +109,7 @@ def place_order(payload: OrderCreate, db: Session = Depends(get_db), user: User 
     if not payload.accept_terms:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Please accept the cash-on-delivery terms.")
     product = check_buyable(db.get(Product, payload.product_id), user)
-    order = create_order(db, product, user, payload)
+    order = create_order(db, product, user, payload, delivery=delivery_fee(payload.city))
     db.commit()
     return order_out(order)
 
@@ -99,9 +121,22 @@ def checkout_basket(payload: BasketCheckout, db: Session = Depends(get_db),
     if not payload.accept_terms:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Please accept the cash-on-delivery terms.")
     products = [check_buyable(db.get(Product, pid), user) for pid in payload.product_ids]
-    orders = [create_order(db, product, user, payload) for product in products]
+    fees = fees_per_item([p.seller_id for p in products], payload.city)
+    orders = [create_order(db, product, user, payload, delivery=fee) for product, fee in zip(products, fees, strict=True)]
     db.commit()
     return [order_out(o) for o in orders]
+
+
+@router.get("/pricing", response_model=PricingOut)
+def pricing() -> PricingOut:
+    """Cities we deliver to, delivery fee and ThriftLoop's commission rates (for the app's checkout and sell form)."""
+    return PricingOut(
+        cities=KOSOVO_CITIES,
+        free_delivery_city=FREE_DELIVERY_CITY,
+        delivery_fee=float(DELIVERY_FEE),
+        commission_rate=float(COMMISSION_RATE),
+        delivery_commission_rate=float(DELIVERY_COMMISSION_RATE),
+    )
 
 
 @router.get("", response_model=list[OrderOut])
@@ -158,7 +193,7 @@ def update_status(order_id: int, body: OrderStatusUpdate, db: Session = Depends(
         "confirmed": f"✅ Order #{order.id} confirmed. I'll arrange delivery soon.",
         "delivered": (f"📦 Order #{order.id} delivered. Thank you!" if order.payment_method == "card"
                       else f"📦 Order #{order.id} delivered and paid in cash. Thank you!"),
-        "cancelled": (f"Order #{order.id} was cancelled. {price_text(order.price)} was refunded to the card."
+        "cancelled": (f"Order #{order.id} was cancelled. {price_text(order.price + (order.delivery_fee or 0))} was refunded to the card."
                       if card_paid else f"Order #{order.id} was cancelled."),
     }
     _notify(db, order, user.id, messages[body.status])

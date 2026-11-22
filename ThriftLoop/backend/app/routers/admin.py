@@ -35,7 +35,21 @@ def stats(db: Session = Depends(get_db)) -> AdminStats:
         ),
         active_listings=count(select(func.count()).select_from(Product).where(Product.status == "active")),
         open_orders=count(select(func.count()).select_from(Order).where(Order.status.in_(["pending", "confirmed"]))),
+        **_earnings(db),
     )
+
+
+def _earnings(db: Session) -> dict:
+    """ThriftLoop's cut: 10% of item prices + 5% of delivery fees. Earned once an order is delivered."""
+    cut = func.coalesce(func.sum(Order.commission + Order.delivery_commission), 0.0)
+    delivered = Order.status == "delivered"
+    return {
+        "earned": round(db.scalar(select(cut).where(delivered)) or 0.0, 2),
+        "earned_pending": round(db.scalar(select(cut).where(Order.status.in_(["pending", "confirmed"]))) or 0.0, 2),
+        "sales_volume": round(db.scalar(select(func.coalesce(func.sum(Order.price + Order.delivery_fee), 0.0))
+                                        .where(delivered)) or 0.0, 2),
+        "delivered_orders": db.scalar(select(func.count()).select_from(Order).where(delivered)) or 0,
+    }
 
 
 @router.get("/applications", response_model=list[SellerApplicationOut])

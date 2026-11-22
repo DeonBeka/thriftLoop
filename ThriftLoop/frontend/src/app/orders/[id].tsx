@@ -50,13 +50,13 @@ export default function OrderDetail() {
     };
     if (status === 'cancelled') {
       const card = order.payment_method === 'card' && order.payment_status === 'paid';
-      Alert.alert('Cancel this order?', card ? `The item will go back on sale and ${formatPrice(order.price)} will be refunded to the card.` : 'The item will go back on sale.', [
+      Alert.alert('Cancel this order?', card ? `The item will go back on sale and ${formatPrice(order.total)} will be refunded to the card.` : 'The item will go back on sale.', [
         { text: 'Keep order', style: 'cancel' },
         { text: 'Cancel order', style: 'destructive', onPress: () => void run() },
       ]);
     } else if (status === 'delivered') {
       const cash = order.payment_method === 'cash_on_delivery';
-      Alert.alert('Mark as delivered?', cash ? `Only do this once the buyer has received the item and paid ${formatPrice(order.price)} in cash.` : 'Only do this once the buyer has received the item. It was already paid by card.', [
+      Alert.alert('Mark as delivered?', cash ? `Only do this once the buyer has received the item and paid ${formatPrice(order.total)} in cash.` : 'Only do this once the buyer has received the item. It was already paid by card.', [
         { text: 'Not yet', style: 'cancel' },
         { text: cash ? 'Delivered and paid' : 'Delivered', onPress: () => void run() },
       ]);
@@ -173,7 +173,32 @@ export default function OrderDetail() {
                   : 'To pay in cash on delivery'}
             </Text>
           </View>
-          <Text style={[styles.price, order.payment_status === 'refunded' && styles.refunded]}>{formatPrice(order.price)}</Text>
+          <Text style={[styles.price, order.payment_status === 'refunded' && styles.refunded]}>{formatPrice(order.total)}</Text>
+        </View>
+
+        <View style={[styles.card, styles.money]}>
+          <MoneyRow label="Item" value={formatPrice(order.price)} />
+          <MoneyRow
+            label={order.city ? `Delivery to ${order.city}` : 'Delivery'}
+            value={order.delivery_fee ? formatPrice(order.delivery_fee) : 'Free'}
+          />
+          <View style={styles.moneyDivider} />
+          <MoneyRow label={isBuyer ? 'You pay' : 'Buyer pays'} value={formatPrice(order.total)} strong />
+          {isSeller && (
+            <>
+              <MoneyRow label="ThriftLoop fee (10% of item)" value={`−${formatPrice(order.commission)}`} muted />
+              {order.delivery_commission > 0 && (
+                <MoneyRow label="ThriftLoop fee (5% of delivery)" value={`−${formatPrice(order.delivery_commission)}`} muted />
+              )}
+              <View style={styles.moneyDivider} />
+              <MoneyRow label="You receive" value={formatPrice(order.seller_payout)} strong />
+              {order.payment_method === 'cash_on_delivery' && order.payment_status !== 'refunded' && (
+                <Text style={type.footnote}>
+                  You collect {formatPrice(order.total)} in cash and pass {formatPrice(order.commission + order.delivery_commission)} on to ThriftLoop.
+                </Text>
+              )}
+            </>
+          )}
         </View>
       </ScrollView>
 
@@ -194,8 +219,20 @@ export default function OrderDetail() {
   );
 }
 
+function MoneyRow({ label, value, strong, muted }: { label: string; value: string; strong?: boolean; muted?: boolean }) {
+  return (
+    <View style={styles.moneyRow}>
+      <Text style={[strong ? type.bodyStrong : type.callout, muted && { color: colors.textSecondary }]}>{label}</Text>
+      <Text style={[strong ? type.bodyStrong : type.body, muted && { color: colors.textSecondary }]}>{value}</Text>
+    </View>
+  );
+}
+
 const styles = themed(() =>
   StyleSheet.create({
+  money: { gap: spacing.sm, marginTop: spacing.sm },
+  moneyRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: spacing.md },
+  moneyDivider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.separator, marginVertical: 2 },
   refunded: { textDecorationLine: 'line-through', color: colors.textSecondary },
   container: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1, gap: 4 },

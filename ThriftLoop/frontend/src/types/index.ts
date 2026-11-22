@@ -61,6 +61,17 @@ export interface Order {
   payment_method: 'cash_on_delivery' | 'card';
   /** due = cash still to be paid on delivery; paid; refunded (card orders that were cancelled). */
   payment_status: 'due' | 'paid' | 'refunded';
+  city: string | null;
+  /** Delivery the buyer pays (free in Prishtina, €2 elsewhere; once per seller). */
+  delivery_fee: number;
+  /** What the buyer pays: price + delivery. */
+  total: number;
+  /** ThriftLoop's 10% of the price, taken from the seller's share. */
+  commission: number;
+  /** ThriftLoop's 5% of the delivery fee. */
+  delivery_commission: number;
+  /** What the seller keeps. */
+  seller_payout: number;
   delivery_name: string;
   phone: string;
   address_text: string;
@@ -80,6 +91,20 @@ export interface AdminStats {
   pending_applications: number;
   active_listings: number;
   open_orders: number;
+  /** ThriftLoop's earnings (10% of prices + 5% of delivery) from delivered orders. */
+  earned: number;
+  /** Earnings from open orders, counted once they're delivered. */
+  earned_pending: number;
+  sales_volume: number;
+  delivered_orders: number;
+}
+
+export interface Pricing {
+  cities: string[];
+  free_delivery_city: string;
+  delivery_fee: number;
+  commission_rate: number;
+  delivery_commission_rate: number;
 }
 
 export type PhotoAngle = 'front' | 'back' | 'side';

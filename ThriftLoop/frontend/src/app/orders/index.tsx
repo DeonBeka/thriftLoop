@@ -70,7 +70,7 @@ export default function Orders() {
                   </Text>
                   <OrderStatusBadge status={item.status} />
                 </View>
-                <Text style={styles.price}>{formatPrice(item.price)}</Text>
+                <Text style={styles.price}>{formatPrice(tab === 'seller' ? item.seller_payout || item.price : item.total || item.price)}</Text>
               </Pressable>
             );
           }}

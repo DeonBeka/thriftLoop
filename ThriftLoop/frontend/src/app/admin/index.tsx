@@ -12,6 +12,7 @@ import { useApi } from '@/hooks/useApi';
 import { adminApi } from '@/services/api';
 import type { SellerApplication } from '@/types';
 import { timeAgo } from '@/utils/format';
+import { formatPrice } from '@/utils/format';
 
 type Filter = 'pending' | 'approved' | 'rejected';
 
@@ -37,6 +38,19 @@ export default function AdminDashboard() {
 
   const header = (
     <View>
+      {stats.data && (
+        <View style={styles.earnings} accessible accessibilityLabel={`ThriftLoop earnings ${formatPrice(stats.data.earned)}`}>
+          <Text style={styles.earningsLabel}>ThriftLoop earnings</Text>
+          <Text style={styles.earningsValue}>{formatPrice(stats.data.earned)}</Text>
+          <Text style={styles.earningsNote}>
+            10% of every sale + 5% of delivery, from {stats.data.delivered_orders} delivered{' '}
+            {stats.data.delivered_orders === 1 ? 'order' : 'orders'} ({formatPrice(stats.data.sales_volume)} in sales).
+          </Text>
+          {stats.data.earned_pending > 0 && (
+            <Text style={styles.earningsNote}>+ {formatPrice(stats.data.earned_pending)} on open orders, earned once delivered.</Text>
+          )}
+        </View>
+      )}
       <View style={styles.tiles}>
         {tiles.map((t) => (
           <View key={t.label} style={[styles.tile, t.warm && { backgroundColor: colors.warmSoft }]}>
@@ -104,6 +118,10 @@ function ApplicationRow({ app, onPress }: { app: SellerApplication; onPress: () 
 
 const styles = themed(() =>
   StyleSheet.create({
+  earnings: { padding: spacing.lg, borderRadius: radius.lg, backgroundColor: colors.primary, gap: 4, marginBottom: spacing.md },
+  earningsLabel: { fontSize: fs(13), fontWeight: '600', color: colors.white, opacity: 0.85 },
+  earningsValue: { fontFamily: 'Fraunces_600SemiBold', fontSize: fs(34), color: colors.white },
+  earningsNote: { fontSize: fs(13), lineHeight: fs(18), color: colors.white, opacity: 0.85 },
   container: { flex: 1, backgroundColor: colors.background },
   content: { paddingHorizontal: GUTTER, paddingBottom: spacing.huge, flexGrow: 1 },
   flex: { flex: 1, gap: 2 },

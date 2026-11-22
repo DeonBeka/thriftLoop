@@ -10,6 +10,7 @@ import { colors, fs, GUTTER, spacing, themed, type } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { productsApi } from '@/services/api';
 import type { Category, Condition, LocalImage, Product } from '@/types';
+import { formatPrice } from '@/utils/format';
 import { haptic } from '@/utils/haptics';
 
 import { ListingPreview } from './ListingPreview';
@@ -255,7 +256,11 @@ export function ListingForm({ product, onSaved, header, bottomInset = 0 }: Listi
               if (Number.isFinite(n) && price.includes('.')) setPrice(n.toFixed(2));
             }}
             error={errors.price}
-            hint="Buyers can message you to make an offer."
+            hint={
+              Number.isFinite(priceValue) && priceValue > 0
+                ? `You receive ${formatPrice(Math.round(priceValue * 90) / 100)} after ThriftLoop’s 10% fee. Buyers pay ${formatPrice(priceValue)} plus delivery.`
+                : 'ThriftLoop keeps 10% of the price when your item sells. Buyers can message you to make an offer.'
+            }
           />
         </Section>
       </ScrollView>

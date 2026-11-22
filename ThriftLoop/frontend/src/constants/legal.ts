@@ -40,7 +40,7 @@ export const LEGAL: Record<LegalDocId, LegalDoc> = {
       },
       {
         heading: '5. Buying and payment',
-        body: 'Purchases are paid in cash to the seller on delivery, or by card where offered (test mode in this demo), under the Order & Payment Terms. Prices are set by sellers and shown in euro. Placing an order is a commitment to buy: please only order if you intend to pay and receive the item.',
+        body: 'Purchases are paid in cash to the seller on delivery, or by card where offered (test mode in this demo), under the Order & Payment Terms. Prices are set by sellers and shown in euro. Delivery is free in Prishtina and €2.00 elsewhere in Kosovo (once per seller). ThriftLoop’s 10% fee is paid by sellers, not buyers. Placing an order is a commitment to buy: please only order if you intend to pay and receive the item.',
       },
       {
         heading: '6. Behaviour',
@@ -115,6 +115,10 @@ export const LEGAL: Record<LegalDocId, LegalDoc> = {
         body: 'List only items you own; describe them accurately; respond to buyers within a reasonable time; keep reserved items aside for the buyer; deliver orders you confirm; and accept cash payment on delivery as agreed.',
       },
       {
+        heading: 'Fees',
+        body: 'ThriftLoop keeps 10% of the price of each item you sell, plus 5% of any delivery fee. These fees come out of your share: buyers pay only your listed price plus delivery, never extra on top. You can see what you will receive when you set a price and on every order. For cash orders you collect the full amount from the buyer and pass ThriftLoop’s fee on; for card orders the fee is kept before your payout. Fees apply once an order is delivered; cancelled orders cost you nothing.',
+      },
+      {
         heading: 'Prohibited items',
         body: 'Counterfeits, stolen goods, worn underwear or swimwear without hygiene protection, items with offensive content, weapons, and anything illegal to sell where you live.',
       },
@@ -154,7 +158,7 @@ export const LEGAL: Record<LegalDocId, LegalDoc> = {
       },
       {
         heading: 'Delivery costs',
-        body: 'Any delivery cost is agreed between buyer and seller in the chat before the order is confirmed.',
+        body: 'Delivery is free within Prishtina and costs €2.00 anywhere else in Kosovo. It is charged once per seller, because each seller delivers their own items, and it is shown at checkout before you order. We deliver within Kosovo only.',
       },
     ],
   },

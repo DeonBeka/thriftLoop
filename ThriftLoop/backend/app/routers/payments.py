@@ -24,6 +24,7 @@ from app.services.payments import (
     session_payment,
     to_cents,
 )
+from app.services.pricing import fees_per_item
 from app.services.serializers import order_out
 
 router = APIRouter(prefix="/payments", tags=["payments"])
@@ -66,13 +67,14 @@ def start_card_checkout(body: CardCheckoutRequest, request: Request, db: Session
     if not safe_return_url(body.return_url):
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Invalid return address.")
     products = [check_buyable(db.get(Product, pid), user) for pid in body.product_ids]
+    fees = fees_per_item([p.seller_id for p in products], body.city)
 
-    delivery = body.model_dump(include={"delivery_name", "phone", "address_text", "latitude", "longitude", "note"})
+    delivery = body.model_dump(include={"delivery_name", "phone", "address_text", "city", "latitude", "longitude", "note"})
     checkout = CardCheckout(
         user_id=user.id,
         product_ids=json.dumps([p.id for p in products]),
         delivery=json.dumps(delivery),
-        amount_cents=sum(to_cents(p.price) for p in products),
+        amount_cents=sum(to_cents(p.price) for p in products) + sum(to_cents(f) for f in fees),
         app_return_url=body.return_url,
         status="pending",
     )
@@ -80,7 +82,9 @@ def start_card_checkout(body: CardCheckoutRequest, request: Request, db: Session
     db.flush()
     try:
         # The browser comes back to this same API address (whatever host the phone used to reach us).
-        url = create_session(checkout, [(p.title, to_cents(p.price)) for p in products], str(request.base_url))
+        lines = [(p.title, to_cents(p.price)) for p in products]
+        lines += [(f"Delivery to {body.city} (@{p.seller.username})", to_cents(f)) for p, f in zip(products, fees, strict=True) if f]
+        url = create_session(checkout, lines, str(request.base_url))
     except PaymentError as exc:
         db.rollback()
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(exc)) from None
@@ -96,7 +100,9 @@ def _finish(db: Session, checkout: CardCheckout) -> None:
     if not paid:
         return
     user = db.get(User, checkout.user_id)
-    delivery = BasketCheckout(product_ids=load_ids(checkout.product_ids), accept_terms=True, **json.loads(checkout.delivery))
+    saved = json.loads(checkout.delivery)
+    saved.setdefault("city", "Prishtina")  # card checkouts started before delivery pricing existed
+    delivery = BasketCheckout(product_ids=load_ids(checkout.product_ids), accept_terms=True, **saved)
     try:
         products = [check_buyable(db.get(Product, pid), user) for pid in delivery.product_ids]
     except HTTPException as exc:
@@ -108,7 +114,9 @@ def _finish(db: Session, checkout: CardCheckout) -> None:
         checkout.message = f"{exc.detail} Your card payment was refunded in full and nothing was ordered."
         db.commit()
         return
-    orders = [create_order(db, p, user, delivery, payment_intent=intent) for p in products]
+    fees = fees_per_item([p.seller_id for p in products], delivery.city)
+    orders = [create_order(db, p, user, delivery, delivery=fee, payment_intent=intent)
+              for p, fee in zip(products, fees, strict=True)]
     checkout.status = "paid"
     checkout.order_ids = json.dumps([o.id for o in orders])
     db.commit()

@@ -11,6 +11,7 @@ import type {
   LocalImage,
   Message,
   PhotoAngle,
+  Pricing,
   Product,
   ProductFilters,
   ProductList,
@@ -283,6 +284,8 @@ export interface OrderInput {
   delivery_name: string;
   phone: string;
   address_text: string;
+  /** Kosovo municipality; decides the delivery fee. */
+  city: string;
   latitude?: number | null;
   longitude?: number | null;
   note?: string;
@@ -294,6 +297,8 @@ export type BasketCheckoutInput = Omit<OrderInput, 'product_id'> & { product_ids
 
 export const ordersApi = {
   place: (body: OrderInput) => request<Order>('POST', '/orders', { body }),
+  /** Cities, delivery fee and ThriftLoop's commission rates. */
+  pricing: () => request<Pricing>('GET', '/orders/pricing'),
   /** Orders everything at once; if any item is gone, nothing is ordered. */
   checkout: (body: BasketCheckoutInput) => request<Order[]>('POST', '/orders/checkout', { body }),
   list: (role: 'buyer' | 'seller' | 'all' = 'all') => request<Order[]>('GET', '/orders', { query: { role } }),
