@@ -1,7 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MapPicker, type PickedLocation } from '@/components/checkout/MapPicker';
@@ -16,12 +18,13 @@ import { colors, fs, GUTTER, radius, spacing, themed, type } from '@/constants/t
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
 import { useBasket } from '@/hooks/useBasket';
-import { ordersApi, productsApi } from '@/services/api';
+import { ordersApi, paymentsApi, productsApi, type CardCheckoutState } from '@/services/api';
 import type { Product } from '@/types';
 import { formatPrice } from '@/utils/format';
 import { haptic } from '@/utils/haptics';
 
 type Mode = 'map' | 'text';
+type PayWith = 'cash' | 'card';
 type Field = 'name' | 'phone' | 'address' | 'terms';
 
 /** Checkout for everything in the basket: one set of delivery details, cash on delivery. */
@@ -50,6 +53,9 @@ export default function Checkout() {
   const [accepted, setAccepted] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [placing, setPlacing] = useState(false);
+  const [payWith, setPayWith] = useState<PayWith>('cash');
+  const payments = useApi(() => paymentsApi.info(), []);
+  const cardEnabled = !!payments.data?.card_enabled;
 
   if (!user) {
     return (
@@ -98,6 +104,41 @@ export default function Checkout() {
     return Object.keys(next).length === 0;
   };
 
+  const details = () => ({
+    product_ids: buyable.map((p) => p.id),
+    delivery_name: name.trim(),
+    phone: phone.trim(),
+    address_text: address.trim(),
+    latitude: mode === 'map' ? location?.latitude ?? null : null,
+    longitude: mode === 'map' ? location?.longitude ?? null : null,
+    note: note.trim() || undefined,
+    accept_terms: true,
+  });
+
+  const finish = (orders: { id: number; product_id: number | null }[]) => {
+    basket.removeMany(orders.map((o) => o.product_id).filter((id): id is number => id != null));
+    void haptic.success();
+    if (orders.length === 1) router.replace(`/orders/${orders[0].id}?placed=1`);
+    else router.replace(`/orders?placed=${orders.length}`);
+  };
+
+  /** Card: open Stripe's hosted card page in the in-app browser, then ask our API whether it was paid. */
+  const payByCard = async () => {
+    const returnUrl = Linking.createURL('checkout/complete');
+    const started = await paymentsApi.startCard({ ...details(), return_url: returnUrl });
+    await WebBrowser.openAuthSessionAsync(started.url, returnUrl);
+    // However the browser closed, the server decides: it checks the payment with Stripe.
+    let state: CardCheckoutState = await paymentsApi.cardStatus(started.checkout_id);
+    for (let i = 0; i < 4 && state.status === 'pending'; i++) {
+      await new Promise((r) => setTimeout(r, 1500));
+      state = await paymentsApi.cardStatus(started.checkout_id);
+    }
+    if (state.status === 'paid') finish(state.orders);
+    else if (state.status === 'refunded') Alert.alert('Payment refunded', state.message ?? 'Your payment was refunded and nothing was ordered.');
+    else Alert.alert('Payment not completed', state.message ?? 'Nothing was charged. You can try again or pay cash on delivery.');
+    if (state.status !== 'paid') void reload();
+  };
+
   const placeOrder = async () => {
     if (!buyable.length) return;
     if (!validate()) {
@@ -106,20 +147,8 @@ export default function Checkout() {
     }
     setPlacing(true);
     try {
-      const orders = await ordersApi.checkout({
-        product_ids: buyable.map((p) => p.id),
-        delivery_name: name.trim(),
-        phone: phone.trim(),
-        address_text: address.trim(),
-        latitude: mode === 'map' ? location?.latitude ?? null : null,
-        longitude: mode === 'map' ? location?.longitude ?? null : null,
-        note: note.trim() || undefined,
-        accept_terms: true,
-      });
-      basket.removeMany(orders.map((o) => o.product_id).filter((id): id is number => id != null));
-      void haptic.success();
-      if (orders.length === 1) router.replace(`/orders/${orders[0].id}?placed=1`);
-      else router.replace(`/orders?placed=${orders.length}`);
+      if (payWith === 'card') await payByCard();
+      else finish(await ordersApi.checkout(details()));
     } catch (err) {
       void haptic.error();
       Alert.alert(
@@ -206,22 +235,36 @@ export default function Checkout() {
         </View>
 
         <Text style={[type.headline, styles.section]}>Payment</Text>
-        <View style={styles.payment}>
-          <View style={styles.payIcon}>
-            <Ionicons name="cash-outline" size={22} color={colors.primary} />
-          </View>
-          <View style={styles.flex}>
-            <Text style={type.bodyStrong}>Cash on delivery</Text>
-            <Text style={type.footnote}>Pay in cash when you receive your items. No card needed.</Text>
-          </View>
-          <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+        <View style={styles.payOptions} accessibilityRole="radiogroup">
+          <PayOption
+            icon="cash-outline"
+            title="Cash on delivery"
+            subtitle="Pay in cash when you receive your items."
+            selected={payWith === 'cash'}
+            onPress={() => setPayWith('cash')}
+          />
+          <PayOption
+            icon="card-outline"
+            title="Card"
+            badge="Test mode"
+            subtitle={
+              cardEnabled
+                ? `Pay now on Stripe’s secure page. Demo only: use test card ${payments.data?.test_card ?? '4242 4242 4242 4242'}, any future date and any CVC.`
+                : payments.loading
+                  ? 'Checking…'
+                  : 'Not set up on this server yet.'
+            }
+            selected={payWith === 'card'}
+            disabled={!cardEnabled}
+            onPress={() => setPayWith('card')}
+          />
         </View>
 
         <View style={styles.totals}>
           <Row label={`Items (${buyable.length})`} value={formatPrice(total)} />
           <Row label="Delivery" value="Agree with the seller" muted />
           <View style={styles.divider} />
-          <Row label="Pay on delivery" value={formatPrice(total)} strong />
+          <Row label={payWith === 'card' ? 'Pay now by card' : 'Pay on delivery'} value={formatPrice(total)} strong />
         </View>
 
         <View style={{ marginTop: spacing.xl }}>
@@ -234,9 +277,9 @@ export default function Checkout() {
             error={!!errors.terms}
             label={
               <>
-                I’ll pay in cash on delivery and agree to the{' '}
+                {payWith === 'card' ? 'I’ll pay now by card and agree to the ' : 'I’ll pay in cash on delivery and agree to the '}
                 <Text style={linkStyles.link} onPress={() => router.push('/legal/delivery')}>
-                  Cash-on-Delivery Terms
+                  {payWith === 'card' ? 'Order & Payment Terms' : 'Cash-on-Delivery Terms'}
                 </Text>
                 .
               </>
@@ -248,13 +291,55 @@ export default function Checkout() {
 
       <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
         <Button
-          title={buyable.length ? `Place order · ${formatPrice(total)}` : 'Nothing available to order'}
+          title={buyable.length ? `${payWith === 'card' ? 'Pay' : 'Place order'} · ${formatPrice(total)}` : 'Nothing available to order'}
+          icon={payWith === 'card' && buyable.length ? 'card-outline' : undefined}
           onPress={placeOrder}
           loading={placing}
           disabled={!buyable.length}
         />
       </View>
     </View>
+  );
+}
+
+function PayOption({ icon, title, subtitle, badge, selected, disabled, onPress }: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  subtitle: string;
+  badge?: string;
+  selected: boolean;
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={() => {
+        if (disabled) return;
+        void haptic.selection();
+        onPress();
+      }}
+      style={[styles.payment, selected && styles.paymentOn, disabled && styles.paymentOff]}
+      accessibilityRole="radio"
+      accessibilityState={{ selected, disabled }}
+      aria-checked={selected}
+      accessibilityLabel={`${title}. ${subtitle}`}
+    >
+      <View style={styles.payIcon}>
+        <Ionicons name={icon} size={22} color={colors.primary} />
+      </View>
+      <View style={styles.flex}>
+        <View style={styles.payTitleRow}>
+          <Text style={type.bodyStrong}>{title}</Text>
+          {badge && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{badge}</Text>
+            </View>
+          )}
+        </View>
+        <Text style={type.footnote}>{subtitle}</Text>
+      </View>
+      <Ionicons name={selected ? 'radio-button-on' : 'radio-button-off'} size={22} color={selected ? colors.primary : colors.textTertiary} />
+    </Pressable>
   );
 }
 
@@ -289,7 +374,22 @@ const styles = themed(() =>
     section: { marginTop: spacing.xxl, marginBottom: spacing.md },
     modes: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
     fields: { gap: spacing.lg },
-    payment: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.lg, borderRadius: radius.lg, backgroundColor: colors.secondary },
+    payOptions: { gap: spacing.sm },
+    payment: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      padding: spacing.lg,
+      borderRadius: radius.lg,
+      backgroundColor: colors.card,
+      borderWidth: 1.5,
+      borderColor: colors.card,
+    },
+    paymentOn: { backgroundColor: colors.secondary, borderColor: colors.primary },
+    paymentOff: { opacity: 0.55 },
+    payTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    badge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: radius.xs, backgroundColor: colors.warmSoft },
+    badgeText: { fontSize: fs(11), fontWeight: '700', color: colors.warm },
     payIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
     totals: { marginTop: spacing.lg, gap: spacing.sm },
     row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },

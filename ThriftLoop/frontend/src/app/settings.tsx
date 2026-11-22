@@ -73,7 +73,7 @@ export default function Settings() {
         <Row icon="document-text-outline" label="Terms of Service" onPress={() => router.push('/legal/terms')} />
         <Row icon="lock-closed-outline" label="Privacy Policy" onPress={() => router.push('/legal/privacy')} />
         <Row icon="storefront-outline" label="Seller Terms" onPress={() => router.push('/legal/seller')} />
-        <Row icon="cash-outline" label="Cash-on-Delivery Terms" onPress={() => router.push('/legal/delivery')} last />
+        <Row icon="cash-outline" label="Order & Payment Terms" onPress={() => router.push('/legal/delivery')} last />
       </Group>
 
       <Group>

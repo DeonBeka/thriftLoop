@@ -66,7 +66,7 @@ export default function Orders() {
                     {item.product_title}
                   </Text>
                   <Text style={type.footnote} numberOfLines={1}>
-                    #{item.id} · {tab === 'buyer' ? 'from' : 'to'} @{other.username} · {timeAgo(item.created_at)}
+                    #{item.id} · {tab === 'buyer' ? 'from' : 'to'} @{other.username} · {item.payment_method === 'card' ? (item.payment_status === 'refunded' ? 'refunded · ' : 'card · ') : ''}{timeAgo(item.created_at)}
                   </Text>
                   <OrderStatusBadge status={item.status} />
                 </View>

@@ -302,6 +302,23 @@ export const ordersApi = {
     request<Order>('POST', `/orders/${id}/status`, { body: { status } }),
 };
 
+// ---------- Card payments (Stripe test mode) ----------
+export interface CardCheckoutState {
+  checkout_id: number;
+  status: 'pending' | 'paid' | 'cancelled' | 'refunded';
+  message: string | null;
+  orders: Order[];
+}
+
+export const paymentsApi = {
+  info: () => request<{ card_enabled: boolean; test_mode: boolean; test_card: string }>('GET', '/payments/info'),
+  /** Starts a Stripe Checkout for the basket; returns the hosted card page to open. */
+  startCard: (body: BasketCheckoutInput & { return_url: string }) =>
+    request<{ checkout_id: number; url: string }>('POST', '/payments/card-checkout', { body, timeoutMs: 30000 }),
+  /** Verifies with Stripe and returns the orders once paid. */
+  cardStatus: (id: number) => request<CardCheckoutState>('GET', `/payments/card-checkout/${id}`, { timeoutMs: 30000 }),
+};
+
 // ---------- Admin ----------
 export const adminApi = {
   stats: () => request<AdminStats>('GET', '/admin/stats'),

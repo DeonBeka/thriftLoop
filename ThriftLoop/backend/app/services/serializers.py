@@ -133,6 +133,7 @@ def order_out(order: Order) -> OrderOut:
         product_image=public_url(order.product_image),
         price=order.price,
         payment_method=order.payment_method,
+        payment_status=order.payment_status or "due",
         delivery_name=order.delivery_name,
         phone=order.phone,
         address_text=order.address_text,

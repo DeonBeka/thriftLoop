@@ -46,7 +46,7 @@ export function TermsGate() {
         <View style={styles.links}>
           {(['terms', 'privacy', 'delivery'] as const).map((doc) => (
             <Text key={doc} style={[linkStyles.link, styles.link]} onPress={() => router.push(`/legal/${doc}`)}>
-              {doc === 'terms' ? 'Terms of Service' : doc === 'privacy' ? 'Privacy Policy' : 'Cash-on-Delivery Terms'}
+              {doc === 'terms' ? 'Terms of Service' : doc === 'privacy' ? 'Privacy Policy' : 'Order & Payment Terms'}
             </Text>
           ))}
         </View>

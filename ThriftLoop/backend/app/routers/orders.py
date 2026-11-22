@@ -8,6 +8,7 @@ from app.core.deps import get_current_user
 from app.database import get_db
 from app.models import Conversation, Message, Order, Product, User
 from app.schemas.marketplace import BasketCheckout, OrderCreate, OrderOut, OrderStatusUpdate
+from app.services.payments import PaymentError, refund_order
 from app.services.serializers import order_out
 from app.utils_format import price_text
 
@@ -41,7 +42,10 @@ def _notify(db: Session, order: Order, sender_id: int, text: str) -> None:
     db.add(Message(conversation_id=convo.id, sender_id=sender_id, content=text))
 
 
-def _create_order(db: Session, product: Product, user: User, payload: OrderCreate | BasketCheckout) -> Order:
+def create_order(db: Session, product: Product, user: User, payload: OrderCreate | BasketCheckout,
+                 *, payment_intent: str | None = None) -> Order:
+    """Create one order and reserve the item. With `payment_intent` it's a card order already paid on Stripe."""
+    card = payment_intent is not None
     order = Order(
         product_id=product.id,
         buyer_id=user.id,
@@ -49,7 +53,9 @@ def _create_order(db: Session, product: Product, user: User, payload: OrderCreat
         product_title=product.title,
         product_image=product.images[0].image_path if product.images else None,
         price=product.price,
-        payment_method="cash_on_delivery",
+        payment_method="card" if card else "cash_on_delivery",
+        payment_status="paid" if card else "due",
+        stripe_payment_intent=payment_intent,
         delivery_name=payload.delivery_name,
         phone=payload.phone,
         address_text=payload.address_text,
@@ -61,11 +67,12 @@ def _create_order(db: Session, product: Product, user: User, payload: OrderCreat
     product.status = "reserved"  # hidden from the marketplace while the order is open
     db.add(order)
     db.flush()
-    _notify(db, order, user.id, f"🛍️ I ordered this for {price_text(order.price)}, cash on delivery. Order #{order.id}.")
+    how = "paid by card" if card else "cash on delivery"
+    _notify(db, order, user.id, f"🛍️ I ordered this for {price_text(order.price)}, {how}. Order #{order.id}.")
     return order
 
 
-def _check_buyable(product: Product | None, user: User) -> Product:
+def check_buyable(product: Product | None, user: User) -> Product:
     if product is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "This listing no longer exists.")
     if product.seller_id == user.id:
@@ -79,8 +86,8 @@ def _check_buyable(product: Product | None, user: User) -> Product:
 def place_order(payload: OrderCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> OrderOut:
     if not payload.accept_terms:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Please accept the cash-on-delivery terms.")
-    product = _check_buyable(db.get(Product, payload.product_id), user)
-    order = _create_order(db, product, user, payload)
+    product = check_buyable(db.get(Product, payload.product_id), user)
+    order = create_order(db, product, user, payload)
     db.commit()
     return order_out(order)
 
@@ -91,8 +98,8 @@ def checkout_basket(payload: BasketCheckout, db: Session = Depends(get_db),
     """Order everything in the basket. All or nothing: if any item can't be bought, no order is placed."""
     if not payload.accept_terms:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Please accept the cash-on-delivery terms.")
-    products = [_check_buyable(db.get(Product, pid), user) for pid in payload.product_ids]
-    orders = [_create_order(db, product, user, payload) for product in products]
+    products = [check_buyable(db.get(Product, pid), user) for pid in payload.product_ids]
+    orders = [create_order(db, product, user, payload) for product in products]
     db.commit()
     return [order_out(o) for o in orders]
 
@@ -130,16 +137,29 @@ def update_status(order_id: int, body: OrderStatusUpdate, db: Session = Depends(
     if body.status not in allowed:
         raise HTTPException(status.HTTP_409_CONFLICT, f"An order that is {order.status} can't be marked {body.status}.")
 
+    card_paid = order.payment_method == "card" and order.payment_status == "paid"
+    if body.status == "cancelled" and card_paid:
+        # Give the buyer their money back on Stripe before cancelling; if that fails, nothing changes.
+        try:
+            refund_order(order)
+        except PaymentError as exc:
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(exc)) from None
+        order.payment_status = "refunded"
+
     order.status = body.status
     if order.product is not None:
         if body.status == "delivered":
             order.product.status = "sold"
         elif body.status == "cancelled" and order.product.status == "reserved":
             order.product.status = "active"  # back on the marketplace
+    if body.status == "delivered" and order.payment_method == "cash_on_delivery":
+        order.payment_status = "paid"
     messages = {
         "confirmed": f"✅ Order #{order.id} confirmed. I'll arrange delivery soon.",
-        "delivered": f"📦 Order #{order.id} delivered and paid in cash. Thank you!",
-        "cancelled": f"Order #{order.id} was cancelled.",
+        "delivered": (f"📦 Order #{order.id} delivered. Thank you!" if order.payment_method == "card"
+                      else f"📦 Order #{order.id} delivered and paid in cash. Thank you!"),
+        "cancelled": (f"Order #{order.id} was cancelled. {price_text(order.price)} was refunded to the card."
+                      if card_paid else f"Order #{order.id} was cancelled."),
     }
     _notify(db, order, user.id, messages[body.status])
     db.commit()

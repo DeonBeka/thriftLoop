@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.core.rate_limit import RateLimitMiddleware
 from app.database import init_db
-from app.routers import admin, assistant, auth, conversations, favorites, orders, products, sellers, users
+from app.routers import admin, assistant, auth, conversations, favorites, orders, payments, products, sellers, users
 
 
 @asynccontextmanager
@@ -58,6 +58,7 @@ app.include_router(favorites.router)
 app.include_router(conversations.router)
 app.include_router(sellers.router)
 app.include_router(orders.router)
+app.include_router(payments.router)
 app.include_router(admin.router)
 app.include_router(assistant.router)
 

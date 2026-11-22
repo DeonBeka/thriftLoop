@@ -94,6 +94,7 @@ function RootNavigator() {
       <Stack.Screen name="orders/[id]" options={{ title: 'Order' }} />
       <Stack.Screen name="basket" options={{ title: 'Basket' }} />
       <Stack.Screen name="checkout/index" options={{ title: 'Checkout' }} />
+      <Stack.Screen name="checkout/complete" options={{ title: 'Payment', headerBackVisible: false }} />
       <Stack.Screen name="seller/apply" options={{ title: 'Become a seller', presentation: 'modal' }} />
       <Stack.Screen name="admin" options={{ headerShown: false }} />
       {/* Editing flows are sheets: swipe down to dismiss, like iOS Mail/Notes. */}

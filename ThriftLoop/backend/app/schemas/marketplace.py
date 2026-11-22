@@ -81,6 +81,7 @@ class OrderOut(BaseModel):
     product_image: str | None
     price: float
     payment_method: str
+    payment_status: str = "due"  # due (cash on delivery) / paid / refunded
     delivery_name: str
     phone: str
     address_text: str

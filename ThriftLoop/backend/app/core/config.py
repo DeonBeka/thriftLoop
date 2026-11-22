@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash-lite"
     rate_limit_assistant_per_minute: int = 20
+    # Card payments via Stripe in TEST mode only (sk_test_... key). Empty = card payments switched off.
+    stripe_secret_key: str = ""
     # Read each listing's colour from its main photo (Claude vision if a key is set, else built-in).
     photo_colors_enabled: bool = True
 

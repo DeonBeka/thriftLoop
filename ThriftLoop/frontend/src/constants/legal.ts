@@ -40,7 +40,7 @@ export const LEGAL: Record<LegalDocId, LegalDoc> = {
       },
       {
         heading: '5. Buying and payment',
-        body: 'Purchases are paid in cash to the seller on delivery, under the Cash-on-Delivery Terms. Prices are set by sellers and shown in euro. Placing an order is a commitment to buy: please only order if you intend to pay and receive the item.',
+        body: 'Purchases are paid in cash to the seller on delivery, or by card where offered (test mode in this demo), under the Order & Payment Terms. Prices are set by sellers and shown in euro. Placing an order is a commitment to buy: please only order if you intend to pay and receive the item.',
       },
       {
         heading: '6. Behaviour',
@@ -129,8 +129,8 @@ export const LEGAL: Record<LegalDocId, LegalDoc> = {
     ],
   },
   delivery: {
-    title: 'Cash-on-Delivery Terms',
-    summary: 'How ordering and paying in cash on delivery works on ThriftLoop.',
+    title: 'Order & Payment Terms',
+    summary: 'How ordering works on ThriftLoop, paying in cash on delivery or by card.',
     sections: [
       {
         heading: 'Placing an order',
@@ -138,7 +138,11 @@ export const LEGAL: Record<LegalDocId, LegalDoc> = {
       },
       {
         heading: 'Payment',
-        body: 'You pay the listed price in cash directly to the seller or their courier when you receive the item. Have the exact amount ready if possible. ThriftLoop does not take payments and does not charge buyers a fee.',
+        body: 'With cash on delivery you pay the listed price in cash directly to the seller or their courier when you receive the item. Have the exact amount ready if possible. ThriftLoop does not charge buyers a fee.',
+      },
+      {
+        heading: 'Card payments (test mode)',
+        body: 'You can also pay by card on Stripe’s secure payment page. ThriftLoop never sees or stores your card details. This version of ThriftLoop is a demo and uses Stripe test mode: no real money is charged, and only Stripe’s test cards (such as 4242 4242 4242 4242) work. Your order is only placed once Stripe confirms the payment. If an item sells to someone else while you are paying, you are refunded in full. If a card-paid order is cancelled, that item’s price is refunded to the card.',
       },
       {
         heading: 'Order status',

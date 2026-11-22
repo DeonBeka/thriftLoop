@@ -58,7 +58,9 @@ export interface Order {
   product_title: string;
   product_image: string | null;
   price: number;
-  payment_method: 'cash_on_delivery';
+  payment_method: 'cash_on_delivery' | 'card';
+  /** due = cash still to be paid on delivery; paid; refunded (card orders that were cancelled). */
+  payment_status: 'due' | 'paid' | 'refunded';
   delivery_name: string;
   phone: string;
   address_text: string;

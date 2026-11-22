@@ -50,6 +50,10 @@ _ADDED_COLUMNS = {
     "seller_applications": {
         "id_document_type": "VARCHAR(20)",
     },
+    "orders": {
+        "payment_status": "VARCHAR(20) NOT NULL DEFAULT 'due'",
+        "stripe_payment_intent": "VARCHAR(100)",
+    },
 }
 
 

@@ -49,14 +49,16 @@ export default function OrderDetail() {
       }
     };
     if (status === 'cancelled') {
-      Alert.alert('Cancel this order?', 'The item will go back on sale.', [
+      const card = order.payment_method === 'card' && order.payment_status === 'paid';
+      Alert.alert('Cancel this order?', card ? `The item will go back on sale and ${formatPrice(order.price)} will be refunded to the card.` : 'The item will go back on sale.', [
         { text: 'Keep order', style: 'cancel' },
         { text: 'Cancel order', style: 'destructive', onPress: () => void run() },
       ]);
     } else if (status === 'delivered') {
-      Alert.alert('Mark as delivered?', `Only do this once the buyer has received the item and paid ${formatPrice(order.price)} in cash.`, [
+      const cash = order.payment_method === 'cash_on_delivery';
+      Alert.alert('Mark as delivered?', cash ? `Only do this once the buyer has received the item and paid ${formatPrice(order.price)} in cash.` : 'Only do this once the buyer has received the item. It was already paid by card.', [
         { text: 'Not yet', style: 'cancel' },
-        { text: 'Delivered and paid', onPress: () => void run() },
+        { text: cash ? 'Delivered and paid' : 'Delivered', onPress: () => void run() },
       ]);
     } else {
       void run();
@@ -99,7 +101,11 @@ export default function OrderDetail() {
             <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
             <View style={styles.flex}>
               <Text style={type.headline}>Order placed</Text>
-              <Text style={type.footnote}>The seller has your details and will confirm soon. Pay in cash when it arrives.</Text>
+              <Text style={type.footnote}>
+                {order.payment_method === 'card'
+                  ? 'Paid by card. The seller has your details and will confirm soon.'
+                  : 'The seller has your details and will confirm soon. Pay in cash when it arrives.'}
+              </Text>
             </View>
           </Animated.View>
         )}
@@ -156,9 +162,18 @@ export default function OrderDetail() {
 
         <Text style={[type.overline, styles.label]}>Payment</Text>
         <View style={[styles.card, styles.payRow]}>
-          <Ionicons name="cash-outline" size={22} color={colors.primary} />
-          <Text style={[type.body, styles.flex]}>Cash on delivery</Text>
-          <Text style={styles.price}>{formatPrice(order.price)}</Text>
+          <Ionicons name={order.payment_method === 'card' ? 'card-outline' : 'cash-outline'} size={22} color={colors.primary} />
+          <View style={styles.flex}>
+            <Text style={type.body}>{order.payment_method === 'card' ? 'Card (Stripe test mode)' : 'Cash on delivery'}</Text>
+            <Text style={type.footnote}>
+              {order.payment_status === 'refunded'
+                ? 'Refunded to the card'
+                : order.payment_status === 'paid'
+                  ? order.payment_method === 'card' ? 'Paid' : 'Paid in cash'
+                  : 'To pay in cash on delivery'}
+            </Text>
+          </View>
+          <Text style={[styles.price, order.payment_status === 'refunded' && styles.refunded]}>{formatPrice(order.price)}</Text>
         </View>
       </ScrollView>
 
@@ -181,6 +196,7 @@ export default function OrderDetail() {
 
 const styles = themed(() =>
   StyleSheet.create({
+  refunded: { textDecorationLine: 'line-through', color: colors.textSecondary },
   container: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1, gap: 4 },
   flex1: { flex: 1 },
