@@ -139,3 +139,5 @@ class AdminStats(BaseModel):
     earned_pending: float = 0.0  # from open orders, earned once they're delivered
     sales_volume: float = 0.0  # what buyers paid on delivered orders
     delivered_orders: int = 0
+    ad_revenue: float = 0.0  # paid promotions (Home slideshow boosts)
+    active_ads: int = 0

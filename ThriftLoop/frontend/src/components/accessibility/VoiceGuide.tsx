@@ -21,6 +21,7 @@ const SCREENS: { match: RegExp; say: string }[] = [
   { match: /^\/messages/, say: 'Messages.' },
   { match: /^\/orders\/\d+/, say: 'Order details.' },
   { match: /^\/orders/, say: 'Orders.' },
+  { match: /^\/promote/, say: 'Boost listing. Pay to feature your item at the top of the Home page.' },
   { match: /^\/basket/, say: 'Basket. Items you want to buy. Tap checkout to order them together.' },
   { match: /^\/checkout/, say: 'Checkout. Enter your delivery address. You pay in cash on delivery.' },
   { match: /^\/seller\/apply/, say: 'Seller verification. Enter your details and take a selfie.' },

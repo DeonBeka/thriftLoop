@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +8,8 @@ import { ProductCard } from '@/components/product/ProductCard';
 import { GRID_PADDING, ProductGrid } from '@/components/product/ProductGrid';
 import { AskAiButton } from '@/components/assistant/AskAiButton';
 import { CategoryTiles } from '@/components/home/CategoryTiles';
+import { FeaturedCarousel } from '@/components/promotions/FeaturedCarousel';
+import { markSpotlightShown, PromoPopup, spotlightShownToday } from '@/components/promotions/PromoPopup';
 import { GroupTabs } from '@/components/home/GroupTabs';
 import { SellBanner } from '@/components/home/SellBanner';
 import { HomeSkeleton, LoadMoreSkeleton, ProductGridSkeleton } from '@/components/skeletons';
@@ -23,8 +25,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useBasket } from '@/hooks/useBasket';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useUnreadCount } from '@/hooks/useUnreadCount';
-import { productsApi } from '@/services/api';
+import { productsApi, promotionsApi } from '@/services/api';
 import type { Category, Group, Product } from '@/types';
+import { formatPrice } from '@/utils/format';
 
 const groupLabel = (g: Group) => GROUPS.find((x) => x.id === g)?.label ?? g;
 
@@ -48,6 +51,24 @@ export default function Home() {
   const [group, setGroup] = useState<Group | null>(null);
   const [category, setCategory] = useState<Category | null>(null);
   const [extra, setExtra] = useState<Product[]>([]);
+  const featured = useApi(() => promotionsApi.featured(), [], { refetchOnFocus: true });
+  const ads = (featured.data ?? []).filter((f) => f.product.seller.id !== user?.id);
+
+  // Daily spotlight pop-up: one boosted item, at most once a day, a moment after Home opens.
+  const [spotlight, setSpotlight] = useState<(typeof ads)[number] | null>(null);
+  const spotlightTried = useRef(false);
+  useEffect(() => {
+    if (spotlightTried.current || !ads.length || spotlightShownToday()) return;
+    const pick = ads[Math.floor(Math.random() * ads.length)];
+    const t = setTimeout(() => {
+      spotlightTried.current = true;
+      setSpotlight(pick);
+      markSpotlightShown();
+    }, 2500);
+    return () => clearTimeout(t);
+    // Re-run only when the featured list itself changes (ads is rebuilt every render).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [featured.data]);
   const [loadingMore, setLoadingMore] = useState(false);
   const firstLoad = useRef(true);
 
@@ -129,6 +150,12 @@ export default function Home() {
       <SearchBar value={query} onChangeText={setQuery} onClear={() => setQuery('')} onSubmitEditing={search} />
 
       <AskAiButton onPress={() => router.push('/assistant')} />
+
+      {!category && !group && ads.length > 0 && (
+        <View style={styles.featured}>
+          <FeaturedCarousel items={ads} />
+        </View>
+      )}
 
       <View style={styles.groups}>
         <GroupTabs
@@ -213,6 +240,22 @@ export default function Home() {
           )
         }
       />
+
+      <PromoPopup
+        visible={!!spotlight}
+        eyebrow="Today’s spotlight"
+        title={spotlight?.product.title ?? ''}
+        body={spotlight ? `Size ${spotlight.product.size} · ${spotlight.product.condition} · from @${spotlight.product.seller.username}. One of a kind, so it won’t last long.` : ''}
+        image={spotlight?.product.images[0]?.url ?? null}
+        price={spotlight ? formatPrice(spotlight.product.price) : undefined}
+        primaryLabel="View item"
+        onPrimary={() => {
+          const id = spotlight?.product.id;
+          setSpotlight(null);
+          if (id) router.push(`/product/${id}`);
+        }}
+        onClose={() => setSpotlight(null)}
+      />
     </View>
   );
 }
@@ -220,6 +263,7 @@ export default function Home() {
 const styles = themed(() =>
   StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  featured: { marginTop: spacing.lg },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',

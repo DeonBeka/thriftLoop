@@ -46,6 +46,9 @@ export default function AdminDashboard() {
             10% of every sale + 5% of delivery, from {stats.data.delivered_orders} delivered{' '}
             {stats.data.delivered_orders === 1 ? 'order' : 'orders'} ({formatPrice(stats.data.sales_volume)} in sales).
           </Text>
+          <Text style={styles.earningsNote}>
+            + {formatPrice(stats.data.ad_revenue)} from promoted listings · {stats.data.active_ads} ads live now
+          </Text>
           {stats.data.earned_pending > 0 && (
             <Text style={styles.earningsNote}>+ {formatPrice(stats.data.earned_pending)} on open orders, earned once delivered.</Text>
           )}

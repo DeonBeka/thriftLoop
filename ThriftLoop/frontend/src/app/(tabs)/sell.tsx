@@ -24,7 +24,7 @@ export default function Sell() {
             <Text style={type.callout}>Takes about a minute. Interested buyers will message you.</Text>
           </View>
         }
-        onSaved={(product) => router.push(`/product/${product.id}`)}
+        onSaved={(product) => router.push(`/product/${product.id}?justListed=1`)}
       />
     </View>
   );

@@ -59,11 +59,15 @@ def app_redirect(checkout: CardCheckout) -> str:
     return f"{checkout.app_return_url}{sep}{urlencode({'checkout_id': checkout.id, 'status': checkout.status})}"
 
 
-def create_session(checkout: CardCheckout, line_items: list[tuple[str, int]], api_base: str) -> str:
-    """Create the Stripe Checkout Session; returns the hosted payment page URL."""
-    if checkout.amount_cents < MIN_AMOUNT_CENTS:
+def create_hosted_session(line_items: list[tuple[str, int]], back_url: str, reference: str,
+                          metadata: dict[str, str]) -> tuple[str, str]:
+    """Create a Stripe Checkout Session. Stripe sends the browser to `back_url` (+ session_id or cancelled=1).
+
+    Returns (session_id, hosted_page_url).
+    """
+    if sum(cents for _, cents in line_items) < MIN_AMOUNT_CENTS:
         raise PaymentError("Card payments need a total of at least €0.50.")
-    back = f"{api_base.rstrip('/')}/payments/return?checkout_id={checkout.id}"
+    sep = "&" if "?" in back_url else "?"
     try:
         session = _client().v1.checkout.sessions.create(params={
             "mode": "payment",
@@ -71,16 +75,33 @@ def create_session(checkout: CardCheckout, line_items: list[tuple[str, int]], ap
                 {"quantity": 1, "price_data": {"currency": CURRENCY, "unit_amount": cents, "product_data": {"name": title[:250]}}}
                 for title, cents in line_items
             ],
-            "success_url": back + "&session_id={CHECKOUT_SESSION_ID}",
-            "cancel_url": back + "&cancelled=1",
-            "client_reference_id": str(checkout.id),
-            "metadata": {"card_checkout_id": str(checkout.id), "user_id": str(checkout.user_id)},
+            "success_url": back_url + sep + "session_id={CHECKOUT_SESSION_ID}",
+            "cancel_url": back_url + sep + "cancelled=1",
+            "client_reference_id": reference,
+            "metadata": metadata,
         })
     except stripe.StripeError as exc:
         logger.warning("Stripe session create failed: %s", exc.user_message or type(exc).__name__)
-        raise PaymentError("Couldn't start the card payment. Please try again or pay cash on delivery.") from None
-    checkout.stripe_session_id = session.id
-    return session.url
+        raise PaymentError("Couldn't start the card payment. Please try again in a moment.") from None
+    return session.id, session.url
+
+
+def create_session(checkout: CardCheckout, line_items: list[tuple[str, int]], api_base: str) -> str:
+    """Basket checkout session; returns the hosted payment page URL."""
+    if checkout.amount_cents < MIN_AMOUNT_CENTS:
+        raise PaymentError("Card payments need a total of at least €0.50.")
+    back = f"{api_base.rstrip('/')}/payments/return?checkout_id={checkout.id}"
+    session_id, url = create_hosted_session(
+        line_items, back, str(checkout.id), {"card_checkout_id": str(checkout.id), "user_id": str(checkout.user_id)},
+    )
+    checkout.stripe_session_id = session_id
+    return url
+
+
+def app_redirect_url(base: str, params: dict) -> str:
+    """Append query params to the app's return URL."""
+    sep = "&" if "?" in base else "?"
+    return f"{base}{sep}{urlencode(params)}"
 
 
 def session_payment(session_id: str) -> tuple[bool, str | None]:

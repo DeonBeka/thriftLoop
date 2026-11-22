@@ -6,6 +6,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AddedToBasketSheet } from '@/components/basket/AddedToBasketSheet';
+import { PromoPopup } from '@/components/promotions/PromoPopup';
 import { FavoriteButton } from '@/components/product/FavoriteButton';
 import { ImageGallery } from '@/components/product/ImageGallery';
 import { ProductDetailsSkeleton } from '@/components/skeletons';
@@ -24,13 +25,14 @@ import { haptic } from '@/utils/haptics';
 import { describeProduct, speak, stopSpeaking } from '@/utils/speech';
 
 export default function ProductDetails() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, justListed } = useLocalSearchParams<{ id: string; justListed?: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user, refreshUser } = useAuth();
   const [busy, setBusy] = useState<null | 'message' | 'status' | 'delete'>(null);
   const basket = useBasket();
   const [addedOpen, setAddedOpen] = useState(false);
+  const [boostPromptOpen, setBoostPromptOpen] = useState(justListed === '1');
   const inBasket = basket.has(Number(id));
 
   const { data: product, error, loading, refreshing, refresh, reload, setData } = useApi(
@@ -154,19 +156,21 @@ export default function ProductDetails() {
   };
 
   const ownerMenu = () => {
-    const options = ['Edit listing', sold ? 'Mark as available' : 'Mark as sold', 'Delete listing', 'Cancel'];
+    const options = ['Edit listing', sold ? 'Mark as available' : 'Mark as sold', 'Delete listing', 'Boost on Home', 'Cancel'];
     const handle = (i: number) => {
       if (i === 0) router.push(`/product/edit/${product.id}`);
       if (i === 1) void toggleSold();
       if (i === 2) deleteListing();
+      if (i === 3) router.push(`/promote/${product.id}`);
     };
     if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions({ options, cancelButtonIndex: 3, destructiveButtonIndex: 2 }, handle);
+      ActionSheetIOS.showActionSheetWithOptions({ options, cancelButtonIndex: 4, destructiveButtonIndex: 2 }, handle);
     } else {
       Alert.alert('Listing', undefined, [
         { text: options[0], onPress: () => handle(0) },
         { text: options[1], onPress: () => handle(1) },
         { text: options[2], style: 'destructive', onPress: () => handle(2) },
+        { text: options[3], onPress: () => handle(3) },
         { text: 'Cancel', style: 'cancel' },
       ]);
     }
@@ -207,6 +211,23 @@ export default function ProductDetails() {
             <Pill label={product.condition} />
             <Pill label={product.category} />
           </View>
+          {isOwner && !sold && !reserved && (
+            <Pressable
+              onPress={() => router.push(`/promote/${product.id}`)}
+              style={({ pressed }) => [styles.boost, pressed && { opacity: 0.85 }]}
+              accessibilityRole="button"
+              accessibilityLabel="Boost this listing to the Home slideshow"
+            >
+              <View style={styles.boostIcon}>
+                <Ionicons name="rocket-outline" size={20} color={colors.white} />
+              </View>
+              <View style={styles.flex}>
+                <Text style={styles.boostTitle}>Boost this listing</Text>
+                <Text style={styles.boostBody}>Feature it at the top of Home from €1.99</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.white} />
+            </Pressable>
+          )}
           <Pressable
             onPress={() => router.push(`/live-view/${product.id}`)}
             style={({ pressed }) => [styles.liveView, pressed && { opacity: 0.8 }]}
@@ -300,6 +321,21 @@ export default function ProductDetails() {
         )}
       </View>
 
+      <PromoPopup
+        visible={boostPromptOpen && isOwner}
+        eyebrow="Your item is live 🎉"
+        title="Want more buyers to see it?"
+        body="Boost it to the Featured slideshow at the top of Home, where every shopper starts. From €1.99."
+        image={product.images[0]?.url ?? null}
+        primaryLabel="Boost my listing"
+        secondaryLabel="Maybe later"
+        onPrimary={() => {
+          setBoostPromptOpen(false);
+          router.push(`/promote/${product.id}`);
+        }}
+        onClose={() => setBoostPromptOpen(false)}
+      />
+
       <AddedToBasketSheet
         visible={addedOpen}
         product={product}
@@ -328,6 +364,25 @@ const styles = themed(() =>
   flex: { flex: 1 },
   topBar: { position: 'absolute', left: GUTTER - 4, right: GUTTER - 4, flexDirection: 'row', justifyContent: 'space-between' },
   topRight: { flexDirection: 'row', gap: spacing.sm },
+  boost: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.primary,
+    marginTop: spacing.sm,
+  },
+  boostIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  boostTitle: { fontSize: fs(16), fontWeight: '700', color: colors.white },
+  boostBody: { fontSize: fs(13), color: colors.white, opacity: 0.85 },
   content: { paddingHorizontal: GUTTER, paddingTop: spacing.xl, gap: spacing.sm },
   soldBanner: {
     flexDirection: 'row',

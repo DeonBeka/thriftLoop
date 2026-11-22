@@ -97,6 +97,33 @@ export interface AdminStats {
   earned_pending: number;
   sales_volume: number;
   delivered_orders: number;
+  /** Paid promotions (Home slideshow boosts). */
+  ad_revenue: number;
+  active_ads: number;
+}
+
+export interface PromotionPlan {
+  id: 'boost_3' | 'boost_7' | 'boost_14';
+  days: number;
+  price: number;
+  label: string;
+}
+
+export interface Promotion {
+  id: number;
+  product_id: number;
+  plan: PromotionPlan['id'];
+  price: number;
+  status: 'pending' | 'active' | 'expired' | 'cancelled';
+  starts_at: string | null;
+  ends_at: string | null;
+}
+
+/** A boosted listing shown in the Home slideshow / spotlight. */
+export interface FeaturedListing {
+  promotion_id: number;
+  ends_at: string | null;
+  product: Product;
 }
 
 export interface Pricing {

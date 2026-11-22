@@ -94,6 +94,8 @@ function RootNavigator() {
       <Stack.Screen name="orders/[id]" options={{ title: 'Order' }} />
       <Stack.Screen name="basket" options={{ title: 'Basket' }} />
       <Stack.Screen name="checkout/index" options={{ title: 'Checkout' }} />
+      <Stack.Screen name="promote/[id]" options={{ title: 'Boost listing', presentation: 'modal' }} />
+      <Stack.Screen name="promote/complete" options={{ title: 'Payment', headerBackVisible: false }} />
       <Stack.Screen name="checkout/complete" options={{ title: 'Payment', headerBackVisible: false }} />
       <Stack.Screen name="seller/apply" options={{ title: 'Become a seller', presentation: 'modal' }} />
       <Stack.Screen name="admin" options={{ headerShown: false }} />

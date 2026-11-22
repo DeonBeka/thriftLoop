@@ -7,10 +7,13 @@ import type {
   SellerApplication,
   Conversation,
   CurrentUser,
+  FeaturedListing,
   IdDocumentType,
   LocalImage,
   Message,
   PhotoAngle,
+  Promotion,
+  PromotionPlan,
   Pricing,
   Product,
   ProductFilters,
@@ -322,6 +325,21 @@ export const paymentsApi = {
     request<{ checkout_id: number; url: string }>('POST', '/payments/card-checkout', { body, timeoutMs: 30000 }),
   /** Verifies with Stripe and returns the orders once paid. */
   cardStatus: (id: number) => request<CardCheckoutState>('GET', `/payments/card-checkout/${id}`, { timeoutMs: 30000 }),
+};
+
+// ---------- Promotions (paid boosts in the Home slideshow) ----------
+export const promotionsApi = {
+  plans: () => request<PromotionPlan[]>('GET', '/promotions/plans'),
+  featured: () => request<FeaturedListing[]>('GET', '/promotions/featured'),
+  mine: () => request<Promotion[]>('GET', '/promotions/mine'),
+  /** Starts a Stripe (test mode) payment for a boost; returns the hosted card page to open. */
+  start: (productId: number, plan: PromotionPlan['id'], returnUrl: string) =>
+    request<{ promotion_id: number; url: string }>('POST', '/promotions/checkout', {
+      body: { product_id: productId, plan, return_url: returnUrl },
+      timeoutMs: 30000,
+    }),
+  /** Verifies the payment with Stripe and returns the boost's state. */
+  get: (id: number) => request<Promotion>('GET', `/promotions/${id}`, { timeoutMs: 30000 }),
 };
 
 // ---------- Admin ----------

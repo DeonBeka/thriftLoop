@@ -19,7 +19,7 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.core.security import hash_password
 from app.database import Base, SessionLocal, engine, init_db
-from app.models import Conversation, Favorite, Message, Product, ProductImage, User
+from app.models import Conversation, Favorite, Message, Product, ProductImage, Promotion, User
 from app.seed_photos import LISTINGS, unsplash_url
 
 # Public demo-account password (documented in the README).
@@ -121,10 +121,40 @@ def seed(reset: bool = False, refresh_demo: bool = False) -> None:
             db.add(Message(conversation_id=convo.id, sender_id=sender, content=text,
                            created_at=now - timedelta(minutes=60 - j * 7), is_read=j < 3))
         db.commit()
+        seed_demo_ads(db)
 
     print(f"Seeded {len(USERS)} users and {len(LISTINGS)} listings with Unsplash photos.")
     print(f"Demo login: {USERS[0][1]} / {DEMO_PASSWORD}")
 
 
+DEMO_AD_TITLES = ["Forest Green Hoodie", "Green Field Jacket", "Red Running Sneakers", "Black Puffer Jacket",
+                  "Brown Leather Sling Bag"]
+
+
+def seed_demo_ads(db) -> int:
+    """Feature a few demo listings in the Home slideshow for 30 days (free demo ads, not counted as revenue)."""
+    now = datetime.now(timezone.utc)
+    added = 0
+    for i, title in enumerate(DEMO_AD_TITLES):
+        product = db.scalar(select(Product).where(Product.title == title, Product.status == "active"))
+        if product is None:
+            continue
+        live = db.scalar(select(Promotion).where(Promotion.product_id == product.id, Promotion.status == "active",
+                                                 Promotion.ends_at > now))
+        if live is not None:
+            continue
+        db.add(Promotion(product_id=product.id, seller_id=product.seller_id, plan="boost_14", price=0.0,
+                         status="active", starts_at=now - timedelta(minutes=10 * (len(DEMO_AD_TITLES) - i)),
+                         ends_at=now + timedelta(days=30)))
+        added += 1
+    db.commit()
+    return added
+
+
 if __name__ == "__main__":
-    seed(reset="--reset" in sys.argv, refresh_demo="--refresh-demo" in sys.argv)
+    if "--demo-ads" in sys.argv:
+        init_db()
+        with SessionLocal() as session:
+            print(f"Added {seed_demo_ads(session)} demo ads to the Home slideshow.")
+    else:
+        seed(reset="--reset" in sys.argv, refresh_demo="--refresh-demo" in sys.argv)

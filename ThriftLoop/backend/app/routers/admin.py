@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import require_admin
 from app.database import get_db
-from app.models import Order, Product, SellerApplication, User
+from app.models import Order, Product, Promotion, SellerApplication, User
 from app.schemas.marketplace import AdminStats, ReviewRequest, RoleUpdate, SellerApplicationOut
 from app.schemas.user import AdminUserOut
 from app.services.images import private_file
@@ -49,6 +49,10 @@ def _earnings(db: Session) -> dict:
         "sales_volume": round(db.scalar(select(func.coalesce(func.sum(Order.price + Order.delivery_fee), 0.0))
                                         .where(delivered)) or 0.0, 2),
         "delivered_orders": db.scalar(select(func.count()).select_from(Order).where(delivered)) or 0,
+        "ad_revenue": round(db.scalar(select(func.coalesce(func.sum(Promotion.price), 0.0))
+                                      .where(Promotion.status == "active")) or 0.0, 2),
+        "active_ads": db.scalar(select(func.count()).select_from(Promotion).where(
+            Promotion.status == "active", Promotion.ends_at > datetime.now(timezone.utc))) or 0,
     }
 
 

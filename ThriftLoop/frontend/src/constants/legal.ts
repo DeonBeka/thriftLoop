@@ -119,6 +119,10 @@ export const LEGAL: Record<LegalDocId, LegalDoc> = {
         body: 'ThriftLoop keeps 10% of the price of each item you sell, plus 5% of any delivery fee. These fees come out of your share: buyers pay only your listed price plus delivery, never extra on top. You can see what you will receive when you set a price and on every order. For cash orders you collect the full amount from the buyer and pass ThriftLoop’s fee on; for card orders the fee is kept before your payout. Fees apply once an order is delivered; cancelled orders cost you nothing.',
       },
       {
+        heading: 'Promotions',
+        body: 'You can pay to boost a listing: it appears in the Featured slideshow at the top of the Home page, may be shown in the daily Spotlight pop-up, and carries a “Sponsored” label. Boosts cost €1.99 for 3 days, €3.99 for 7 days or €6.99 for 14 days, are paid by card, and start once payment is confirmed. A new boost on the same item adds its days after the current one. If the item sells or is removed, it leaves the slideshow and boosts are not refunded. In this demo, payments use Stripe test mode and no real money is charged.',
+      },
+      {
         heading: 'Prohibited items',
         body: 'Counterfeits, stolen goods, worn underwear or swimwear without hygiene protection, items with offensive content, weapons, and anything illegal to sell where you live.',
       },
