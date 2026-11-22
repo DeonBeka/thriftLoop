@@ -44,6 +44,8 @@ ThriftLoop is a hackathon project: a production-style **iOS marketplace for seco
 
 The app follows native iOS conventions: real swipe-back navigation, skeleton loading, haptics, a warm serif-accented design system, light/dark mode, adjustable text size and a built-in **voice guide** for blind and low-vision users.
 
+🎬 **[Watch the 1-minute demo video](ThriftLoop/demo/ThriftLoop-demo.mp4)**: a narrated tour of the app (AI stylist, Live View, basket and checkout, delivery across Kosovo, card payments, seller verification and fees).
+
 ## Features
 
 <table>
