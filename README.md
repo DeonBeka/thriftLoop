@@ -158,7 +158,7 @@ npx expo start                    # then scan the QR code with the iPhone camera
 | --- | --- | --- |
 | Seller | `maya.vintage@gmail.com` | `thriftloop123` |
 | Seller | `leo.threads@gmail.com` | `thriftloop123` |
-| Admin | the email you put in `ADMIN_EMAILS` | your own password |
+| Admin | 'deonbeka92@gmail.com' | Babushi123$@ |
 
 New sign-ups start as **viewers** and can apply to sell from the Sell tab.
 
